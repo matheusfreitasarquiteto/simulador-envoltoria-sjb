@@ -796,7 +796,14 @@ table.r td.v{text-align:right;font-variant-numeric:tabular-nums}
 #avisoCx .t{font-size:14.5px;font-weight:600;line-height:1.5}
 #avisoCx .t b{color:var(--acc)}
 #avisoCx .s{font-size:12px;color:var(--tx2);line-height:1.5;margin-top:9px}
-#avisoCx .bt{display:flex;gap:9px;margin-top:20px}
+#avisoCx .esc{display:flex;flex-direction:column;gap:7px;margin-top:16px;text-align:left}
+#avisoCx .esc label{display:grid;grid-template-columns:16px 1fr;column-gap:9px;row-gap:1px;align-items:start;
+ border:1px solid var(--line);border-radius:8px;padding:9px 11px;cursor:pointer;background:rgba(255,255,255,.02)}
+#avisoCx .esc label:has(input:checked){border-color:var(--acc);background:rgba(110,168,254,.08)}
+#avisoCx .esc input{grid-row:1/3;margin:2px 0 0;accent-color:var(--acc)}
+#avisoCx .esc b{font-size:12.5px}
+#avisoCx .esc span{font-size:11px;color:var(--tx2);line-height:1.45}
+#avisoCx .bt{display:flex;gap:9px;margin-top:16px}
 #avisoCx .bt button{flex:1}
 @media print{#avisoBg{display:none!important}}
 .nota{background:rgba(242,181,68,.08);border:1px solid rgba(242,181,68,.35);border-left:3px solid var(--warn);
@@ -933,6 +940,10 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
 #print h2 + p.obs,#print h3 + p.obs{break-after:avoid;page-break-after:avoid}
 #print .ckres{break-after:avoid;page-break-after:avoid}
 #print table.curta{break-inside:avoid;page-break-inside:avoid}
+/* tabela longa não começa com uma ou duas linhas no pé da página:
+   as três primeiras não admitem quebra depois de si, de modo que o
+   título e as quatro primeiras linhas viajam juntos */
+#print table tbody tr:nth-child(-n+3){break-after:avoid;page-break-after:avoid}
 #print th,#print td{border:.5pt solid #ccd4e0;padding:1.5mm 2mm;text-align:left;vertical-align:top}
 #print th{background:#eef2f8;color:#1b3a6b;font-weight:600;font-size:7.8pt;
   text-transform:uppercase;letter-spacing:.2px;white-space:nowrap}
@@ -975,6 +986,8 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
 #print .st-ok{color:#136b43}#print .st-no{color:#9b2c2a}#print .st-cond{color:#8a6100}#print .st-na{color:#6b7280}
 #print .q-sim{color:#8a6100;font-weight:700}#print .q-ver{color:#1d4ed8}#print .q-nao{color:#6b7280}
 #print .obs{font-size:8pt;color:#4b5563;line-height:1.5;margin:1.5mm 0 3mm}
+#print p.extrato{border-left:1.2pt solid #9aa3b2;background:#f7f8fa;padding:2.2mm 3.5mm;border-radius:0 1.2mm 1.2mm 0;
+ margin:0 0 4mm;break-inside:avoid;page-break-inside:avoid}
 #print ul.obs{padding-left:5mm;margin:1.5mm 0 3mm}
 #print ul.obs li{margin-bottom:1.2mm;break-inside:avoid}
 #print .nota{border:.5pt solid #e0c384;border-left:2.4pt solid #a16207;background:#fdf9ef;border-radius:1.2mm;
@@ -1158,6 +1171,12 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
         <div class="t" id="avisoTxt">Este produto foi desenvolvido pelo <b>NEPLAN</b> e <b>não substitui a análise da Prefeitura</b>.</div>
         <div class="s">Núcleo de Engenharia em Planejamento e Infraestrutura Urbana · neplan@ufv.br<br>
         O estudo é uma consulta prévia de viabilidade construtiva. A aprovação do projeto compete ao órgão municipal.</div>
+        <div class="esc">
+          <label><input type="radio" name="escopo" value="full" checked>
+            <b>Completo</b><span>Verificação item a item, dispositivos, vagas, memória de cálculo e premissas.</span></label>
+          <label><input type="radio" name="escopo" value="sint">
+            <b>Síntese</b><span>Veredito, quadro de parâmetros, o que não atende e as peças gráficas.</span></label>
+        </div>
         <div class="bt">
           <button class="b" id="avisoNao">Cancelar</button>
           <button class="b pr" id="avisoSim">Continuar e imprimir</button>
@@ -1405,6 +1424,14 @@ const OCUP = {
   reserv:    { n: "Reservatório / caixa d'água", hab: false, pd: 2.20, comp: "nunca", pdArt: "Código de Obras, Anexo V — 2,20 m" }
 };
 
+/* Anexo IV, nota 3: "As quadras com testadas para as vias arteriais e
+   coletoras, localizadas na Zona Comercial (ZC), Zona Mista 1 (ZM1) e
+   Zona Mista 2 (ZM2), não poderão ter parcelamentos com parâmetros
+   inferiores ao MP-4." O MP-4 vira piso nessas três zonas — daí precisar
+   dele solto, já que a ZC só lista MP-1 e MP-2 e a ZM1 só o MP-3. */
+const MP4 = { id: "MP-4", area: 360, t: 12, te: 15, varArea: 300, varPct: 25 };
+const NOTA3_ZONAS = ["ZC", "ZM1", "ZM2"];
+
 /* Hierarquia viária — Plano de Mobilidade, art. 40 e Anexo III */
 const VIAS = {
   arterial_p: { n: "Arterial primária", cls: "arterial" },
@@ -1446,6 +1473,12 @@ const VIA_GEO = {
 
 /* Divergências entre o arquivo de zoneamento, a lei e o texto sancionado */
 const DIVERG = [
+  { f: "Art. 155 — se o subsolo entra na contagem de pavimentos do § 1º",
+    l: "O § 1º torna o elevador obrigatório nas edificações “com cinco ou mais pavimentos” e não diz se os subsolos contam. O § 5º, por sua vez, dá regra própria para a edificação com subsolo: mais de quatro pavimentos acima do nível do logradouro ou mais de três abaixo dele.",
+    t: "Contados apenas os pavimentos acima do logradouro no § 1º, e os subsolos pelo § 5º, II. Se os subsolos entrassem na conta do § 1º, o inciso II do § 5º, que fixa o limite de três, nunca teria aplicação — um prédio com quatro subsolos já teria estourado os cinco pavimentos. Pela leitura contrária, um prédio de quatro pavimentos com um subsolo exigiria elevador." },
+  { f: "Anexo IV, nota 3 — a nota fala da quadra, o simulador conhece o lote",
+    l: "A nota veda parcelamento abaixo do MP-4 nas quadras com testada para via arterial ou coletora, na ZC, na ZM1 e na ZM2. O dado de entrada do simulador é a via de acesso do lote, não a relação de faces da quadra.",
+    t: "Acesso por arterial ou coletora implica quadra com essa testada, e o piso do MP-4 é aplicado. O contrário não se conclui: lote de via local pode estar em quadra que faz testada para coletora em outra face. Nesse caso o simulador não eleva o modelo e declara a verificação pendente, em vez de presumir." },
   { f: "Art. 27 — sentido do verbo no cálculo da taxa de permeabilidade",
     l: "O caput diz que no cálculo da taxa de permeabilidade “não deverão ser considerados” a projeção de beirais, platibandas, varandas, sacadas e balcões de até 1 m, as áreas com pavimentação permeável cujos elementos impermeáveis não passem de 20% e os pisos permeáveis. O material didático da Secretaria Municipal de Obras, elaborado sobre o art. 63 da Lei 359/2015 — de lista idêntica —, aplica o oposto: esses elementos “deverão ser computados”. Pela leitura literal, piso drenante não conta como área permeável, o que esvazia a razão de ser do próprio inciso III.",
     t: "Nenhuma das duas leituras foi adotada. O simulador reserva a área permeável mínima do Anexo II e não decide de que superfície ela se compõe. A diferença é grande em lote de porte: pela leitura literal a taxa exige solo natural; pela aplicada, pode ser atendida com piso drenante, pátio e estacionamento. Cabe ao Município esclarecer." },
@@ -1492,7 +1525,7 @@ const DIVERG = [
 
 /* Premissas de cálculo que não estão literalmente na lei */
 const PREMISSAS = [
-  "A envoltória é obtida por deslocamento paralelo de cada lado do polígono do lote para dentro, pelo afastamento correspondente àquele lado. Em lote reentrante o método superestima os cantos côncavos, e o simulador emite alerta quando isso ocorre.",
+  "A envoltória é obtida por deslocamento paralelo de cada lado do polígono do lote para dentro, pelo afastamento correspondente àquele lado. Em lote reentrante o método <b>subestima</b> a área: junto ao canto côncavo ele corta um quadrado onde o afastamento medido a partir da divisa descreve um arco, e a diferença é sempre contra o projeto. Confira esses trechos em projeto.",
   "Havendo mais de uma testada marcada, o afastamento frontal é aplicado a todas — hipótese conservadora. O art. 29 determina que, em lote de esquina, a testada principal é a voltada para a via de maior hierarquia, e apenas a ela se aplica o afastamento frontal previsto.",
   "A altura da edificação é a soma dos pés-direitos dos pavimentos acima do solo, excluídos o subsolo (art. 25, § 2º) e a casa de máquinas e a caixa-d'água (art. 25, V). O simulador não modela desnível do terreno nem a cota média do alinhamento.",
   "A área computável para o Coeficiente de Aproveitamento segue o art. 26 e suas exclusões. A exceção do caput é aplicada literalmente: em residência unifamiliar e em multifamiliar horizontal (geminada) nada é excluído do cômputo.",
@@ -1513,7 +1546,8 @@ const NAOCONTA = [
   {
     p: "Coeficiente de Aproveitamento",
     art: "Lei de Uso, Ocupação e Parcelamento do Solo, art. 26",
-    ressalva: "A exceção do caput é literal: em residência unifamiliar e em multifamiliar horizontal (geminada) nada se exclui — computa-se toda a área construída.",
+    escopo: "naozde",
+    ressalva: "A exceção do caput é literal: em residência unifamiliar e em multifamiliar horizontal (geminada) nada se exclui — computa-se toda a área construída. O art. 26 não alcança a Zona de Desenvolvimento Econômico, que tem regra própria no art. 108.",
     itens: [
       "I — áreas dos pavimentos em subsolo destinadas ao uso comum;",
       "II — áreas destinadas à guarda e à circulação de veículos, cobertos ou descobertos;",
@@ -1553,6 +1587,16 @@ const NAOCONTA = [
       "Consideram-se apenas as áreas efetivamente ocupadas pelas edificações e instalações operacionalmente indispensáveis à atividade da empresa (art. 110), incluídas as estações de tratamento de despejos industriais, a estação elevatória e outros equipamentos e os reservatórios de acumulação de água (§ 1º).",
       "Depósitos de produto ao ar livre computam quando previstos em projeto e comprovada a necessidade, e no máximo até 25% da área total construída (§§ 2º e 3º).",
       "Não computam como área construída (art. 111): I — estacionamento descoberto; II — vias internas de circulação; III — pérgolas, nas condições do Código de Obras; IV — varandas sem cobertura; V — playgrounds; VI — ajardinados; VII — áreas de recreação ou prática de esportes; VIII — piscinas descobertas; IX — placas fotovoltaicas, nas condições do Código de Obras."
+    ]
+  },
+  {
+    p: "Área Total Edificável — somente na Zona de Desenvolvimento Econômico",
+    art: "Lei de Uso, Ocupação e Parcelamento do Solo, art. 108, parágrafo único",
+    escopo: "zde",
+    ressalva: "É a única exclusão do Capítulo XI para o potencial construtivo, e ela é dupla: precisa ser subsolo <b>e</b> área de uso exclusivo. Garagem em pavimento acima do solo computa na ZDE, ao contrário do que o art. 26, II estabelece para as demais zonas. O simulador aplica a exclusão ao subsolo de garagem e deixa a condição de uso exclusivo para o projeto.",
+    itens: [
+      "ATE = CA × S, em que CA é o Coeficiente de Aproveitamento e S é a área do terreno (art. 108, caput).",
+      "Não computam as áreas destinadas a estacionamento de veículos quando localizadas em subsolo em áreas de uso exclusivo (parágrafo único)."
     ]
   }
 ];
@@ -1725,6 +1769,7 @@ function paramZona(sigla, setor, zeisRef) {
       sigla, nome: Z.n + " — " + s.n, base: Z,
       to: s.to, tp: s.tp, gab: null, gabMotivo: Z.gabMotivo,
       ca: s.ca, outorga: false, outorgaMotivo: Z.outorgaMotivo,
+      capXI: true,
       afPorArea: !!s.afPorArea, afZero: !!s.afZero, af: null,
       loteMin: s.loteMin, testMin: null, mp: null, desdobro: null,
       obs: s.obs, setor, art: Z.art,
@@ -1823,6 +1868,14 @@ function motor(est) {
   const pavs = est.pav.map(p => ({ ...p, O: OCUP[p.ocup], Q: POS[p.pos] }));
   const habUni = est.uso === "res_uni" || (USO_INFO[est.uso].multi && est.geminada);
   const multiOuMisto = ["res_multi", "misto_local", "misto_geral"].indexOf(est.uso) >= 0;
+  /* Na ZDE o cômputo não sai do art. 26. O Capítulo XI tem regra própria:
+     o art. 108 define ATE = CA × S e o seu parágrafo único exclui uma
+     única coisa — o estacionamento de veículos em subsolo, e ainda assim
+     só em área de uso exclusivo. Garagem acima do solo computa, e as
+     demais exclusões do art. 26 não alcançam a zona. Até aqui o simulador
+     aplicava o art. 26 na ZDE, o que derrubava o Coeficiente pela metade
+     em prédio com garagem em pavimento. */
+  const capXI = !!P.capXI;
   pavs.forEach(p => {
     let comp;
     if (habUni) comp = true;                                   // art. 26, caput — exceção
@@ -1832,17 +1885,28 @@ function motor(est) {
     else if (p.O.comp === "cond") comp = !multiOuMisto ? true : false; // art. 26, III
     else comp = true;
     if (p.Q.sub && !p.O.hab) comp = habUni ? true : false;     // art. 26, I — subsolo de uso comum
+    if (capXI) comp = !(p.Q.sub && p.O.comp === "veic");       // art. 108, parágrafo único
     p.computa = comp;
   });
+  if (capXI && pavs.some(p => p.Q.sub && p.O.comp === "veic"))
+    R.infos.push("A exclusão do estacionamento em subsolo do cálculo da Área Total Edificável (art. 108, parágrafo único) " +
+      "vale apenas em área de uso exclusivo. O simulador aplicou a exclusão; a condição de uso exclusivo é do projeto.");
   const acimaSolo = pavs.filter(p => !p.Q.sub);
   const contaGab = acimaSolo.filter(p => !p.Q.topo);
   const habitados = pavs.filter(p => p.O.hab && !p.Q.sub);
   const nSub = pavs.filter(p => p.Q.sub).length;
   const altura = acimaSolo.filter(p => !p.Q.topo).reduce((s, p) => s + num(p.pd), 0);
   const alturaTopo = acimaSolo.reduce((s, p) => s + num(p.pd), 0);
-  /* paradas de elevador — Código de Obras, art. 155: pilotis, sobrelojas e
-     pavimento de garagem contam como paradas */
-  const paradas = pavs.filter(p => !p.Q.topo).length;
+  /* Elevador — Código de Obras, art. 155. O caput manda contar pilotis,
+     sobreloja e pavimento de garagem como paradas. O § 1º dispara pelo
+     número de pavimentos: cinco a seis, um elevador; sete ou mais, dois.
+     O § 5º tem gatilho próprio para quem tem subsolo — mais de quatro
+     pavimentos acima do logradouro ou mais de três abaixo dele.
+     Os subsolos não entram na conta do § 1º: se entrassem, o inciso II do
+     § 5º, que fixa três, não teria função alguma. A leitura contrária
+     está declarada nas divergências. Antes o simulador somava tudo e
+     exigia elevador em prédio de quatro pavimentos com um subsolo. */
+  const paradas = acimaSolo.filter(p => !p.Q.topo).length;
   R.pav = { lista: pavs, gab: contaGab.length, hab: habitados.length, sub: nSub, altura, alturaTopo,
             total: pavs.length, paradas };
 
@@ -1888,8 +1952,20 @@ function motor(est) {
   let envArea = 0, envOk = offsetValido(pts, env);
   if (envOk) {
     envArea = areaAbs(env);
+    /* Dois avisos distintos. Se a envoltória se cruza, a área pela
+       fórmula de Gauss perde sentido e o número não se sustenta. Se não
+       se cruza mas o lote tem canto reentrante, o número vale, só que
+       para menos: o deslocamento paralelo corta um quadrado onde o
+       afastamento real descreve um arco. Antes esta mensagem dizia o
+       contrário — dizia que o método superestimava. */
     if (autoIntersecta(env)) {
-      R.avisos.push("A envoltória resultante cruza a si mesma: o lote tem canto reentrante e o deslocamento paralelo superestima essa região. Confira a planta.");
+      R.erros.push("A envoltória resultante cruza a si mesma: o lote tem canto reentrante e o deslocamento paralelo " +
+        "não produz figura simples nessa região. A área calculada não é confiável — decomponha o lote em partes " +
+        "convexas e simule cada uma.");
+    } else if (temReentrancia(pts)) {
+      R.avisos.push("O lote tem canto reentrante: nesse trecho o deslocamento paralelo subestima a envoltória, " +
+        "porque corta em esquadro o que o afastamento medido a partir da divisa descreve em arco. " +
+        "A área apurada é conservadora — o terreno comporta ao menos isso.");
     }
   } else if (temReentrancia(pts)) {
     R.erros.push("Com " + fmt(af.f, 2) + " m de frente e " + fmt(af.l, 2) +
@@ -2083,15 +2159,34 @@ function motor(est) {
        ok ? "ok" : (est.antigo ? "cond" : "no"), "Art. 104, III");
     if (!ok && !est.antigo) R.erros.push("A área do lote (" + fmt(S, 2) + " m²) é inferior à mínima de " + fmt(P.loteMin, 0) + " m² para parcelamento no setor.");
   } else if (P.mp) {
-    const mp = P.mp.find(m => m.id === est.mp) || P.mp[0];
-    R.mp = mp;
+    /* Anexo IV, nota 3 — piso do MP-4 nas quadras com testada para via
+       arterial ou coletora, na ZC, na ZM1 e na ZM2. O simulador conhece a
+       via de acesso do lote, não a testada da quadra: acesso por arterial
+       ou coletora implica quadra com essa testada, e é sobre isso que a
+       nota incide. O contrário não se conclui — um lote de via local pode
+       estar numa quadra que faz testada para uma coletora na outra face,
+       e isso fica declarado, não presumido. */
+    const viaCls = VIAS[est.via] ? VIAS[est.via].cls : "";
+    const nota3 = NOTA3_ZONAS.indexOf(P.sigla) >= 0 && (viaCls === "arterial" || viaCls === "coletora");
+    let mp = P.mp.find(m => m.id === est.mp) || P.mp[0];
+    const subiu = nota3 && mp.area < MP4.area;
+    if (subiu) mp = MP4;
+    R.mp = mp; R.nota3 = subiu;
     const areaExig = (est.varquadra && mp.varArea) ? mp.varArea : mp.area;
     const testExig = est.esquina ? mp.te : mp.t;
     const okA = S >= areaExig - 1e-6;
     const okT = R.lote.testadaMaior >= testExig - 1e-6;
-    const rotA = (est.varquadra && mp.varArea) ? " (área de variação do modelo " + mp.id + ")" : " (modelo " + mp.id + ")";
-    R.exigLote = { area: areaExig, testada: testExig, rot: "modelo " + mp.id,
-                   art: "Anexo IV; art. 42" + (est.antigo ? "; art. 161" : "") };
+    const porNota3 = subiu ? " — Anexo IV, nota 3" : "";
+    const rotA = ((est.varquadra && mp.varArea) ? " (área de variação do modelo " + mp.id : " (modelo " + mp.id) + porNota3 + ")";
+    R.exigLote = { area: areaExig, testada: testExig, rot: "modelo " + mp.id + (subiu ? " (nota 3)" : ""),
+                   art: "Anexo IV" + (subiu ? ", nota 3" : "") + "; art. 42" + (est.antigo ? "; art. 161" : "") };
+    if (subiu) R.infos.push("Acesso por via " + (viaCls === "arterial" ? "arterial" : "coletora") +
+      " na " + P.nome + ": a quadra não admite parcelamento abaixo do MP-4 — área mínima de 360 m² e testada de 12 m, " +
+      "15 m em esquina (Anexo IV, nota 3). O modelo indicado na entrada foi elevado ao MP-4.");
+    if (!nota3 && NOTA3_ZONAS.indexOf(P.sigla) >= 0)
+      R.infos.push("A nota 3 do Anexo IV eleva o parcelamento ao MP-4 nas quadras com testada para via arterial ou coletora. " +
+        "O acesso informado é por via " + (VIAS[est.via] ? VIAS[est.via].n.toLowerCase() : "não informada") +
+        ", mas a nota incide sobre a quadra: se qualquer face dela der para arterial ou coletora, o piso é o MP-4. Confira a quadra.");
     ck("Área mínima do lote", fmt(areaExig, 0) + " m²" + rotA, fmt(S, 2) + " m²",
        okA ? "ok" : (est.antigo ? "cond" : "no"), "Anexo IV; art. 42" + (est.antigo ? "; art. 161" : ""));
     ck("Testada mínima", fmt(testExig, 2) + " m" + (est.esquina ? " (lote de esquina)" : ""),
@@ -2137,10 +2232,18 @@ function motor(est) {
   /* ---- 13. porte do uso ---- */
   const U = USO_INFO[est.uso];
   if (U.limiteArea) {
-    const ok = areaTotal <= U.limiteArea + 1e-6;
-    ck("Porte compatível com a classificação do uso", "até " + fmt(U.limiteArea, 0) + " m² de área construída",
-       fmt(areaTotal, 2) + " m²", ok ? "ok" : "no", U.limiteArt);
-    if (!ok) R.erros.push("A área construída (" + fmt(areaTotal, 2) + " m²) ultrapassa o limite de " + fmt(U.limiteArea, 0) +
+    /* O art. 10, II, "a" classifica o USO econômico pela área construída
+       dele, não pela da edificação inteira. Num uso misto quem define o
+       porte é a parcela econômica: um prédio de 432 m² com 216 m² de loja
+       e o resto de habitação continua sendo de atendimento local. Antes
+       o simulador media o total e reprovava. */
+    const mede = U.res ? areaNaoResid : areaTotal;
+    const rotMede = U.res ? "área construída do uso econômico" : "área construída";
+    const ok = mede <= U.limiteArea + 1e-6;
+    ck("Porte compatível com a classificação do uso", "até " + fmt(U.limiteArea, 0) + " m² de " + rotMede,
+       fmt(mede, 2) + " m²" + (U.res ? " de " + fmt(areaTotal, 2) + " m² construídos" : ""),
+       ok ? "ok" : "no", U.limiteArt);
+    if (!ok) R.erros.push("A " + rotMede + " (" + fmt(mede, 2) + " m²) ultrapassa o limite de " + fmt(U.limiteArea, 0) +
       " m² que define o uso como “" + USOS[iu].n + "”: o enquadramento passa a ser o de atendimento geral ou impactante, com outros condicionantes.");
   }
 
@@ -2167,9 +2270,18 @@ function motor(est) {
     d: "Art. 51 a 58 e art. 65 a 67 — prazos, garantia e registro no Cartório de Registro de Imóveis." });
   if (multiOuMisto) ex.push({ q: "verificar", t: "Acessibilidade e unidades adaptáveis",
     d: "Art. 15 e 16 — áreas comuns conforme as normas de acessibilidade e previsão de unidades habitacionais adaptáveis." });
-  if (R.pav.paradas >= 5) ex.push({ q: "sim", t: "Elevador — " + (R.pav.paradas >= 7 ? "no mínimo dois" : "no mínimo um"),
-    d: "Código de Obras, art. 155, § 1º — obrigatório a partir de cinco pavimentos: de cinco a seis, um elevador; de sete ou mais, dois. " +
-       "Pilotis, sobrelojas e pavimento de garagem contam como paradas (art. 155, caput): " + pl(R.pav.paradas, "parada") + " nesta pilha." });
+  /* § 1º pelo número de pavimentos acima do solo; § 5º, II pelo número de
+     subsolos. O § 5º, I repete o gatilho do § 1º e nada acrescenta. */
+  const ele1 = R.pav.paradas >= 5;
+  const ele5 = R.pav.sub > 3;
+  if (ele1 || ele5) ex.push({ q: "sim", t: "Elevador — " + (R.pav.paradas >= 7 ? "no mínimo dois" : "no mínimo um"),
+    d: ele1
+      ? "Código de Obras, art. 155, § 1º — obrigatório a partir de cinco pavimentos: de cinco a seis, um elevador; " +
+        "de sete ou mais, dois. Pilotis, sobrelojas e pavimento de garagem contam como paradas (art. 155, caput): " +
+        pl(R.pav.paradas, "parada") + " acima do logradouro nesta pilha." +
+        (R.pav.sub > 0 ? " Os " + pl(R.pav.sub, "subsolo") + " não entram nesta contagem; para eles vale o § 5º." : "")
+      : "Código de Obras, art. 155, § 5º, II — edificação com previsão de subsolo e mais de três pavimentos abaixo " +
+        "do nível do logradouro: " + pl(R.pav.sub, "subsolo") + " nesta pilha." });
   if (R.pav.gab >= 4 && multiOuMisto) ex.push({ q: "sim", t: "Coleta de resíduos por pavimento",
     d: "Código de Obras, art. 193, II e art. 194 — edificações verticais com quatro ou mais pavimentos e mais de uma unidade residencial." });
   if (est.tombado) ex.push({ q: "sim", t: "Anuência do IPHAN e do Conselho Municipal de Cultura", d: "Art. 21; Plano Diretor, art. 127." });
@@ -3499,7 +3611,17 @@ function desenha3d(R) {
 }
 
 /* ---------- relatório ---------- */
-function relatorio() {
+/* Dois escopos de saída. "sint" é o extrato que se entrega a quem
+   encomendou o estudo: veredito, números, o que não atende e as peças.
+   "full" é o documento que justifica cada número. A ressalva e o rodapé
+   do NEPLAN são idênticos nos dois — a versão curta não pode circular
+   sem os avisos, e ela se declara extrato logo abaixo da ficha. */
+function escopoRelatorio() {
+  const r = document.querySelector('input[name="escopo"]:checked');
+  return r && r.value === "sint" ? "sint" : "full";
+}
+function relatorio(escopo) {
+  const SIN = (escopo || escopoRelatorio()) === "sint";
   if (!SIM || !SIM.R || SIM.R.suspenso) { alert("Selecione uma zona com parâmetros e monte o lote antes de gerar o relatório."); return; }
   const { est, R } = SIM, P = R.P;
 
@@ -3559,10 +3681,15 @@ function relatorio() {
 
   const tituloEst = "Estudo de envoltória máxima edificável";
   doc += "<h1>" + tituloEst + "</h1>" +
-    '<p class="sub">Consulta prévia de viabilidade construtiva · ' + P.nome + " · " + hoje + "</p>" +
+    '<p class="sub">Consulta prévia de viabilidade construtiva · ' + (SIN ? "síntese · " : "") +
+      P.nome + " · " + hoje + "</p>" +
     '<table class="ficha"><tbody>' +
     ficha.map(f => '<tr><td class="r">' + f[0] + '</td><td class="d">' + f[1] + "</td></tr>").join("") +
-    "</tbody></table>";
+    "</tbody></table>" +
+    (SIN ? '<p class="obs extrato"><b>Síntese — extrato do estudo completo.</b> A verificação item a item com os ' +
+      "dispositivos aplicados, a composição dos pavimentos, as vagas de estacionamento, os estudos e licenças " +
+      "incidentes e as premissas de cálculo constam da versão completa, gerada pela mesma ferramenta e a partir " +
+      "dos mesmos dados. A ausência de um item aqui não significa ausência de exigência.</p>" : "");
 
   doc += "<h2>Veredito</h2>" +
     '<div class="ver ' + (selo === "no" ? "no" : selo === "cond" ? "sus" : "ok") + '">' +
@@ -3580,14 +3707,15 @@ function relatorio() {
     "</div>" +
     (R.amarra ? '<p class="obs">A projeção máxima é limitada pela ' + R.amarra + ".</p>" : "");
 
-  doc += "<h2>Composição dos pavimentos</h2>" +
+  const secPav = "<h2>Composição dos pavimentos</h2>" +
     tab("<th>Nível</th><th>Posição</th><th>Ocupação</th><th>Pé-direito</th><th>Área</th><th>Habitado</th><th>Computa no CA</th>",
       R.pav.lista.map((p, i) => "<tr><td>" + niveis()[i] + "</td><td>" + POS[p.pos].n + "</td><td>" + p.O.n +
         '</td><td class="n">' + fmt(p.pd, 2) + ' m</td><td class="n">' + fmt(p.area, 2) + " m²</td><td>" +
         (p.O.hab ? "sim" : "não") + "</td><td>" + (p.computa ? "sim" : "não") + "</td></tr>").join(""));
 
+  let secAdens = "";
   if (P.tiers) {
-    doc += "<h2>Alternativas de adensamento</h2>" +
+    secAdens = "<h2>Alternativas de adensamento</h2>" +
       tab("<th>Alternativa</th><th>CA</th><th>Área computável máxima</th><th>Gabarito</th><th>Outorga onerosa</th>",
         P.tiers.map(t => "<tr><td>" + t.rot + '</td><td class="n">' + fmt(t.ca, 2) + '</td><td class="n">' +
           fmt(t.ca * R.lote.area, 2) + " m²</td><td>" + (t.pav ? t.pav + " pav / " + fmt(t.h, 2) + " m" : "não fixado na lei") +
@@ -3597,22 +3725,37 @@ function relatorio() {
         : (P.outorgaMotivo || "")) + "</p>";
   }
 
-  doc += "<h2>Verificação de conformidade</h2>" +
+  /* No completo, a lista inteira, com dispositivo e exigência. Na
+     síntese, só o que não atende ou traz condicionante: o que está
+     conforme não precisa de linha, e o placar acima já diz quantos são. */
+  const chkLin = (SIN ? R.check.filter(c => c.st === "no" || c.st === "cond") : R.check.slice())
+    .sort((a, b) => ord[a.st] - ord[b.st]);
+  const secVerif = "<h2>" + (SIN ? "Desconformidades e condicionantes" : "Verificação de conformidade") + "</h2>" +
     '<div class="ckres ' + (selo === "no" ? "no" : "ok") + '"><b>' +
     (selo === "no" ? "Reprovado" : selo === "cond" ? "Aprovado com condicionantes" : "Aprovado") + "</b>" +
     "<span>" + nOk + " atende · " + nCond + " com condicionante · " + nNo + " não atende · " + nNa + " não aplicável</span></div>" +
-    tab("<th>Requisito e dispositivo</th><th>Exigido</th><th>Projeto</th><th>Situação</th>",
-      R.check.slice().sort((a, b) => ord[a.st] - ord[b.st]).map(c =>
-        '<tr class="' + (c.st === "no" ? "no" : c.st === "cond" ? "cond" : "") + '"><td>' + c.req +
-        '<span class="disp">' + c.art + "</span></td><td>" + c.exig + "</td><td>" + c.proj +
-        '</td><td class="st st-' + c.st + '">' + rot[c.st] + "</td></tr>").join(""));
+    (chkLin.length
+      ? tab("<th>Requisito e dispositivo</th><th>Exigido</th><th>Projeto</th><th>Situação</th>",
+          chkLin.map(c =>
+            '<tr class="' + (c.st === "no" ? "no" : c.st === "cond" ? "cond" : "") + '"><td>' + c.req +
+            '<span class="disp">' + c.art + "</span></td><td>" + c.exig + "</td><td>" + c.proj +
+            '</td><td class="st st-' + c.st + '">' + rot[c.st] + "</td></tr>").join(""))
+      : '<p class="obs">Nenhum item em desconformidade ou sujeito a condicionante entre os verificados.</p>');
 
-  doc += "<h2>Estudos, licenças e instrumentos</h2>" +
+  const secExig = "<h2>Estudos, licenças e instrumentos</h2>" +
     tab("<th>Item</th><th>Incide</th>",
       R.exig.map(e => "<tr><td><b>" + e.t + '</b><span class="disp">' + e.d + '</span></td><td class="st q-' +
         (e.q === "sim" ? "sim" : "ver") + '">' + (e.q === "sim" ? "sim" : "verificar") + "</td></tr>").join(""));
 
-  doc += "<h2>Vagas de estacionamento</h2>" +
+  /* na síntese o que incide vira uma linha; o que há para verificar
+     fica na versão completa, onde cabe dizer por quê */
+  const exigSim = R.exig.filter(e => e.q === "sim");
+  const secExigLinha = exigSim.length
+    ? '<p class="obs"><b>Estudos e licenças incidentes.</b> ' + exigSim.map(e => e.t).join(" · ") +
+      ". Os itens a verificar e os dispositivos constam da versão completa.</p>"
+    : "";
+
+  const secVagas = "<h2>Vagas de estacionamento</h2>" +
     tab("<th>Situação</th><th>Regra do Anexo III</th>",
       R.vagas.regras.map(r => "<tr><td>" + r.q + "</td><td>" + r.t + "</td></tr>").join("")) +
     '<p class="obs">' + (R.vagas.total !== null
@@ -3681,7 +3824,13 @@ function relatorio() {
       P.gab ? "Anexo II; art. 25, V" : "Anexo II — coluna de gabarito com “-”"]
   ];
 
-  doc += "<h2>Quadro de parâmetros</h2>" +
+  /* a síntese não traz a seção de vagas; o número, que muda o térreo,
+     entra aqui como uma linha */
+  if (SIN) quadro.push(["Vagas de estacionamento",
+    R.vagas.total !== null ? pl(R.vagas.total, "vaga") : "unidades não informadas",
+    "mínimo do Anexo III, todas no interior do lote", "Anexo III; art. 33, § 4º"]);
+
+  const secQuadro = "<h2>Quadro de parâmetros</h2>" +
     tab("<th>Parâmetro</th><th>Estudo</th><th>Estipulado em lei</th><th>Dispositivo</th>",
         quadro.map(x => "<tr><td>" + x[0] + '</td><td class="n pj">' + x[1] +
           '</td><td class="lei">' + x[2] + '</td><td class="disp4">' + x[3] + "</td></tr>").join("")) +
@@ -3700,7 +3849,7 @@ function relatorio() {
     '<div class="fx"><div class="fx-t">' + rot + '</div><div class="fx-a">' + disp + "</div>" +
     '<div class="fx-c">' + frac(num, den) + (fim || "") + ' <span class="fx-i">=</span> <b>' + res + "</b></div></div>";
 
-  doc += "<h2>Como se calcula</h2>" +
+  const secCalc = "<h2>Como se calcula</h2>" +
     '<p class="obs">As três relações da lei, com os números deste estudo.</p>' +
     conta("Taxa de ocupação", "Art. 25, II — projeção da edificação sobre a área total do lote",
       "projeção " + m2(R.proj), "lote " + m2(S), " × 100", fmt(R.toProj, 1) + "%") +
@@ -3715,10 +3864,10 @@ function relatorio() {
      Não mexem no cálculo: informam quem vai projetar sobre o que pode
      descontar e sobre o que pode ocupar dentro do afastamento. */
   const naZDE = /ZDE|SEDISJB|SEPA|AEIP/i.test(P.nome) || est.zona === "ZDE";
-  doc += "<h2>O que não conta nos parâmetros</h2>" +
+  const secNaoConta = "<h2>O que não conta nos parâmetros</h2>" +
     '<p class="obs">As exclusões abaixo são do texto da lei e dependem do projeto — o simulador não as estima. ' +
     "Estão aqui porque decidem quanta área o projeto ainda tem para trabalhar dentro dos mesmos índices.</p>" +
-    NAOCONTA.filter(g => g.escopo !== "zde" || naZDE).map(g =>
+    NAOCONTA.filter(g => (g.escopo !== "zde" || naZDE) && (g.escopo !== "naozde" || !naZDE)).map(g =>
       '<div class="bloco-lei"><div class="bl-t">' + g.p + '</div><div class="bl-a">' + g.art + "</div>" +
       '<ul class="obs">' + g.itens.map(i => "<li>" + i + "</li>").join("") + "</ul>" +
       (g.ressalva ? '<p class="bl-r">' + g.ressalva + "</p>" : "") + "</div>").join("") +
@@ -3726,13 +3875,13 @@ function relatorio() {
       "pertence ao Capítulo XI e vale somente para o SEDISJB, o SEPA e a AEIP. Para esta zona a lei não traz " +
       "relação equivalente: é lacuna, e nada foi presumido por analogia.</p>");
 
-  doc += "<h2>O que cabe no afastamento frontal</h2>" +
+  const secAfast = "<h2>O que cabe no afastamento frontal</h2>" +
     '<div class="bloco-lei"><div class="bl-a">' + AF_FRONTAL.art + "</div>" +
     '<ul class="obs">' + AF_FRONTAL.itens.map(i => "<li>" + i + "</li>").join("") + "</ul>" +
     '<p class="bl-r">' + AF_FRONTAL.nota + "</p></div>";
 
   /* ---------- peças gráficas: folha própria ---------- */
-  doc += '<section class="pg-figs"><h2>Peças gráficas</h2>' +
+  const secFigs = '<section class="pg-figs"><h2>Peças gráficas</h2>' +
     '<div class="figgrid">' +
     '<figure><img src="' + imgs.plan + '" alt="Planta">' +
     "<figcaption><b>Planta de implantação.</b> A linha cheia é a divisa do lote e o traço grosso marca a testada. " +
@@ -3746,25 +3895,37 @@ function relatorio() {
     "</section>";
 
   /* ---------- alertas ---------- */
-  if (R.erros.length || R.avisos.length || R.infos.length) {
-    doc += "<h2>Alertas</h2>" +
+  const secAlertas = (R.erros.length || R.avisos.length || R.infos.length)
+    ? "<h2>Alertas</h2>" +
       R.erros.map(m => '<div class="nota err"><b>Desconformidade.</b> ' + m + "</div>").join("") +
       R.avisos.map(m => '<div class="nota"><b>Atenção.</b> ' + m + "</div>").join("") +
-      R.infos.map(m => '<div class="nota inf">' + m + "</div>").join("");
-  }
+      R.infos.map(m => '<div class="nota inf">' + m + "</div>").join("")
+    : "";
 
-  doc += "<h2>Premissas de cálculo</h2><ul class=\"obs\">" +
-    PREMISSAS.map(p => "<li>" + p + "</li>").join("") + "</ul>" +
-    '<div class="ressalva"><b>Ressalva.</b> Este documento é uma consulta prévia de viabilidade construtiva, ' +
+  /* as premissas só na versão completa; a ressalva nas duas */
+  const secPrem = SIN ? "" : "<h2>Premissas de cálculo</h2><ul class=\"obs\">" +
+    PREMISSAS.map(p => "<li>" + p + "</li>").join("") + "</ul>";
+  const secRess = '<div class="ressalva"><b>Ressalva.</b> Este documento é uma consulta prévia de viabilidade construtiva, ' +
     "produzida por ferramenta de apoio à decisão. Não substitui o projeto arquitetônico, o licenciamento ambiental " +
     "nem a análise do órgão municipal competente, e a decisão sobre qual leitura da lei prevalece é de quem assina o estudo. " +
     "Havendo unidade de conservação no recorte, registre-se que os planos de manejo não foram analisados e que a " +
     "viabilidade sob esse aspecto não pode ser aferida aqui.</div>";
 
+  /* Ordem. Na síntese os números vêm antes do que não atende — quem lê
+     quer primeiro saber o que cabe no lote — e as peças fecham o
+     documento como anexo gráfico, porque elas ocupam folha própria e
+     deixariam meia página vazia se viessem no meio. No completo a
+     verificação abre o corpo, o quadro fecha a parte numérica e as
+     peças antecedem os alertas e as premissas. */
+  doc += SIN
+    ? secQuadro + secVerif + secExigLinha + secAlertas + secRess + secFigs
+    : secPav + secAdens + secVerif + secExig + secVagas + secQuadro + secCalc + secNaoConta + secAfast +
+      secFigs + secAlertas + secPrem + secRess;
+
   /* ---------- montagem final ---------- */
   const cabeca = '<div class="ph"><div class="sp">' +
     '<div class="t1">' + esc(tituloEst) + "</div>" +
-    '<div class="t2">São João da Barra/RJ · ' + esc(P.nome) + "</div></div>" +
+    '<div class="t2">São João da Barra/RJ · ' + esc(P.nome) + (SIN ? " · síntese" : "") + "</div></div>" +
     '<img src="' + (LOGOS.prefPdf || LOGOS.pref || "") + '" alt="Prefeitura de São João da Barra"></div>';
   const rodape = '<div class="pf">' +
     '<img src="' + (LOGOS.neplanPdf || LOGOS.neplan || "") + '" alt="NEPLAN">' +
@@ -3828,6 +3989,14 @@ const CASOS = [
     z: "ZC", f: 12, p: 30, fronts: [0, 1], uso: "eco_local", via: "coletora", unid: 0, esquina: true,
     pav: [["terreo", "comercio", 2.60]],
     e: { gab: 1, alt: 2.60, recF: 3, recL: 1.5, env: 191.25, proj: 191.25, selo: "ok" } },
+  { n: "ZM1 · lote de 300 m² em via coletora — a nota 3 do Anexo IV eleva ao MP-4 e reprova",
+    z: "ZM1", f: 10, p: 30, fronts: [0], uso: "misto_local", via: "coletora", unid: 1,
+    pav: [["terreo", "comercio", 2.60]],
+    e: { gab: 1, alt: 2.60, recF: 5, recL: 1.5, env: 164.50, proj: 164.50, selo: "no" } },
+  { n: "ZDE/SEDISJB · garagem no térreo computa na Área Total Edificável (art. 108, par. único)",
+    z: "ZDE", setor: "SEDISJB", f: 100, p: 100, fronts: [0], uso: "ind_i", via: "logistica", unid: 0,
+    pav: [["subsolo", "garagem", 2.40], ["terreo", "garagem", 2.40], ["pav", "indust", 4.00]],
+    e: { gab: 2, alt: 6.40, recF: 10, recL: 4, env: 7912.00, proj: 7000.00, ca: 1.40, selo: "ok" } },
   { n: "ZC · pé-direito de 2,40 m em compartimento habitável",
     z: "ZC", f: 12, p: 30, fronts: [0], uso: "res_uni", via: "coletora", unid: 1,
     pav: [["terreo", "habitacao", 2.40]],
