@@ -27,12 +27,12 @@ funciona sem rede.
 A caixa que se abre antes de imprimir oferece duas saídas do mesmo estudo,
 com os mesmos dados e a mesma ressalva.
 
-**Completo**, nove páginas: composição dos pavimentos, alternativas de
+**Completo**, dez páginas: composição dos pavimentos, alternativas de
 adensamento, verificação de conformidade item a item com o dispositivo de
 cada exigência, estudos e licenças incidentes, vagas de estacionamento,
 quadro de parâmetros, memória de cálculo das três relações da lei, o que
-não conta nos parâmetros, o que cabe no afastamento frontal, peças gráficas,
-alertas e premissas.
+não conta nos parâmetros, o que cabe no afastamento frontal, a legenda do
+Anexo II com as seis notas transcritas, peças gráficas, alertas e premissas.
 
 **Síntese**, quatro páginas: ficha, veredito, quadro de parâmetros com a
 linha de vagas, apenas os itens que não atendem ou trazem condicionante,
@@ -53,6 +53,68 @@ taxa de ocupação, áreas por pavimento, Coeficiente de Aproveitamento e volume
 saem dela, as três peças gráficas desenham a forma de verdade, e a taxa de
 ocupação e a envoltória voltam a poder reprovar. Apagar o desenho volta ao
 cálculo da envoltória máxima.
+
+## Encostar na divisa
+
+Ao lado do desenho do lote há um check por lado. Cada lado é classificado
+como testada, lateral ou fundos, e o check só fica disponível onde a lei
+dispensa o afastamento: a nota (2) do Anexo II libera qualquer divisa que
+não seja testada para uso não residencial, misto, hotel e similares e para
+o pavimento de uso comum exclusivo em multifamiliar; a nota (3) dispensa
+uma lateral nas tipologias residenciais. Onde o check está travado, o
+motivo aparece escrito nele.
+
+A dispensa alcança o 1º e o 2º pavimentos acima do solo. Marcar um lado
+refaz o modelo inteiro: o embasamento ganha a projeção maior, a torre
+mantém a sua, e as três peças gráficas saem escalonadas. O quadro de
+pavimentos traz a coluna **Projeção** dizendo de qual das duas cada piso
+tira a área.
+
+Quando a taxa de ocupação ou a permeabilidade cortam a envoltória do
+embasamento, a redução **não** é homotética. A testada nunca cede — o
+afastamento frontal é mínimo legal e aumentá-lo só empurra a edificação
+para o fundo do lote. A folga sai, nesta ordem: dos lados que já são
+recuo, depois do fundo — ainda que tenha sido escolhido, porque encurtar
+a edificação e deixar quintal é o que um projeto faz —, depois das
+laterais encostadas. A divisa que deixa de ser alcançada sai do desenho
+e é declarada em alerta.
+
+**A torre se apoia no embasamento.** Onde o embasamento recuou, a torre
+recua junto: nenhum pavimento avança além da base que o sustenta. Isso
+tem consequência de conta — em edificação alta, encostar pode reduzir a
+área total, porque dois pavimentos mais largos não pagam cinco mais
+estreitos. O simulador mantém a escolha marcada e informa quanto ela
+custa, com o número do estudo sem encostar ao lado.
+
+Nas peças gráficas a parede na divisa aparece como massa cheia: faixa
+preenchida na planta, ao longo da extensão real da edificação; massa e
+traço reforçado na face correspondente da volumetria, com o lote
+desenhado como placa cuja borda é a divisa; e faixa junto à linha de eixo
+no corte. A volumetria abre com a câmera na rua, à frente da testada, que
+é de onde se vê ao mesmo tempo a divisa encostada e a frente recuada;
+girar o desenho passa o controle da câmera ao usuário.
+
+## Os dois sentidos do corte
+
+O corte tem dois sentidos, à escolha, e o relatório completo traz os dois.
+
+**Transversal**, plano paralelo à testada: as duas divisas laterais
+aparecem uma em cada extremo. É o sentido em que se veem a parede na
+divisa lateral e o recuo da torre sobre o embasamento.
+
+**Longitudinal**, perpendicular à testada: a via de um lado, a divisa de
+fundos do outro. É o sentido em que se veem o afastamento frontal, a
+profundidade da edificação e o que resta de quintal.
+
+Em qualquer dos dois, a largura de cada pavimento é a extensão real do
+seu contorno medida naquela direção — não é esquema proporcional à área.
+Cada extremo é nomeado pelo que é: testada, divisa lateral ou divisa de
+fundos.
+
+As notas (1), (4), (5) e (6) do Anexo II também entram no cálculo: a
+outorga onerosa eleva o gabarito, o volume técnico e a casa de máquinas
+não contam no número de pavimentos, hotel e similares têm regime próprio
+na ZM1, e o subsolo segue a nota (6).
 
 ## O que a ferramenta verifica
 
