@@ -27,12 +27,13 @@ funciona sem rede.
 A caixa que se abre antes de imprimir oferece duas saídas do mesmo estudo,
 com os mesmos dados e a mesma ressalva.
 
-**Completo**, dez páginas: composição dos pavimentos, alternativas de
+**Completo**, onze páginas: composição dos pavimentos, alternativas de
 adensamento, verificação de conformidade item a item com o dispositivo de
 cada exigência, estudos e licenças incidentes, vagas de estacionamento,
 quadro de parâmetros, memória de cálculo das três relações da lei, o que
 não conta nos parâmetros, o que cabe no afastamento frontal, a legenda do
-Anexo II com as seis notas transcritas, peças gráficas, alertas e premissas.
+Anexo II com as seis notas transcritas, as quatro peças gráficas — planta,
+volumetria e os dois cortes —, alertas e premissas.
 
 **Síntese**, quatro páginas: ficha, veredito, quadro de parâmetros com a
 linha de vagas, apenas os itens que não atendem ou trazem condicionante,
@@ -116,6 +117,37 @@ outorga onerosa eleva o gabarito, o volume técnico e a casa de máquinas
 não contam no número de pavimentos, hotel e similares têm regime próprio
 na ZM1, e o subsolo segue a nota (6).
 
+## Hierarquia viária no mapa
+
+O Anexo III do Plano de Mobilidade entra como camada: arterial primária,
+arterial secundária, coletora, local, logística, aeroporto e via não
+implementada, cada uma com sua linha no seletor de camadas, para ligar e
+desligar separadamente. O zoneamento também é desligável — quem quer
+conferir o traçado das vias não quer a mancha das zonas por cima.
+
+A hierarquia é variável ordinal e está codificada como tal: a espessura
+cresce da local à arterial primária e a cor acompanha numa rampa única.
+Logística, aeroporto e via não implementada saem tracejadas, fora da
+escala, para não se lerem como um degrau da hierarquia.
+
+**Nomes de logradouro** são camada à parte. Aparecem a partir do zoom em
+que caberiam, um por logradouro visível, no maior trecho dele, com
+prioridade pela hierarquia e descarte por colisão — numa tela cheia de
+ruas o nome que orienta é o da arterial, não o do beco.
+
+**A classe da via deixou de ser declarada de cabeça.** Ao clicar no mapa
+ou buscar um endereço, a ferramenta mede a via mais próxima do ponto e
+preenche a classe, dizendo qual logradouro usou e a que distância. Segue
+editável: quem sabe que o acesso é por outra via troca, e aí a leitura
+sai e o relatório para de citar o logradouro. Isso importa porque a
+classe da via governa as vagas de estacionamento do Anexo III e o piso do
+MP-4 da nota 3 do Anexo IV.
+
+Origem do dado: camada `classificacao_vias` do NEPLAN, exportada por
+classe. As polilinhas foram reduzidas com tolerância de 1,3 m e gravadas
+codificadas — em rua desenhada com 2 px isso não se vê, e corta o arquivo
+em dois terços.
+
 ## O que a ferramenta verifica
 
 Coeficiente de Aproveitamento (art. 25, I e art. 26), taxa de ocupação,
@@ -165,6 +197,34 @@ registradas para encaminhamento ao Município.
 
 Origem do dado espacial: Anexo III (zoneamento urbano) — arquivo KMZ fornecido
 pelo Município.
+
+## Celular e desktop no mesmo arquivo
+
+Um HTML só. Acima de 860 px de largura vale o desktop, exatamente como
+era. Abaixo disso a mesma página se reorganiza — nada é removido, o que
+muda é onde as coisas ficam e quanto pesam.
+
+No telefone o mapa deixa de dividir a tela com o painel e vira **aba**:
+em 390 px, meio mapa e meio formulário não serve para nenhum dos dois. A
+legenda abre recolhida, com o título servindo de botão. A verificação de
+conformidade, que tem quatro colunas, **empilha em cartões**, cada um com
+o requisito, o dispositivo, o exigido, o do projeto e o veredito — é a
+tabela inteira, dobrada, sem nada cortado. Campos com 16 px de corpo,
+para o iOS não dar zoom ao focar, e alvos de toque de 44 px.
+
+Três escolhas de desempenho valem só no telefone:
+
+- o mapa desenha em **canvas** em vez de milhares de nós SVG;
+- a **malha local** — 3.143 polilinhas, três quartos do traçado — só se
+  monta quando alguém liga a camada;
+- o corte mostra **um sentido por vez**; o relatório continua levando os
+  dois.
+
+O botão do relatório passa a dizer que gera PDF para compartilhar, e
+explica o passo do sistema: *Salvar como PDF* no Android, o ícone de
+compartilhar na pré-visualização do iPhone. A folha é a mesma A4 do
+computador — quem produz o PDF é o próprio navegador, e não uma
+biblioteca embarcada que repetiria pior o que o sistema já faz.
 
 ## Técnico
 
