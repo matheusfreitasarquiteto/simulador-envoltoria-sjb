@@ -729,6 +729,9 @@ legend{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--t
 label{display:block;font-size:12px;margin:8px 0 3px;color:var(--tx2)}
 input,select{width:100%;background:#0f1218;border:1px solid var(--line);color:var(--tx);border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit}
 input[type=range]{padding:0}
+/* campo que deixou de governar: tachado e apagado, mas legível */
+input.tach{text-decoration:line-through;opacity:.5}
+.row>div.tach>label{text-decoration:line-through;opacity:.6}
 input:focus,select:focus{outline:none;border-color:var(--acc)}
 .row{display:flex;gap:9px}.row>div{flex:1}
 .chk{display:flex;align-items:flex-start;gap:7px;margin:7px 0;font-size:12.5px;color:var(--tx);line-height:1.35}
@@ -1209,6 +1212,7 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
           <div><label>Testada / frente (m)</label><input type="number" id="frente" value="12" min="1" step="0.1"></div>
           <div><label>Profundidade (m)</label><input type="number" id="prof" value="30" min="1" step="0.1"></div>
         </div>
+        <p class="hint" id="dimhint" style="display:none">Testada e profundidade não se aplicam ao polígono desenhado: a forma do lote vem do desenho, e estes campos só descrevem o retângulo. Área e perímetro abaixo seguem valendo, calculados sobre o polígono.</p>
         <div class="row">
           <div><label>Área do lote (m²)</label><input type="number" id="lote" value="360" min="1" step="1"></div>
           <div><label>Perímetro (m)</label><input type="number" id="perim" value="84" readonly></div>
@@ -1896,15 +1900,100 @@ function segCruza(p1, p2, p3, p4) {
 /* polígono A inteiramente contido em B: todo vértice dentro e nenhuma
    aresta cruzando. As duas condições são necessárias — só os vértices
    não bastam num B côncavo. */
-function dentroDe(A, B) {
-  for (const p of A) if (!inside(p, B)) return false;
+function dentroDe(A, B, tol) {
+  /* Tolerância na borda. Sem ela, desenhar exatamente sobre a divisa —
+     que é o que se faz ao usar a dispensa das notas (2) e (3) — cai no
+     teste estrito de ponto interior e reprova por coincidência
+     numérica, não por invasão. 1 cm é menos que a precisão do próprio
+     desenho, que guarda duas casas. */
+  const t = tol === undefined ? 0.01 : tol;
+  const naBorda = p => {
+    for (let j = 0; j < B.length; j++)
+      if (distSeg(p, B[j], B[(j + 1) % B.length]) <= t) return true;
+    return false;
+  };
+  for (const p of A) if (!inside(p, B) && !naBorda(p)) return false;
   for (let i = 0; i < A.length; i++) {
     const a = A[i], b = A[(i + 1) % A.length];
-    for (let j = 0; j < B.length; j++)
-      if (segCruza(a, b, B[j], B[(j + 1) % B.length])) return false;
+    for (let j = 0; j < B.length; j++) {
+      if (!segCruza(a, b, B[j], B[(j + 1) % B.length])) continue;
+      /* cruzamento sobre a própria borda, dentro da tolerância, não é
+         invasão: é a parede assentada na linha */
+      const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      if (distSeg(m, B[j], B[(j + 1) % B.length]) > t) return false;
+    }
   }
   return true;
 }
+/* Polígono convexo? Todos os produtos vetoriais das arestas
+   consecutivas com o mesmo sinal. Serve de guarda para o recorte de
+   Sutherland-Hodgman, que só vale com janela convexa. */
+function convexo(p) {
+  const n = p.length;
+  if (n < 3) return false;
+  let sinal = 0;
+  for (let i = 0; i < n; i++) {
+    const a = p[i], b = p[(i + 1) % n], c = p[(i + 2) % n];
+    const z = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+    if (Math.abs(z) < 1e-12) continue;
+    const s = z > 0 ? 1 : -1;
+    if (!sinal) sinal = s; else if (s !== sinal) return false;
+  }
+  return true;
+}
+
+/* Recorte de Sutherland-Hodgman: devolve a parte de `sub` que cai
+   dentro da janela convexa `jan`. É o que produz a torre quando o
+   usuário desenha o perímetro da edificação: o desenho é o
+   embasamento, e do terceiro pavimento em diante só vale o que estiver
+   dentro da envoltória dos afastamentos. */
+function recorta(sub, jan) {
+  if (!sub || !jan || sub.length < 3 || jan.length < 3) return null;
+  const orient = area(jan) >= 0 ? 1 : -1;
+  let saida = sub.slice();
+  for (let i = 0; i < jan.length && saida.length; i++) {
+    const a = jan[i], b = jan[(i + 1) % jan.length];
+    const dentro = p => orient * ((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x)) >= -1e-9;
+    const corta = (p, q) => {
+      const r1 = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+      const r2 = (b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x);
+      const t = Math.abs(r1 - r2) < 1e-12 ? 0 : r1 / (r1 - r2);
+      return { x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t };
+    };
+    const ent = saida; saida = [];
+    for (let j = 0; j < ent.length; j++) {
+      const p = ent[j], q = ent[(j + 1) % ent.length];
+      const dp = dentro(p), dq = dentro(q);
+      if (dp) saida.push(p);
+      if (dp !== dq) saida.push(corta(p, q));
+    }
+  }
+  return saida.length >= 3 ? saida : null;
+}
+
+/* distância de um ponto ao segmento a-b */
+function distSeg(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+  let t = L2 > 1e-12 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2 : 0;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+/* Lados do lote sobre os quais uma forma desenhada assenta: aqueles em
+   que há trecho da forma encostado na divisa. Um vértice sozinho não
+   basta — parede é segmento, não ponto. */
+function ladosEncostados(forma, lote, tol) {
+  const t = tol === undefined ? 0.05 : tol;
+  const out = [];
+  for (let i = 0; i < lote.length; i++) {
+    const a = lote[i], b = lote[(i + 1) % lote.length];
+    let n = 0;
+    for (let j = 0; j < forma.length; j++) if (distSeg(forma[j], a, b) <= t) n++;
+    if (n >= 2) out.push(i);
+  }
+  return out;
+}
+
 /* redução homotética em torno do centroide, preservando a forma */
 function homotetia(pts, f) {
   const c = centroid(pts);
@@ -2392,8 +2481,28 @@ function motor(est) {
      que se mede se a dispensa acrescentou algo. Medir contra a torre
      seria circular, porque a torre encolhe junto com o embasamento. */
   let projSemEnc = 0;
+  /* Perímetro desenhado: a forma é o EMBASAMENTO, não a edificação
+     inteira.
+
+     Era aqui o erro. O desenho virava a projeção de todos os
+     pavimentos, então bastava encostar o traço na divisa para o prédio
+     inteiro subir colado nela — inclusive o terceiro pavimento em
+     diante, que não tem dispensa nenhuma. Agora o desenho responde
+     pelos dois primeiros pavimentos, e a torre é o que sobra dele
+     depois de recortado pela envoltória dos afastamentos. */
+  let desTorre = null, semRecorte = false;
   if (desOk) {
-    proj = projTorre = areaAbs(des);
+    proj = areaAbs(des);
+    if (envOk && convexo(env)) {
+      desTorre = recorta(des, env);
+      projTorre = desTorre ? areaAbs(desTorre) : 0;
+    } else {
+      /* envoltória reentrante: o recorte de janela convexa não vale, e
+         inventar um resultado seria pior que declarar o limite */
+      semRecorte = true;
+      desTorre = des; projTorre = proj;
+    }
+    projSemEnc = projTorre;
   } else {
     projTorre = projSemEnc = Math.min(toMax, envArea, restPerm);
     proj = R.emb ? Math.min(toMax, embArea, restPerm) : projTorre;
@@ -2467,7 +2576,7 @@ function motor(est) {
         ? homotetia(tEnv, Math.sqrt(Math.min(1, projTorre / Math.max(tArea, 1e-9)))) : tEnv;
     }
   }
-  if (!R.torrePts) R.torrePts = desOk ? des
+  if (!R.torrePts) R.torrePts = desOk ? (desTorre || des)
     : (envOk ? homotetia(env, Math.sqrt(Math.min(1, projTorre / Math.max(envArea, 1e-9)))) : null);
 
   /* Se a taxa de ocupação ou a permeabilidade já cortavam a envoltória
@@ -2475,7 +2584,7 @@ function motor(est) {
      não há dispensa de afastamento em jogo, nem condicionante a
      declarar. Sem isto, quase todo estudo nas quatro zonas sairia
      "com condicionantes" por uma permissão que ninguém usou. */
-  if (R.emb && proj <= projSemEnc + 1e-6) {
+  if (R.emb && !desOk && proj <= projSemEnc + 1e-6) {
     R.emb = null; proj = projTorre = projSemEnc; R.projRec = null; R.torreRec = rec.slice();
     R.torrePts = envOk ? homotetia(env, Math.sqrt(Math.min(1, projTorre / Math.max(envArea, 1e-9)))) : null;
     R.projPts = R.torrePts;
@@ -2487,9 +2596,46 @@ function motor(est) {
      recuo que o cálculo produziu, não da escolha do usuário: o que a
      taxa de ocupação obrigou a recuar não é parede na divisa, e as
      peças gráficas não podem desenhar o que não existe. */
-  R.naDivisa = R.projRec
-    ? R.projRec.map((v, i) => (v <= 1e-6 && fronts.indexOf(i) < 0) ? i : -1).filter(i => i >= 0)
-    : [];
+  /* No desenho, parede na divisa é a que a geometria mostra E a lei
+     admite. Encostar o traço num lado que o usuário não marcou — ou
+     que a nota não libera — é desconformidade, e o estudo reprova por
+     isso; não pode virar parede desenhada como se fosse regular. */
+  R.naDivisa = desOk
+    ? ladosEncostados(des, pts)
+        .filter(i => fronts.indexOf(i) < 0)
+        .filter(i => R.emb && R.emb.lados.indexOf(i) >= 0)
+    : (R.projRec
+        ? R.projRec.map((v, i) => (v <= 1e-6 && fronts.indexOf(i) < 0) ? i : -1).filter(i => i >= 0)
+        : []);
+  /* Os segmentos de parede sobre a divisa, em coordenadas do lote.
+
+     As peças gráficas precisam saber ONDE a parede está, não só em que
+     lado. Na envoltória a aresta da projeção serve, porque o
+     deslocamento paralelo preserva a ordem dos vértices; no perímetro
+     desenhado não serve — o desenho tem vértices próprios, sem relação
+     com os do lote, e indexar por lado daria parede no lugar errado.
+     Daí o motor entregar o segmento pronto. */
+  R.paredes = [];
+  R.naDivisa.forEach(i => {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    if (!desOk && R.projPts && R.projPts.length === pts.length) {
+      R.paredes.push({ i: i, a: R.projPts[i], b: R.projPts[(i + 1) % R.projPts.length] });
+      return;
+    }
+    /* desenhado: a parede é o trecho do lado do lote que o desenho
+       de fato ocupa, e não o lado inteiro */
+    const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1;
+    let t0 = Infinity, t1 = -Infinity;
+    (desOk ? des : []).forEach(q => {
+      if (distSeg(q, a, b) > 0.05) return;
+      const t = ((q.x - a.x) * dx + (q.y - a.y) * dy) / L2;
+      if (t < t0) t0 = t; if (t > t1) t1 = t;
+    });
+    if (t1 - t0 > 1e-6) R.paredes.push({ i: i,
+      a: { x: a.x + dx * t0, y: a.y + dy * t0 },
+      b: { x: a.x + dx * t1, y: a.y + dy * t1 } });
+  });
+
   /* o que a escolha pediu e o cálculo não pôde entregar */
   R.divisaPerdida = R.emb ? R.emb.lados.filter(i => R.naDivisa.indexOf(i) < 0) : [];
   if (R.divisaPerdida.length) {
@@ -2661,17 +2807,46 @@ function motor(est) {
        fmt(permMin, 2) + " m² reservados — área livre do lote: " + fmt(R.livre, 2) +
        " m² (" + fmt(R.livrePct, 1) + "%)", "ok", "Anexo II; art. 25, III e art. 27");
 
+    /* O limite do desenho é a envoltória do EMBASAMENTO — a que já
+       incorpora as divisas escolhidas. Conferir contra a envoltória
+       cheia reprovava todo desenho que usasse a dispensa das notas (2)
+       e (3), que é justamente o que o usuário marcou no check. A
+       envoltória cheia continua valendo, mas para a torre, e ali ela
+       não reprova: recorta. */
+    const envEmb = R.emb ? R.emb.pts : env;
+    const areaEnvEmb = R.emb ? R.emb.area : envArea;
     const noLote = dentroDe(des, pts);
-    const naEnv = envOk && dentroDe(des, env);
+    const naEnv = envOk && dentroDe(des, envEmb);
     ck("Perímetro dentro da envoltória dos afastamentos",
-       "frente " + fmt(af.f, 2) + " m; laterais e fundos " + fmt(af.l, 2) + " m" +
-       (envOk ? "; envoltória de " + fmt(envArea, 2) + " m²" : ""),
+       R.emb ? "1º e 2º pavimentos: " + R.emb.rot + "; envoltória de " + fmt(areaEnvEmb, 2) + " m²"
+             : "frente " + fmt(af.f, 2) + " m; laterais e fundos " + fmt(af.l, 2) + " m" +
+               (envOk ? "; envoltória de " + fmt(envArea, 2) + " m²" : ""),
        !noLote ? "o desenho sai do lote" : (naEnv ? "contido na envoltória" : "invade o afastamento"),
        (noLote && naEnv) ? "ok" : "no", dispAf);
     if (!noLote) R.erros.push("O perímetro desenhado sai dos limites do lote. Refaça o desenho dentro da divisa.");
     else if (!envOk) R.erros.push("Não há envoltória: os afastamentos consomem o lote, e nada pode ser edificado no perímetro desenhado.");
     else if (!naEnv) R.erros.push("O perímetro desenhado invade o afastamento: parte da forma está fora da envoltória de " +
-      fmt(envArea, 2) + " m². Recue o desenho até o limite dos afastamentos.");
+      fmt(areaEnvEmb, 2) + " m²" + (R.emb ? " admitida para os dois primeiros pavimentos" : "") +
+      ". Recue o desenho até o limite dos afastamentos.");
+
+    /* a torre do desenho: o que sobra depois do recorte */
+    if (semRecorte) {
+      R.avisos.push("A envoltória deste lote é reentrante, e o recorte da torre pelo limite dos afastamentos " +
+        "não pôde ser calculado com segurança. Do terceiro pavimento em diante o simulador repetiu a forma " +
+        "desenhada — confira à mão se ela respeita os afastamentos nesses pavimentos.");
+    } else if (R.emb && projTorre < proj - 0.01) {
+      ck("Recorte da torre pelo limite dos afastamentos",
+         "do 3º pavimento em diante valem todos os afastamentos",
+         fmt(proj, 2) + " m² nos dois primeiros; " + fmt(projTorre, 2) + " m² acima deles",
+         "cond", "Anexo II, " + (R.emb.rot.indexOf("(2)") >= 0 ? "nota (2)" : "nota (3)") + "; art. 25, IV");
+      R.infos.push("O perímetro desenhado vale para os dois primeiros pavimentos, que a " +
+        (R.emb.rot.indexOf("(2)") >= 0 ? "nota (2)" : "nota (3)") + " do Anexo II dispensa de afastamento nas divisas " +
+        "escolhidas. Do terceiro em diante a forma foi recortada pela envoltória dos afastamentos: a área por " +
+        "pavimento cai de " + fmt(proj, 2) + " m² para " + fmt(projTorre, 2) + " m².");
+    }
+    if (projTorre <= 0.01 && R.pav && R.pav.lista)
+      R.avisos.push("Depois do recorte pelos afastamentos não sobra área para a torre: a forma desenhada está " +
+        "inteiramente fora da envoltória dos pavimentos acima do segundo.");
 
     if (proj + permMin > S + 1e-6) {
       R.erros.push("O perímetro desenhado (" + fmt(proj, 2) + " m²) somado à área permeável mínima (" +
@@ -3348,6 +3523,16 @@ function desenhaLote() {
       g.fillStyle = i === arrastE ? "#8ff0c4" : "#3ecf8e"; g.fill();
     });
   }
+  /* marca do ímã: onde o próximo clique vai cair. Quadrado no vértice
+     do lote, círculo sobre a divisa — a mesma convenção dos CADs. */
+  if (LOT.modo === "edif" && IMA_ALVO) {
+    const q = T(IMA_ALVO, s);
+    g.strokeStyle = "#f2b544"; g.lineWidth = 1.8;
+    g.beginPath();
+    if (IMA_ALVO.tipo === "vertice") g.rect(q.X - 6, q.Y - 6, 12, 12);
+    else g.arc(q.X, q.Y, 6, 0, 7);
+    g.stroke();
+  }
   /* botão de inserir vértice */
   if (hoverLado >= 0 && LOT.modo === "draw") {
     const m = T(meioLado(LOT.pts, hoverLado), s);
@@ -3360,6 +3545,40 @@ function achaVertice(X, Y, s) {
   for (let i = 0; i < LOT.pts.length; i++) { const q = T(LOT.pts[i], s); if (Math.hypot(q.X - X, q.Y - Y) < 11) return i; }
   return -1;
 }
+/* Ímã do desenho da edificação.
+
+   Sem ele é fácil demais clicar meio metro fora do lote e o estudo
+   reprovar por um erro de mira, não de projeto. O ponto salta para o
+   vértice do lote quando está perto dele, e senão para a linha da
+   divisa — que é exatamente onde se quer clicar quando se vai encostar
+   na divisa. A tolerância é em pixels, não em metros: o que importa é
+   a precisão do dedo e do mouse, que não muda com o zoom.
+
+   Devolve o ponto ajustado e o que prendeu, para o desenho mostrar. */
+const IMA_PX = 13;
+let IMA_ALVO = null;   /* ponto que o ímã vai prender, para o desenho mostrar */
+function imanLote(p, s) {
+  if (!LOT.pts || LOT.pts.length < 2) return { p: p, tipo: null };
+  const tol = IMA_PX / (s.k || 1);          /* pixels convertidos em metros */
+  let melhor = null;
+  LOT.pts.forEach((v, i) => {
+    const d = Math.hypot(p.x - v.x, p.y - v.y);
+    if (d <= tol && (!melhor || d < melhor.d)) melhor = { d: d, p: { x: v.x, y: v.y }, tipo: "vertice", i: i };
+  });
+  if (melhor) return melhor;                 /* vértice tem prioridade sobre lado */
+  for (let i = 0; i < LOT.pts.length; i++) {
+    const a = LOT.pts[i], b = LOT.pts[(i + 1) % LOT.pts.length];
+    const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+    if (L2 < 1e-12) continue;
+    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const q = { x: a.x + t * dx, y: a.y + t * dy };
+    const d = Math.hypot(p.x - q.x, p.y - q.y);
+    if (d <= tol && (!melhor || d < melhor.d)) melhor = { d: d, p: q, tipo: "lado", i: i };
+  }
+  return melhor || { p: p, tipo: null };
+}
+
 function achaVerticeEdif(X, Y, s) {
   for (let i = 0; i < EDIF.pts.length; i++) { const q = T(EDIF.pts[i], s); if (Math.hypot(q.X - X, q.Y - Y) < 11) return i; }
   return -1;
@@ -3389,8 +3608,21 @@ function setModo(m) {
     rect: "Ajuste testada e profundidade nos campos abaixo. O lado inferior é a testada.",
     draw: "Arraste um vértice para movê-lo. Passe o cursor sobre um lado e clique no <b>+</b> para inserir vértice. Duplo clique remove um vértice.",
     front: "Clique sobre um lado para marcá-lo ou desmarcá-lo como testada. Mais de uma testada é permitido — lote de esquina.",
-    edif: "Clique dentro do lote para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. O tracejado mostra até onde os afastamentos deixam construir.",
+      edif: "Clique dentro do lote para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. Perto da divisa o ponto <b>adere</b> à linha ou ao vértice do terreno — o marcador âmbar mostra onde vai cair. O tracejado é o limite dos afastamentos: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
   }[m];
+  /* No polígono desenhado, testada e profundidade deixam de governar o
+     lote — passam a ser leitura do que foi desenhado. Ficam tachados e
+     travados, para ninguém digitar ali esperando que mude alguma
+     coisa. */
+  const livre = m === "rect";
+  ["frente", "prof"].forEach(id => {
+    const el = $(id); if (!el) return;
+    el.disabled = !livre;
+    el.classList.toggle("tach", !livre);
+    if (el.parentNode) el.parentNode.classList.toggle("tach", !livre);
+  });
+  const dcm = $("dimhint");
+  if (dcm) dcm.style.display = livre ? "none" : "";
   atualizaEdif();
   desenhaLote();
 }
@@ -4251,12 +4483,11 @@ function desenhaPlanta(R) {
      aparecer. */
   const NADIV = R.naDivisa || [];
   const cenL = centroid(pts);
-  NADIV.forEach((i, j) => {
-    /* a parede vai de ponta a ponta da aresta da PROJEÇÃO, não do lado
-       do lote: a divisa segue além da edificação, onde o afastamento
-       frontal manda recuar, e ali não há parede nenhuma */
-    const Q = R.projPts;
-    const p = Q[i], q = Q[(i + 1) % Q.length];
+  /* o motor entrega o segmento de parede pronto: a divisa segue além
+     da edificação, onde o afastamento frontal manda recuar, e ali não
+     há parede nenhuma */
+  (R.paredes || []).forEach((W, j) => {
+    const p = W.a, q = W.b;
     const dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy) || 1;
     if (L < 1e-6) return;
     let nx = -dy / L, ny = dx / L;
@@ -4775,10 +5006,9 @@ function desenha3d(R) {
      placa — desenhadas antes do volume, para o volume tapá-las onde
      de fato as cobre */
   const naDiv3 = R.naDivisa || [];
-  naDiv3.forEach((i, j) => {
-    const Q = R.projPts;
-    const a = S3({ x: Q[i].x - cen.x, y: Q[i].y - cen.y }, 0);
-    const b = S3({ x: Q[(i + 1) % Q.length].x - cen.x, y: Q[(i + 1) % Q.length].y - cen.y }, 0);
+  (R.paredes || []).forEach((W, j) => {
+    const a = S3({ x: W.a.x - cen.x, y: W.a.y - cen.y }, 0);
+    const b = S3({ x: W.b.x - cen.x, y: W.b.y - cen.y }, 0);
     g.beginPath(); riscoMao(g, a.X, a.Y, b.X, b.Y, 230 + j, .7, 2.5);
     g.strokeStyle = PAL.rec; g.lineWidth = 3; g.lineCap = "round"; g.stroke();
   });
@@ -4821,10 +5051,14 @@ function desenha3d(R) {
         d: v3.dot(dm, fw), i,
         tom: tomParede(lam),
         ang: (p.O.hab ? -40 : 40),
-        /* o índice do anel corresponde ao do lado do lote: o
-           deslocamento paralelo e a homotetia preservam a ordem dos
-           vértices. Daí saber qual face é parede na divisa. */
-        divisa: !!p.emb && naDiv3.indexOf(i) >= 0,
+        /* face na divisa se os dois cantos dela assentam sobre um dos
+           segmentos de parede. Testar por geometria, e não pelo índice
+           do anel, é o que faz isto valer também no perímetro
+           desenhado, cujos vértices não correspondem aos do lote. */
+        divisa: !!p.emb && (R.paredes || []).some(W => {
+          const wa = { x: W.a.x - cen.x, y: W.a.y - cen.y }, wb = { x: W.b.x - cen.x, y: W.b.y - cen.y };
+          return distSeg(A, wa, wb) <= 0.12 && distSeg(B, wa, wb) <= 0.12;
+        }),
         pts: [S3(A, zi), S3(B, zi), S3(B, zf), S3(A, zf)]
       });
       faces[faces.length - 1].pts.forEach(q => silX.push(q.X));
@@ -5660,7 +5894,7 @@ function montarBaseLegal() {
     if (LOT.modo === "edif") {
       const v = achaVerticeEdif(X, Y, s);
       if (v >= 0) { arrastE = v; drag = true; c.setPointerCapture(ev.pointerId); desenhaLote(); return; }
-      const p = Tinv(X, Y, s);
+      const p = imanLote(Tinv(X, Y, s), s).p;
       EDIF.pts.push({ x: +p.x.toFixed(2), y: +p.y.toFixed(2) });
       atualizaEdif(); desenhaLote(); if (EDIF.pts.length >= 3) calc();
       return;
@@ -5676,16 +5910,29 @@ function montarBaseLegal() {
   c.addEventListener("pointermove", ev => {
     const { X, Y, s } = pos(ev);
     if (drag && arrastE >= 0) {
-      const p = Tinv(X, Y, s);
+      const p = imanLote(Tinv(X, Y, s), s).p;
       EDIF.pts[arrastE] = { x: +p.x.toFixed(2), y: +p.y.toFixed(2) };
       atualizaEdif(); desenhaLote(); if (EDIF.pts.length >= 3) calc();
       return;
     }
     if (drag && arrast >= 0) { const p = Tinv(X, Y, s); LOT.pts[arrast] = { x: +p.x.toFixed(2), y: +p.y.toFixed(2) }; sincroniza(); return; }
     if (LOT.modo === "draw") { const h = achaLado(X, Y, s); if (h !== hoverLado) { hoverLado = h; desenhaLote(); } }
+    if (LOT.modo === "edif") {
+      /* marca onde o clique vai cair: sem essa pista o ímã surpreende */
+      const im = imanLote(Tinv(X, Y, s), s);
+      const novo = im.tipo ? { x: im.p.x, y: im.p.y, tipo: im.tipo } : null;
+      const mudou = (!!novo) !== (!!IMA_ALVO) ||
+        (novo && IMA_ALVO && (novo.x !== IMA_ALVO.x || novo.y !== IMA_ALVO.y));
+      if (mudou) { IMA_ALVO = novo; desenhaLote(); }
+    }
   });
   c.addEventListener("pointerup", () => { drag = false; arrast = -1; arrastE = -1; desenhaLote(); });
-  c.addEventListener("pointerleave", () => { if (hoverLado >= 0) { hoverLado = -1; desenhaLote(); } });
+  c.addEventListener("pointerleave", () => {
+    let m = false;
+    if (hoverLado >= 0) { hoverLado = -1; m = true; }
+    if (IMA_ALVO) { IMA_ALVO = null; m = true; }
+    if (m) desenhaLote();
+  });
   c.addEventListener("dblclick", ev => {
     if (LOT.modo === "edif") {
       const { X, Y, s } = pos(ev);

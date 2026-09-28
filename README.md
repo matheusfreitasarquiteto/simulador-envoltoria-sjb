@@ -13,7 +13,9 @@ serve como base de informações para ele.
 
 1. Clique numa zona do mapa ou escolha na lista da aba **Entrada**.
 2. Informe testada e profundidade, ou desenhe o polígono do lote e marque as
-   testadas.
+   testadas. No polígono desenhado os campos de testada e profundidade ficam
+   tachados e travados: quem manda ali é o desenho, e área e perímetro passam
+   a ser calculados sobre ele.
 3. Monte a pilha de pavimentos de baixo para cima, com posição, ocupação e
    pé-direito.
 4. Leia o veredito e a verificação de conformidade na aba **Resultado**.
@@ -51,9 +53,23 @@ e aí a taxa de ocupação resultante fica abaixo da permitida pela lei.
 edificação dentro do lote, com o limite dos afastamentos visível como guia. A
 partir de três pontos, essa forma passa a ser a projeção do estudo — área,
 taxa de ocupação, áreas por pavimento, Coeficiente de Aproveitamento e volume
-saem dela, as três peças gráficas desenham a forma de verdade, e a taxa de
+saem dela, as peças gráficas desenham a forma de verdade, e a taxa de
 ocupação e a envoltória voltam a poder reprovar. Apagar o desenho volta ao
 cálculo da envoltória máxima.
+
+O desenho responde pelo **1º e 2º pavimentos** — é o embasamento. Do terceiro
+em diante valem todos os afastamentos, e a forma é **recortada** pela
+envoltória: a área por pavimento cai, e o relatório declara de quanto para
+quanto. Sem esse recorte bastava encostar o traço na divisa para o prédio
+inteiro subir colado nela, inclusive os pavimentos que não têm dispensa
+nenhuma. O limite do próprio desenho é a envoltória do embasamento, aquela
+que já incorpora as divisas marcadas — encostar num lado não marcado continua
+reprovando.
+
+Ao desenhar, o ponto **adere** à linha e ao vértice do terreno quando passa
+perto (13 px), com marcador âmbar mostrando onde vai cair: quadrado no
+vértice, círculo sobre a divisa. Sem isso era fácil errar a mira por meio
+metro e o estudo reprovar por pontaria, não por projeto.
 
 ## Encostar na divisa
 
