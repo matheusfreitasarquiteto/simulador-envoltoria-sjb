@@ -1559,7 +1559,7 @@ const POS = {
   subsolo:   { n: "Subsolo", sub: true },
   terreo:    { n: "Térreo" },
   sobreloja: { n: "Sobreloja" },
-  pav:       { n: "Pavimento-tipo" },
+  pav:       { n: "Pavimento" },
   cobertura: { n: "Cobertura" },
   caixa:     { n: "Casa de máquinas / caixa d'água", topo: true }
 };
@@ -1668,6 +1668,9 @@ const VIA_GEO = {
 
 /* Divergências entre o arquivo de zoneamento, a lei e o texto sancionado */
 const DIVERG = [
+  { t: "Alcance da nota (2) do Anexo II — pavimento ou edificação",
+    l: "A nota (2) libera o 1º e o 2º pavimentos \"quando destinados exclusivamente ao uso comum em condomínios residenciais multifamiliares, aos usos não residenciais, e em edificações com uso misto, hotel, apart-hotel e similares\". São três portas e elas não têm o mesmo sujeito: as duas primeiras qualificam o PAVIMENTO pelo que se faz nele; a terceira qualifica a EDIFICAÇÃO. Adotada a leitura literal, o piso é avaliado um a um — num multifamiliar, o térreo de pilotis entra pela nota (2) e o pavimento de habitação acima dele fica com a nota (3), com plantas diferentes. Pela leitura oposta, bastaria um piso de habitação entre os dois primeiros para a edificação inteira perder a nota (2), o que é mais restritivo que o texto. Cabe ao Município esclarecer." },
+
   { f: "Notas (2) e (3) do Anexo II — a taxa de ocupação alcança o embasamento?",
     l: "As duas notas dispensam afastamentos nos dois primeiros pavimentos e mandam observar o afastamento frontal, a taxa de permeabilidade e as normas de iluminação e ventilação. Não citam a taxa de ocupação, que está em coluna própria do mesmo quadro. A redação é a mesma do art. 25, § 3º, que rege o subsolo — e ao subsolo o simulador não aplica a taxa de ocupação.",
     t: "Adotada a leitura conservadora: a taxa de ocupação limita o embasamento, porque o art. 25, II a define como a projeção horizontal da edificação sobre o lote, e o embasamento é projeção horizontal. Na prática é ela que amarra quase sempre — num lote de 360 m² na ZM1, a nota (2) libera 300 m² de envoltória e a taxa de ocupação corta em 216 m². Pela leitura oposta, o embasamento iria a 288 m², limitado só pela permeabilidade. Cabe ao Município esclarecer, e a escolha vale também para o subsolo." },
@@ -2387,10 +2390,53 @@ function motor(est) {
      como fundos a divisa cujo meio está mais longe da testada; as
      demais que não sejam testada são laterais. */
   const emZona = !!P.emb;
-  const soComum = pavs.filter(p => !p.Q.sub && !p.Q.topo).slice(0, 2).every(p => !p.O.hab);
   const U0 = USO_INFO[est.uso];
-  const nota2 = emZona && (!U0.res || (U0.eco && U0.res) || U0.hosp || (U0.multi && soComum));
-  const nota3 = emZona && (habUni || U0.multi);
+
+  /* A permissão é do PAVIMENTO, não da edificação.
+
+     A nota (2) diz "o primeiro e o segundo pavimentos não em subsolo,
+     quando destinados exclusivamente ao uso comum em condomínios
+     residenciais multifamiliares, aos usos não residenciais, e em
+     edificações com uso misto, hotel, apart-hotel e similares". São
+     três portas, e duas delas — uso comum exclusivo e uso não
+     residencial — qualificam o piso pelo que se faz nele, não o
+     prédio. Só a terceira, "em edificações com uso misto, hotel,
+     apart-hotel e similares", é da edificação inteira.
+
+     Disso decorre o caso comum: multifamiliar com térreo de pilotis e
+     primeiro pavimento de habitação. O térreo é uso comum exclusivo e
+     entra na nota (2) — encosta em qualquer divisa que não seja
+     testada. O pavimento acima é habitação, não entra, e fica com a
+     nota (3) — uma lateral só. Dois pavimentos do mesmo prédio, duas
+     envoltórias.
+
+     Antes o simulador exigia que os DOIS primeiros pisos fossem de uso
+     comum para aplicar a nota (2), e rebaixava os dois à nota (3)
+     quando só o térreo era. Era mais restritivo que a lei e não sabia
+     representar o escalonamento que ela admite. */
+  const permNada = { lat: 0, fundos: false, art: null };
+  const permZDE = { lat: 99, fundos: true, art: "art. 113, § 1º — afastamentos dispensados no setor" };
+  const permN2 = { lat: 99, fundos: true, art: "Anexo II, nota (2)" };
+  const permN3uni = { lat: 99, fundos: false, art: "Anexo II, nota (3) — unifamiliar e multifamiliar horizontal" };
+  const permN3ver = { lat: 1, fundos: false, art: "Anexo II, nota (3) — multifamiliar vertical" };
+  /* a edificação inteira entra pela nota (2): misto, hotel e similares,
+     e o não residencial puro, em que todo piso é não residencial */
+  const predioN2 = U0.hosp || (U0.res && U0.eco) || !U0.res;
+
+  function permDoPav(p, iAcima) {
+    if (P.afZero) return permZDE;
+    if (!emZona || iAcima > 2) return permNada;      /* do 3º em diante, afastamento cheio */
+    if (predioN2) return permN2;
+    if (p && p.O.hab && p.ocup !== "habitacao") return permN2;   /* piso não residencial */
+    if (p && !p.O.hab && U0.multi) return permN2;                /* uso comum exclusivo */
+    if (habUni) return permN3uni;
+    if (U0.multi) return permN3ver;
+    return permNada;
+  }
+
+  /* pavimentos acima do solo, na ordem em que sobem */
+  const acima = pavs.filter(p => !p.Q.sub && !p.Q.topo);
+  const permPav = acima.map((p, k) => permDoPav(p, k + 1));
 
   /* classificação das divisas */
   const mFr = fronts.map(i => meioLado(pts, i));
@@ -2401,15 +2447,23 @@ function motor(est) {
   const tipoLado = i => fronts.indexOf(i) >= 0 ? "testada" : (i === iFundo ? "fundos" : "lateral");
   R.lados = pts.map((_, i) => ({ i, tipo: tipoLado(i), len: edgeLen(pts, i) }));
 
-  /* o que a lei permite encostar, e com que fundamento */
-  let permLat = 0, permFundo = false, permArt = null;
-  if (P.afZero) { permLat = 99; permFundo = true; permArt = "art. 113, § 1º — afastamentos dispensados no setor"; }
-  else if (nota2) { permLat = 99; permFundo = true; permArt = "Anexo II, nota (2)"; }
-  else if (nota3 && habUni) { permLat = 99; permFundo = false; permArt = "Anexo II, nota (3) — unifamiliar e multifamiliar horizontal"; }
-  else if (nota3) { permLat = 1; permFundo = false; permArt = "Anexo II, nota (3) — multifamiliar vertical"; }
+  /* O que os checks oferecem é a maior permissão que algum pavimento
+     tem — a escolha é uma só para a edificação, e cada piso usa dela o
+     que lhe couber. Um térreo de pilotis abre a divisa de fundos na
+     lista; o pavimento de habitação acima simplesmente não a usa, e o
+     relatório diz isso. */
+  let melhor = permNada;
+  permPav.forEach(q => {
+    if (!q.art) return;
+    if (!melhor.art || q.lat > melhor.lat || (q.fundos && !melhor.fundos)) melhor = q;
+  });
+  const permLat = melhor.lat, permFundo = melhor.fundos, permArt = melhor.art;
   const nLat = naoFrente.filter(i => i !== iFundo).length;
   R.encostaPerm = { lat: Math.min(permLat, nLat), fundos: permFundo, art: permArt,
                     todas: permLat >= nLat && permFundo };
+  /* a permissão piso a piso, para o relatório mostrar onde a escolha
+     vale e onde não vale */
+  R.permPav = permPav.map((q, k) => ({ nivel: k + 1, lat: Math.min(q.lat, nLat), fundos: q.fundos, art: q.art }));
 
   /* escolha do usuário: nenhuma, o máximo que a lei permite, ou manual */
   const modo = ["nenhuma", "max", "manual"].indexOf(est.encostaModo) >= 0 ? est.encostaModo : "max";
@@ -2452,6 +2506,41 @@ function motor(est) {
   }
   R.emb = embPts ? { pts: embPts, area: embArea, rot: embRot, rec: recEmb, lados: escolhidas.slice() } : null;
   R.encosta = { modo, escolhidas: escolhidas.slice(), recusadas };
+
+  /* Recuo de cada pavimento acima do solo.
+
+     A escolha de divisas é uma só; o que muda é quanto dela cada piso
+     pode usar. O térreo de pilotis usa tudo, o pavimento de habitação
+     acima usa uma lateral, o terceiro não usa nada. E cada piso se
+     apoia no de baixo: o recuo nunca diminui ao subir, porque
+     pavimento nenhum pode avançar além da laje que o sustenta. */
+  const recDoPav = (perm) => pts.map((_, i) => {
+    if (fronts.indexOf(i) >= 0) return af.f;
+    const t = tipoLado(i);
+    if (escolhidas.indexOf(i) < 0) return t === "fundos" ? af.u : af.l;
+    if (!perm.art) return t === "fundos" ? af.u : af.l;
+    if (t === "fundos" && !perm.fundos) return af.u;
+    return 0;
+  });
+  /* as laterais escolhidas, na ordem em que foram aceitas, para o piso
+     que só tem direito a uma saber qual é */
+  const latEscolhidas = escolhidas.filter(i => tipoLado(i) === "lateral");
+  const recComLimite = (perm) => {
+    const r = recDoPav(perm);
+    if (!perm.art) return r;
+    /* o limite de laterais é por pavimento: as excedentes voltam ao
+       afastamento normal neste piso */
+    latEscolhidas.slice(Math.max(0, perm.lat)).forEach(i => { r[i] = af.l; });
+    return r;
+  };
+  R.recPav = [];
+  let recAnterior = null;
+  permPav.forEach((perm, k) => {
+    let r = recComLimite(perm);
+    if (recAnterior) r = r.map((v, i) => Math.max(v, recAnterior[i]));
+    R.recPav.push(r);
+    recAnterior = r;
+  });
   recusadas.forEach(r => R.erros.push("Divisa " + (r.i + 1) + " (" + r.t + "): " + r.m +
     ". O estudo foi calculado sem encostar nessa divisa."));
 
@@ -2534,50 +2623,109 @@ function motor(est) {
 
      O que deixar de ser alcançado sai de R.naDivisa e é declarado. */
   R.projRec = null; R.projPts = null; R.torreRec = rec.slice();
-  if (!desOk && R.emb && proj < embArea - 1e-6) {
-    const naoFrenteIdx = pts.map((_, i) => i).filter(i => fronts.indexOf(i) < 0);
-    /* A folga sai primeiro do fundo — encurtar a edificação e deixar
-       quintal é o que um projeto faz, e é também o que preserva mais
-       torre, porque a torre acompanha o embasamento onde ele recua.
-       Depois as laterais sem parede na divisa, depois as encostadas, e
-       a testada só em último caso. */
+
+  /* Resolve um nível: contenção com o de baixo, envoltória, teto da
+     taxa e — se o teto morder — a redução escalonada. É a mesma rotina
+     que antes servia só ao embasamento, agora aplicada a cada patamar
+     da pilha. */
+  const naoFrenteIdx = pts.map((_, i) => i).filter(i => fronts.indexOf(i) < 0);
+  function resolveNivel(recBase, recAbaixo) {
+    let r = recBase.slice();
+    if (recAbaixo) r = r.map((v, i) => Math.max(v, recAbaixo[i]));
+    const e0 = offsetPoly(pts, r);
+    if (!offsetValido(pts, e0)) return { rec: r, pts: null, area: 0 };
+    const aEnv = areaAbs(e0);
+    const alvo = Math.min(toMax, aEnv, restPerm);
+    if (alvo >= aEnv - 1e-6) return { rec: r, pts: e0, area: aEnv };
+    /* a folga sai primeiro do fundo — encurtar e deixar quintal é o que
+       um projeto faz, e é o que preserva mais área nos pisos de cima,
+       que se apoiam neste. Depois as laterais sem parede na divisa,
+       depois as encostadas, e a testada só em último caso. */
+    const naDiv = r.map((v, i) => v <= 1e-6 && fronts.indexOf(i) < 0);
     const etapas = [
       naoFrenteIdx.filter(i => i === iFundo),
-      naoFrenteIdx.filter(i => i !== iFundo && R.emb.lados.indexOf(i) < 0),
-      naoFrenteIdx.filter(i => i !== iFundo && R.emb.lados.indexOf(i) >= 0),
-      fronts.slice()                                                  /* último recurso */
+      naoFrenteIdx.filter(i => i !== iFundo && !naDiv[i]),
+      naoFrenteIdx.filter(i => i !== iFundo && naDiv[i]),
+      fronts.slice()
     ].filter(g => g.length);
-    let recAtual = R.emb.rec.slice();
-    for (let e = 0; e < etapas.length; e++) {
-      const red = encolhePorRecuo(pts, recAtual, etapas[e], proj);
-      if (red) { R.projPts = red.pts; R.projRec = red.rec; break; }
-      /* a etapa não chega ao alvo sozinha: leva o grupo ao máximo que
-         ainda produz polígono válido e passa para a próxima */
-      const lim = encolheMaximo(pts, recAtual, etapas[e]);
-      if (lim) recAtual = lim; else break;
+    let atual = r;
+    for (let k = 0; k < etapas.length; k++) {
+      const red = encolhePorRecuo(pts, atual, etapas[k], alvo);
+      if (red) return { rec: red.rec, pts: red.pts, area: alvo };
+      const lim = encolheMaximo(pts, atual, etapas[k]);
+      if (lim) atual = lim; else break;
     }
-  } else if (!desOk && R.emb) {
-    const e0 = offsetPoly(pts, R.emb.rec);
-    if (offsetValido(pts, e0)) { R.projPts = e0; R.projRec = R.emb.rec.slice(); }
+    /* nenhuma etapa fechou: homotetia, e o desenho mostra descolado
+       porque o cálculo de fato descolou */
+    return { rec: null, pts: homotetia(e0, Math.sqrt(Math.min(1, alvo / Math.max(aEnv, 1e-9)))), area: alvo };
+  }
+
+  /* A pilha: um patamar por pavimento acima do solo, resolvido de baixo
+     para cima. Pisos com o mesmo recuo compartilham o patamar, então na
+     prática são dois ou três — térreo, primeiro e torre. */
+  R.pisos = [];
+  if (!desOk) {
+    let abaixo = null;
+    (R.recPav.length ? R.recPav : [rec]).forEach((rb, k) => {
+      const anterior = R.pisos.length ? R.pisos[R.pisos.length - 1] : null;
+      /* recuo idêntico ao do piso de baixo: mesmo patamar, sem recalcular */
+      if (anterior && rb.every((v, i) => Math.abs(v - (R.recPav[k - 1] || rb)[i]) < 1e-9)
+          && anterior.rec && anterior.rec.every((v, i) => v >= rb[i] - 1e-9)) {
+        R.pisos.push(anterior); return;
+      }
+      const n = resolveNivel(rb, abaixo);
+      abaixo = n.rec || abaixo;
+      R.pisos.push(n);
+    });
+  }
+
+  /* Contenção conferida no fim, e não só confiada ao recuo.
+
+     Quando um patamar não fecha pelo recuo e cai na homotetia, o
+     vetor de recuos dele é nulo e o patamar de cima deixa de herdar a
+     contenção — sai torre mais larga que a base. Aqui a pilha é
+     percorrida e todo piso que não couber no de baixo vira redução do
+     próprio piso de baixo, com a área que já tinha. */
+  if (!desOk) for (let k = 1; k < R.pisos.length; k++) {
+    const b = R.pisos[k - 1], t = R.pisos[k];
+    if (!b.pts || !t.pts || t === b) continue;
+    if (dentroDe(t.pts, b.pts)) continue;
+    const a = Math.min(t.area, b.area);
+    R.pisos[k] = { rec: null, area: a,
+      pts: homotetia(b.pts, Math.sqrt(Math.min(1, a / Math.max(b.area, 1e-9)))) };
+  }
+
+  if (!desOk && R.pisos.length) {
+    const p0 = R.pisos[0];
+    if (p0.pts) { R.projPts = p0.pts; R.projRec = p0.rec; proj = p0.area; }
+    /* A torre é o patamar do 3º pavimento em diante, e vale calcular
+       mesmo quando o prédio não chega lá: é ela que o quadro mostra
+       como limite de quem subir mais um piso. Resolve-se sobre o
+       último patamar existente, para herdar a contenção. */
+    const base = R.pisos[R.pisos.length - 1];
+    const nT = resolveNivel(rec, base.rec || null);
+    let tPts = nT.pts, tRec = nT.rec, tArea = nT.area;
+    if (!tPts && base.pts) { tPts = base.pts; tRec = base.rec; tArea = base.area; }
+    /* o patamar de baixo pode ter vindo de homotetia, e aí o recuo não
+       carrega a contenção: a torre sai de dentro dele por redução */
+    if (tPts && base.pts && !dentroDe(tPts, base.pts)) {
+      tArea = Math.min(tArea, base.area); tRec = null;
+      tPts = homotetia(base.pts, Math.sqrt(Math.min(1, tArea / Math.max(base.area, 1e-9))));
+    }
+    if (tPts) { R.torrePts = tPts; R.torreRec = tRec || rec.slice(); projTorre = tArea; }
   }
   if (!R.projPts) R.projPts = desOk ? des
     : (R.emb ? homotetia(R.emb.pts, Math.sqrt(Math.min(1, proj / Math.max(embArea, 1e-9))))
              : (envOk ? homotetia(env, Math.sqrt(Math.min(1, proj / Math.max(envArea, 1e-9)))) : null));
-
-  /* a torre se apoia no embasamento: recuo por lado é o maior dos dois */
-  if (!desOk && R.projRec) {
-    const rt = rec.map((v, i) => Math.max(v, R.projRec[i]));
-    const tEnv = offsetPoly(pts, rt);
-    if (offsetValido(pts, tEnv)) {
-      R.torreRec = rt;
-      const tArea = areaAbs(tEnv);
-      projTorre = Math.min(projTorre, tArea);
-      R.torrePts = tArea > projTorre + 1e-6
-        ? homotetia(tEnv, Math.sqrt(Math.min(1, projTorre / Math.max(tArea, 1e-9)))) : tEnv;
-    }
-  }
   if (!R.torrePts) R.torrePts = desOk ? (desTorre || des)
     : (envOk ? homotetia(env, Math.sqrt(Math.min(1, projTorre / Math.max(envArea, 1e-9)))) : null);
+  /* Contenção, em último grau: nenhum recurso de emergência pode
+     devolver torre maior que a base que a sustenta. */
+  if (!desOk && R.projPts && R.torrePts && !dentroDe(R.torrePts, R.projPts)) {
+    projTorre = Math.min(projTorre, proj);
+    R.torrePts = homotetia(R.projPts, Math.sqrt(Math.min(1, projTorre / Math.max(proj, 1e-9))));
+    R.torreRec = null;
+  }
 
   /* Se a taxa de ocupação ou a permeabilidade já cortavam a envoltória
      cheia no mesmo valor, o embasamento não acrescenta nada — e então
@@ -2588,6 +2736,7 @@ function motor(est) {
     R.emb = null; proj = projTorre = projSemEnc; R.projRec = null; R.torreRec = rec.slice();
     R.torrePts = envOk ? homotetia(env, Math.sqrt(Math.min(1, projTorre / Math.max(envArea, 1e-9)))) : null;
     R.projPts = R.torrePts;
+    R.pisos = R.pisos.map(() => ({ rec: rec.slice(), pts: R.torrePts, area: projTorre }));
   }
   R.projTorre = projTorre;
   R.projSemEnc = projSemEnc;
@@ -2672,8 +2821,16 @@ function motor(est) {
     else if (p.Q.topo) a = Math.min(projTorre, 25);       // casa de máquinas / caixa d'água
     else {
       iAcima++;
-      p.emb = iAcima <= 2 && !!R.emb;
-      const base = iAcima <= 2 ? proj : projTorre;
+      /* cada piso tem o seu patamar na pilha: o térreo de pilotis pode
+         estar na divisa e o de habitação acima dele já recuado */
+      const N = (!desOk && R.pisos && R.pisos[iAcima - 1]) ? R.pisos[iAcima - 1] : null;
+      p.nivel = iAcima;
+      p.pts = N ? N.pts : (iAcima <= 2 ? R.projPts : R.torrePts);
+      /* "emb" agora quer dizer: este piso usa alguma dispensa de
+         divisa — e não mais "é um dos dois primeiros" */
+      p.emb = !!(N && N.rec && N.rec.some((v, i) => v <= 1e-6 && fronts.indexOf(i) < 0)) ||
+              !!(desOk && iAcima <= 2 && R.emb);
+      const base = N ? N.area : (iAcima <= 2 ? proj : projTorre);
       a = (p.Q.n === "Cobertura" && !p.O.hab) ? base / 2 : base;
     }
     p.area = a;
@@ -2823,7 +2980,9 @@ function motor(est) {
                (envOk ? "; envoltória de " + fmt(envArea, 2) + " m²" : ""),
        !noLote ? "o desenho sai do lote" : (naEnv ? "contido na envoltória" : "invade o afastamento"),
        (noLote && naEnv) ? "ok" : "no", dispAf);
-    if (!noLote) R.erros.push("O perímetro desenhado sai dos limites do lote. Refaça o desenho dentro da divisa.");
+    if (!noLote) R.erros.push("A forma desenhada sai dos limites do lote. Os cantos ficam presos dentro da divisa, " +
+      "mas num lote reentrante uma aresta entre dois cantos internos ainda pode passar por fora — acrescente um " +
+      "canto no trecho que escapa para acompanhar o contorno do terreno.");
     else if (!envOk) R.erros.push("Não há envoltória: os afastamentos consomem o lote, e nada pode ser edificado no perímetro desenhado.");
     else if (!naEnv) R.erros.push("O perímetro desenhado invade o afastamento: parte da forma está fora da envoltória de " +
       fmt(areaEnvEmb, 2) + " m²" + (R.emb ? " admitida para os dois primeiros pavimentos" : "") +
@@ -2874,16 +3033,45 @@ function motor(est) {
        aqui como encostada — o alerta ao lado já diz que ela caiu */
     const alcancadas = R.naDivisa.length ? R.naDivisa : R.emb.lados;
     const quais = alcancadas.map(i => "divisa " + (i + 1) + " (" + R.lados[i].tipo + ")").join(", ");
+    /* Quando os pisos não têm a mesma permissão, dizer piso a piso:
+       "dois primeiros pavimentos" vira frase falsa num prédio em que
+       só o térreo encosta. */
+    const porPiso = (R.permPav || []).slice(0, 3)
+      .map(q => "nível " + q.nivel + ": " + (q.art
+        ? (q.art.indexOf("(2)") > 0 ? "nota (2), qualquer divisa que não seja testada"
+           : q.art.indexOf("(3)") > 0 ? "nota (3), " + pl(q.lat, "divisa lateral", "divisas laterais")
+           : q.art)
+        : "afastamento cheio"));
+    const variam = (R.permPav || []).length > 1 &&
+      R.permPav.slice(0, 2).some(q => (q.art || "") !== (R.permPav[0].art || ""));
+    if (variam) R.infos.push("A dispensa de afastamento é avaliada pavimento a pavimento, porque a nota (2) " +
+      "qualifica o piso pelo que se faz nele — uso comum exclusivo ou uso não residencial — e não só a " +
+      "edificação. Neste estudo: " + porPiso.join("; ") + ". Por isso os pavimentos têm plantas diferentes.");
     ck("Encostar na divisa — dois primeiros pavimentos acima do solo",
        EP.art + " — " + (EP.lat >= 99 || EP.fundos ? "qualquer divisa que não seja testada"
          : pl(EP.lat, "divisa lateral", "divisas laterais") + ", mantido o afastamento de fundos"),
        quais + " — projeção de " + fmt(proj, 2) + " m² contra " + fmt(projTorre, 2) +
        " m² da torre", "cond",
        EP.art + " — condicionado à taxa de permeabilidade e às normas de iluminação e ventilação dos compartimentos");
-    R.infos.push("Os dois primeiros pavimentos acima do solo encostam em " + quais + " — " + R.emb.rot +
+    R.infos.push((variam ? "O pavimento térreo encosta" : "Os dois primeiros pavimentos acima do solo encostam") +
+      " em " + quais + " — " + R.emb.rot +
       ". A área por pavimento vai de " + fmt(projTorre, 2) + " m² para " + fmt(proj, 2) +
       " m². Do terceiro pavimento em diante valem todos os afastamentos.");
   } else if (EP.art && !desOk) {
+    /* Quando os pisos não têm a mesma permissão, dizer piso a piso:
+       "dois primeiros pavimentos" vira frase falsa num prédio em que
+       só o térreo encosta. */
+    const porPiso = (R.permPav || []).slice(0, 3)
+      .map(q => "nível " + q.nivel + ": " + (q.art
+        ? (q.art.indexOf("(2)") > 0 ? "nota (2), qualquer divisa que não seja testada"
+           : q.art.indexOf("(3)") > 0 ? "nota (3), " + pl(q.lat, "divisa lateral", "divisas laterais")
+           : q.art)
+        : "afastamento cheio"));
+    const variam = (R.permPav || []).length > 1 &&
+      R.permPav.slice(0, 2).some(q => (q.art || "") !== (R.permPav[0].art || ""));
+    if (variam) R.infos.push("A dispensa de afastamento é avaliada pavimento a pavimento, porque a nota (2) " +
+      "qualifica o piso pelo que se faz nele — uso comum exclusivo ou uso não residencial — e não só a " +
+      "edificação. Neste estudo: " + porPiso.join("; ") + ". Por isso os pavimentos têm plantas diferentes.");
     ck("Encostar na divisa — dois primeiros pavimentos acima do solo",
        EP.art + " — " + (EP.lat >= 99 || EP.fundos ? "qualquer divisa que não seja testada"
          : pl(EP.lat, "divisa lateral", "divisas laterais") + ", mantido o afastamento de fundos"),
@@ -3530,7 +3718,10 @@ function desenhaLote() {
     g.strokeStyle = "#f2b544"; g.lineWidth = 1.8;
     g.beginPath();
     if (IMA_ALVO.tipo === "vertice") g.rect(q.X - 6, q.Y - 6, 12, 12);
-    else g.arc(q.X, q.Y, 6, 0, 7);
+    else if (IMA_ALVO.tipo === "cerca") {
+      g.moveTo(q.X, q.Y - 7); g.lineTo(q.X + 7, q.Y);
+      g.lineTo(q.X, q.Y + 7); g.lineTo(q.X - 7, q.Y); g.closePath();
+    } else g.arc(q.X, q.Y, 6, 0, 7);
     g.stroke();
   }
   /* botão de inserir vértice */
@@ -3579,6 +3770,40 @@ function imanLote(p, s) {
   return melhor || { p: p, tipo: null };
 }
 
+/* ponto mais próximo sobre o contorno do lote */
+function bordaMaisPerto(p, poly) {
+  let melhor = null;
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+    let t = L2 > 1e-12 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const q = { x: a.x + t * dx, y: a.y + t * dy };
+    const d = Math.hypot(p.x - q.x, p.y - q.y);
+    if (!melhor || d < melhor.d) melhor = { d: d, p: q };
+  }
+  return melhor ? melhor.p : p;
+}
+
+/* Ponto do desenho da edificação: ímã primeiro, cerca depois.
+
+   A edificação não pode sair do lote, e não faz sentido deixar clicar
+   fora para depois reprovar o estudo por isso. Clique fora cai sobre a
+   divisa mais próxima — que é, afinal, o mais perto que se pode
+   construir naquela direção. Assim a mensagem "o perímetro desenhado
+   sai dos limites do lote" deixa de aparecer por erro de mira.
+
+   Sobra um caso em que ela ainda vale: lote reentrante, em que dois
+   cantos dentro do lote podem ser ligados por uma aresta que passa por
+   fora. Aí não é pontaria, é a forma, e o aviso continua certo. */
+function pontoEdif(p, s) {
+  const im = imanLote(p, s);
+  if (im.tipo) return { p: im.p, tipo: im.tipo };
+  if (LOT.pts.length >= 3 && !inside(p, LOT.pts))
+    return { p: bordaMaisPerto(p, LOT.pts), tipo: "cerca" };
+  return { p: p, tipo: null };
+}
+
 function achaVerticeEdif(X, Y, s) {
   for (let i = 0; i < EDIF.pts.length; i++) { const q = T(EDIF.pts[i], s); if (Math.hypot(q.X - X, q.Y - Y) < 11) return i; }
   return -1;
@@ -3608,7 +3833,7 @@ function setModo(m) {
     rect: "Ajuste testada e profundidade nos campos abaixo. O lado inferior é a testada.",
     draw: "Arraste um vértice para movê-lo. Passe o cursor sobre um lado e clique no <b>+</b> para inserir vértice. Duplo clique remove um vértice.",
     front: "Clique sobre um lado para marcá-lo ou desmarcá-lo como testada. Mais de uma testada é permitido — lote de esquina.",
-      edif: "Clique dentro do lote para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. Perto da divisa o ponto <b>adere</b> à linha ou ao vértice do terreno — o marcador âmbar mostra onde vai cair. O tracejado é o limite dos afastamentos: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
+      edif: "Clique para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. O ponto <b>nunca sai do lote</b>: perto da divisa adere à linha ou ao vértice, e clique fora cai sobre a divisa mais próxima. O marcador âmbar mostra onde vai cair — quadrado no vértice, círculo na divisa, losango quando o ponto foi trazido de fora. O tracejado é o limite dos afastamentos: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
   }[m];
   /* No polígono desenhado, testada e profundidade deixam de governar o
      lote — passam a ser leitura do que foi desenhado. Ficam tachados e
@@ -4650,10 +4875,11 @@ function desenhaLegenda(g, LG) {
 /* contorno de cada pavimento, o mesmo que a volumetria usa */
 function anelPavimento(R, p) {
   if (POS[p.pos].sub) return anelSubsolo(R);
-  const emb = !!(R.emb && p.emb);
-  const Q = emb ? R.projPts : (R.emb && R.torrePts ? R.torrePts : R.projPts);
+  /* o contorno é o do próprio pavimento: com a permissão avaliada piso
+     a piso, térreo, primeiro e torre podem ter três plantas distintas */
+  const Q = p.pts || (p.emb ? R.projPts : (R.torrePts || R.projPts));
   if (!Q) return null;
-  const ref = emb ? R.proj : (R.emb ? R.projTorre : R.proj);
+  const ref = areaAbs(Q);
   const kk = Math.sqrt(Math.max(0, Math.min(1, p.area / Math.max(ref, 1e-9))));
   return kk > 0.9999 ? Q : homotetia(Q, kk);
 }
@@ -4904,14 +5130,15 @@ function desenha3d(R) {
      diferentes — não é a mesma planta reduzida. Cada pavimento usa o
      seu próprio contorno, e só o que varia dentro de um mesmo contorno
      (cobertura a meia área, volume técnico) é que entra por redução. */
-  const baseTorre = R.emb && R.torrePts ? desl(R.torrePts) : base;
-  const anelPor = (Q, a, ref) => {
+  /* cada pavimento traz o seu contorno; o que varia dentro de um mesmo
+     contorno — cobertura a meia área, volume técnico — entra por
+     redução em torno do centro */
+  const anelDe = (a, p) => {
+    const Q = (p && p.pts) ? desl(p.pts) : base;
+    const ref = areaAbs(Q);
     const kk = Math.sqrt(Math.max(0, Math.min(1, a / Math.max(ref, 1e-9))));
-    return Q.map(p => ({ x: p.x * kk, y: p.y * kk }));
+    return kk > 0.9999 ? Q : Q.map(q => ({ x: q.x * kk, y: q.y * kk }));
   };
-  const anelDe = (a, p) => (p && !p.emb && R.emb)
-    ? anelPor(baseTorre, a, R.projTorre)
-    : anelPor(base, a, R.proj);
   const lote = R.lote.pts.map(p => ({ x: p.x - cen.x, y: p.y - cen.y }));
   const subP = anelSubsolo(R);
   const anelSub = subP ? subP.map(p => ({ x: p.x - cen.x, y: p.y - cen.y })) : null;
@@ -5247,12 +5474,32 @@ function relatorio(escopo) {
     "</div>" +
     (R.amarra ? '<p class="obs">A projeção máxima é limitada pela ' + R.amarra + ".</p>" : "");
 
+  /* "tipo" é adjetivo de planta repetida, não posição na pilha: só se
+     escreve onde a laje de fato se repete — mesma posição, ocupação,
+     pé-direito e projeção de um vizinho imediato. O 2º pavimento do
+     embasamento tem a ocupação dos de cima com projeção maior; chamá-lo
+     de tipo contradiria a coluna de projeção ao lado */
+  const LST = R.pav.lista;
+  const mesmaLaje = (a, b) => !!a && !!b && a.pos === b.pos && a.ocup === b.ocup &&
+    Math.abs(num(a.pd) - num(b.pd)) < 5e-3 && Math.abs(a.area - b.area) < 5e-3;
+  const rotPos = i => POS[LST[i].pos].n + (LST[i].pos === "pav" &&
+    (mesmaLaje(LST[i], LST[i - 1]) || mesmaLaje(LST[i], LST[i + 1])) ? "-tipo" : "");
+
+  /* onde um pavimento de embasamento repete a ocupação da torre com
+     projeção maior, nivelar a planta é decisão de projeto — e tem preço */
+  const desnivel = [];
+  LST.forEach((p, i) => {
+    if (p.Q.sub || p.Q.topo || !p.emb) return;
+    const t = LST.find(q => !q.Q.sub && !q.Q.topo && !q.emb && q.ocup === p.ocup);
+    if (t && p.area - t.area > 5e-3) desnivel.push({ n: niveis()[i], d: p.area - t.area });
+  });
+
   /* a área por pavimento é a memória de cálculo do Coeficiente: o total
      computável aparece ao pé da tabela, e a coluna diz de onde vem cada
      laje — embasamento, torre ou subsolo */
   const secPav = "<h2>Composição dos pavimentos</h2>" +
     tab("<th>Nível</th><th>Posição</th><th>Ocupação</th><th>Pé-direito</th><th>Área</th><th>Projeção</th><th>Habitado</th><th>Computa no CA</th>",
-      R.pav.lista.map((p, i) => "<tr><td>" + niveis()[i] + "</td><td>" + POS[p.pos].n + "</td><td>" + p.O.n +
+      R.pav.lista.map((p, i) => "<tr><td>" + niveis()[i] + "</td><td>" + rotPos(i) + "</td><td>" + p.O.n +
         '</td><td class="n">' + fmt(p.pd, 2) + ' m</td><td class="n">' + fmt(p.area, 2) + " m²</td><td>" +
         (p.Q.sub ? "subsolo" : p.Q.topo ? "volume técnico" : p.emb ? "embasamento" : R.emb ? "torre" : "envoltória") +
         "</td><td>" + (p.O.hab ? "sim" : "não") + "</td><td>" + (p.computa ? "sim" : "não") + "</td></tr>").join("") +
@@ -5260,7 +5507,13 @@ function relatorio(escopo) {
       ' m²</b></td><td colspan="2">computável <b>' + fmt(R.areas.comp, 2) + " m²</b></td><td><b>CA " +
       fmt(R.ca.proj, 2) + "</b></td></tr>") +
     (R.emb ? '<p class="obs">Os dois primeiros pavimentos acima do solo formam o embasamento — ' + R.emb.rot +
-      ". A dispensa vale para eles e não alcança a torre, do terceiro pavimento em diante.</p>" : "");
+      ". A dispensa vale para eles e não alcança a torre, do terceiro pavimento em diante.</p>" : "") +
+    (desnivel.length ? '<p class="obs">O ' + desnivel.map(x => x.n + "º").join(" e o ") +
+      " pavimento" + (desnivel.length > 1 ? "s repetem" : " repete") + " a ocupação da torre com projeção maior: " +
+      (desnivel.length > 1 ? "são pavimentos de embasamento" : "é pavimento de embasamento") +
+      ", não pavimento-tipo. A lei conta pavimento, não planta — a dispensa da nota é dos dois primeiros, qualquer que seja o uso deles. " +
+      "Adotar uma planta única repetida do embasamento à cobertura é decisão de projeto e abre mão de " +
+      fmt(desnivel.reduce((a, x) => a + x.d, 0), 2) + " m² de área computável.</p>" : "");
 
   let secAdens = "";
   if (P.tiers) {
@@ -5894,7 +6147,7 @@ function montarBaseLegal() {
     if (LOT.modo === "edif") {
       const v = achaVerticeEdif(X, Y, s);
       if (v >= 0) { arrastE = v; drag = true; c.setPointerCapture(ev.pointerId); desenhaLote(); return; }
-      const p = imanLote(Tinv(X, Y, s), s).p;
+      const p = pontoEdif(Tinv(X, Y, s), s).p;
       EDIF.pts.push({ x: +p.x.toFixed(2), y: +p.y.toFixed(2) });
       atualizaEdif(); desenhaLote(); if (EDIF.pts.length >= 3) calc();
       return;
@@ -5910,7 +6163,7 @@ function montarBaseLegal() {
   c.addEventListener("pointermove", ev => {
     const { X, Y, s } = pos(ev);
     if (drag && arrastE >= 0) {
-      const p = imanLote(Tinv(X, Y, s), s).p;
+      const p = pontoEdif(Tinv(X, Y, s), s).p;
       EDIF.pts[arrastE] = { x: +p.x.toFixed(2), y: +p.y.toFixed(2) };
       atualizaEdif(); desenhaLote(); if (EDIF.pts.length >= 3) calc();
       return;
@@ -5919,7 +6172,7 @@ function montarBaseLegal() {
     if (LOT.modo === "draw") { const h = achaLado(X, Y, s); if (h !== hoverLado) { hoverLado = h; desenhaLote(); } }
     if (LOT.modo === "edif") {
       /* marca onde o clique vai cair: sem essa pista o ímã surpreende */
-      const im = imanLote(Tinv(X, Y, s), s);
+      const im = pontoEdif(Tinv(X, Y, s), s);
       const novo = im.tipo ? { x: im.p.x, y: im.p.y, tipo: im.tipo } : null;
       const mudou = (!!novo) !== (!!IMA_ALVO) ||
         (novo && IMA_ALVO && (novo.x !== IMA_ALVO.x || novo.y !== IMA_ALVO.y));

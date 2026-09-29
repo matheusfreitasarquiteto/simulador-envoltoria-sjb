@@ -66,10 +66,14 @@ nenhuma. O limite do próprio desenho é a envoltória do embasamento, aquela
 que já incorpora as divisas marcadas — encostar num lado não marcado continua
 reprovando.
 
-Ao desenhar, o ponto **adere** à linha e ao vértice do terreno quando passa
-perto (13 px), com marcador âmbar mostrando onde vai cair: quadrado no
-vértice, círculo sobre a divisa. Sem isso era fácil errar a mira por meio
-metro e o estudo reprovar por pontaria, não por projeto.
+Ao desenhar, **o ponto nunca sai do lote**. Perto da divisa ele adere à linha
+ou ao vértice do terreno (13 px); clique fora cai sobre a divisa mais
+próxima, que é o mais perto que se pode construir naquela direção. O
+marcador âmbar mostra onde vai cair: quadrado no vértice, círculo na divisa,
+losango quando o ponto foi trazido de fora. Com isso a mensagem de perímetro
+fora do lote deixa de aparecer por erro de mira — ela sobra apenas para lote
+reentrante, em que uma aresta entre dois cantos internos ainda pode passar
+por fora, e aí o aviso pede um canto a mais no trecho que escapa.
 
 ## Encostar na divisa
 
@@ -81,8 +85,24 @@ o pavimento de uso comum exclusivo em multifamiliar; a nota (3) dispensa
 uma lateral nas tipologias residenciais. Onde o check está travado, o
 motivo aparece escrito nele.
 
-A dispensa alcança o 1º e o 2º pavimentos acima do solo. Marcar um lado
-refaz o modelo inteiro: o embasamento ganha a projeção maior, a torre
+**A permissão é do pavimento, não da edificação.** A nota (2) libera o 1º e
+o 2º pavimentos "quando destinados exclusivamente ao uso comum em condomínios
+residenciais multifamiliares, aos usos não residenciais, e em edificações com
+uso misto, hotel, apart-hotel e similares". As duas primeiras portas
+qualificam o piso pelo que se faz nele; só a terceira qualifica o prédio. Daí
+o caso comum: multifamiliar com térreo de pilotis e habitação acima — o
+térreo entra pela nota (2) e encosta em qualquer divisa que não seja testada,
+o pavimento acima fica com a nota (3) e encosta em uma lateral só, e do
+terceiro em diante vale o afastamento cheio. **Três pavimentos, três
+plantas.** Cada piso se apoia no de baixo: o recuo nunca diminui ao subir.
+
+Num lote 12 × 30 em ZM1 isso dá 216 m² no térreo, 189 m² no pavimento acima e
+162 m² do terceiro em diante — e o relatório lista a permissão nível por
+nível. A escolha de divisas nos checks é uma só; cada piso usa dela o que lhe
+couber, e o alerta diz onde não couber. A leitura adotada está declarada nas
+divergências, porque o texto admite a oposta.
+
+Marcar um lado refaz o modelo inteiro: o embasamento ganha a projeção maior, a torre
 mantém a sua, e as três peças gráficas saem escalonadas. O quadro de
 pavimentos traz a coluna **Projeção** dizendo de qual das duas cada piso
 tira a área.
