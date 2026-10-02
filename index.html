@@ -716,7 +716,7 @@ header p{margin:3px 0 0;font-size:11px;color:var(--tx2);line-height:1.4}
 #zidx .u.ac{background:rgba(242,181,68,.14);color:var(--warn);border-color:rgba(242,181,68,.3)}
 #zidx .u.na{background:rgba(239,95,95,.10);color:#c4787c;border-color:rgba(239,95,95,.22)}
 #tabs{display:flex;border-bottom:1px solid var(--line)}
-#tabs button{flex:1;background:none;border:0;color:var(--tx2);padding:9px 4px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent}
+#tabs button{flex:1;min-width:0;background:none;border:0;color:var(--tx2);padding:9px 3px;font-size:11.5px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tabs button.on{color:var(--tx);border-bottom-color:var(--acc)}
 #tabMapa{display:none}
 .pane{display:none;overflow-y:auto;padding:14px 16px 40px;flex:1}
@@ -862,6 +862,51 @@ table.ex tr.sim td{background:rgba(242,181,68,.07)}
 h3{font-size:12.5px;margin:16px 0 7px;letter-spacing:.3px}
 h3:first-child{margin-top:0}
 .hint{font-size:11px;color:var(--tx2);line-height:1.5;margin:6px 0 0}
+/* ---- medida dos lados do lote ---- */
+#ladosBox{margin-top:12px}
+#lados{display:grid;grid-template-columns:1fr 1fr;gap:6px 9px;margin:6px 0 2px}
+.ld{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:6px;padding:4px 7px}
+.ld.te{border-color:rgba(242,181,68,.55)}
+.ld .n{flex:none;width:17px;height:17px;border-radius:4px;background:var(--line);color:var(--tx);
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ld.te .n{background:var(--warn);color:#241a04}
+.ld .t{flex:1;min-width:0;font-size:10px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ld input{width:66px;flex:none;background:var(--panel);color:var(--tx);border:1px solid var(--line);
+  border-radius:5px;padding:3px 5px;font:inherit;font-size:11.5px;text-align:right}
+.ld input:focus{outline:0;border-color:var(--acc)}
+.ld .u{flex:none;font-size:10px;color:var(--tx2)}
+#ladoshint.err{color:var(--err)}
+/* ---- aba Certidão ---- */
+.tarja{display:inline-block;border:1px solid var(--warn);color:var(--warn);border-radius:4px;
+  font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;padding:4px 10px}
+#p-cert h2{font-size:12.5px;margin:20px 0 7px;letter-spacing:.3px;color:var(--acc);
+  border-bottom:1px solid var(--line);padding-bottom:5px;counter-increment:csec}
+#p-cert h2::before{content:counter(csec) ".\00a0\00a0"}
+#p-cert h3{font-size:11.5px;color:var(--tx2);margin:14px 0 5px}
+#p-cert .certdoc{counter-reset:csec}
+#p-cert .obs{font-size:11px;color:var(--tx2);line-height:1.5;margin:6px 0 12px}
+#p-cert table.ficha{width:100%;border-collapse:collapse;margin:10px 0 4px}
+#p-cert table.ficha td{border:0;border-bottom:1px solid var(--line);padding:5px 0;font-size:11.5px;vertical-align:top}
+#p-cert table.ficha td.r{color:var(--tx2);width:38%;padding-right:10px}
+#p-cert .disp{display:block;font-size:10px;color:var(--tx2);margin-top:2px;line-height:1.35}
+#p-cert tr.no td{background:rgba(239,95,95,.07)}
+#p-cert tr.cond td{background:rgba(242,181,68,.07)}
+#p-cert td.st{text-align:center;white-space:nowrap;font-weight:700}
+#p-cert .sit-a{color:var(--ok)}#p-cert .sit-ac{color:var(--warn)}#p-cert .sit-na{color:var(--err)}
+/* formulário dos dados da emissão */
+#p-cert .emisbox{border:1px solid var(--line);border-radius:8px;padding:11px 12px 13px;margin:14px 0 4px;
+  background:var(--panel2)}
+#p-cert .emisbox h3{margin:0 0 4px;color:var(--tx)}
+#p-cert .emisg{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:10px}
+#p-cert .emisf{display:flex;flex-direction:column;gap:3px;margin:0}
+#p-cert .emisf>span{font-size:10.5px;color:var(--tx2);letter-spacing:.2px}
+#p-cert .emisf input{width:100%;box-sizing:border-box;background:var(--panel);color:var(--tx);
+  border:1px solid var(--line);border-radius:5px;padding:5px 7px;font:inherit;font-size:12px}
+#p-cert .emisf input:focus{outline:0;border-color:var(--acc)}
+#p-cert .emisf.fx>span::after{content:" · lembrado";color:var(--acc);opacity:.75;font-size:9.5px}
+#p-cert canvas#croqui{width:100%;display:block;border:1px solid var(--line);border-radius:8px;
+  background:#0b0d11;margin:6px 0 4px}
 table.doc{width:100%;border-collapse:collapse;font-size:11.5px;margin:6px 0 14px}
 table.doc th,table.doc td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
 table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
@@ -1021,6 +1066,27 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
 #print .nota.inf b{color:#1b3a6b}
 #print .ressalva{border:.8pt solid #ccd4e0;background:#fafbfd;border-radius:1.5mm;padding:3mm 4mm;
   margin-top:5mm;font-size:8pt;line-height:1.5;color:#374151;break-inside:avoid}
+/* ---- minuta de certidão ----
+   A tarja não é enfeite: ela é o que impede a folha de circular como
+   ato da Administração. Some do topo, some a razão de a peça poder
+   ser impressa antes de assinada. */
+#print .tarja-pdf{display:inline-block;border:1.2pt solid #a16207;background:#fdf9ef;color:#7a4d06;
+  border-radius:1.2mm;padding:1.4mm 3.5mm;margin-bottom:3.5mm;
+  font-size:8pt;font-weight:700;letter-spacing:1.2pt;text-transform:uppercase}
+#print .assina td.bl{border-bottom:.6pt solid #9aa3b2;height:6mm}
+#print .sit-a{color:#136b43}#print .sit-ac{color:#8a6100}#print .sit-na{color:#9b2c2a}
+/* a folha não é telefone: a regra de rolagem horizontal das tabelas
+   estreitas é de tela, e o papel A4 mede menos que o ponto de corte */
+#print table.doc{display:table;white-space:normal;overflow:visible}
+#print .firma{display:grid;grid-template-columns:1fr 1fr;gap:12mm;margin:12mm 0 0;break-inside:avoid}
+#print .firma .ln{border-top:.6pt solid #4b5563;margin-bottom:1.4mm}
+#print .firma .fn{font-size:8.4pt;font-weight:600;color:#374151}
+#print .firma .fc{font-size:7.4pt;color:#6b7280;margin-top:.4mm}
+#print .pg-emis{break-inside:avoid;page-break-inside:avoid;display:block}
+#print .fig-croq{margin:0 0 3mm;break-inside:avoid;page-break-inside:avoid}
+#print .fig-croq img{width:100%;height:88mm;object-fit:contain;background:#fff;
+  border:.5pt solid #ccd4e0;border-radius:1.2mm}
+#print .fig-croq figcaption{font-size:7.8pt;line-height:1.45;color:#4b5563;margin-top:1.6mm}
 /* como se calcula: fórmula com os números do estudo */
 #print .fx{border:.5pt solid #ccd4e0;border-radius:1.2mm;padding:2.2mm 3.5mm 2.8mm;margin:0 0 2.5mm;
   background:#fafbfd;break-inside:avoid;page-break-inside:avoid}
@@ -1055,7 +1121,7 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
 
 /* tablet: a divisão em duas faixas ainda serve. Abaixo de 860 px vale o
    bloco de celular mais adiante, que troca o mapa por uma aba. */
-@media(min-width:861px) and (max-width:900px){#app{flex-direction:column}#side{width:100%;height:62%}#map{height:38%}}
+@media screen and (min-width:861px) and (max-width:900px){#app{flex-direction:column}#side{width:100%;height:62%}#map{height:38%}}
 
 /* ---------- celular ----------
 
@@ -1066,7 +1132,7 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
    No telefone o mapa deixa de dividir a tela com o painel e vira aba:
    em 390 px de largura, meio mapa e meio formulário não serve para
    nenhum dos dois. */
-@media (max-width: 860px) {
+@media screen and (max-width: 860px) {
   #app { flex-direction: column; }
   #side { order: 0; width: 100%; height: auto; flex: 1; min-height: 0;
           border-left: 0; border-bottom: 1px solid var(--line); }
@@ -1085,7 +1151,9 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
 
   /* alvo de toque: 44 px é o mínimo confortável, e 16 px de corpo no
      campo impede o iOS de dar zoom sozinho ao focar */
-  #tabs button { padding: 12px 4px; font-size: 13px }
+  #tabs button { padding: 12px 3px; font-size: 12px }
+  #p-cert .emisg { grid-template-columns: 1fr }
+  #lados { grid-template-columns: 1fr }
   input, select { font-size: 16px; padding: 10px 10px }
   button.b { padding: 10px 13px; font-size: 12.5px }
   button.pr { padding: 13px 16px; font-size: 14px }
@@ -1140,7 +1208,7 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
   #foot img { height: 34px }
   #avisoCx { width: calc(100% - 28px); padding: 16px }
 }
-@media (max-width: 420px) {
+@media screen and (max-width: 420px) {
   .row { flex-direction: column; gap: 4px }
   .lg { max-width: 74vw }
 }
@@ -1170,6 +1238,7 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
       <button id="tabMapa" data-p="mapa">Mapa</button>
       <button class="on" data-p="sim">Entrada</button>
       <button data-p="res">Resultado</button>
+      <button data-p="cert">Certidão</button>
       <button data-p="lei">Base legal</button>
     </div>
 
@@ -1204,6 +1273,13 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
         </div>
         <canvas id="lotc"></canvas>
         <p class="hint" id="lothint"></p>
+        <div id="ladosBox" style="display:none">
+          <label>Medida dos lados <span class="cite">— digite para fixar a medida exata</span></label>
+          <div id="lados"></div>
+          <p class="hint" id="ladoshint">O lado assume a medida digitada mantendo a direção: o primeiro vértice fica
+          parado e o segundo desliza sobre a própria linha. Quem absorve a diferença é o lado seguinte — ajuste-o em
+          seguida, se precisar. Medida que colapse um lado ou cruze o polígono é recusada, e o campo volta ao valor anterior.</p>
+        </div>
         <p class="hint" id="edifinfo" style="display:none"></p>
         <label>Encostar na divisa — 1º e 2º pavimentos acima do solo</label>
         <div id="encostas"></div>
@@ -1286,6 +1362,9 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
       <div id="out" style="margin-top:14px"></div>
       <button class="b pr" id="btnPrint" style="margin-top:16px">Gerar relatório para impressão / PDF</button>
     </div>
+    <div class="pane" id="p-cert">
+      <div id="certCorpo"></div>
+    </div>
     <div class="pane" id="p-lei">
       <div id="autoteste"></div>
       <div id="leg"></div>
@@ -1327,7 +1406,7 @@ const VIAS_GEO={"n":["Avenida Rotary","Rodovia Alberto Duaire","Rua Joaquim De B
    1. Base legal
    ============================================================ */
 const VERSAO = {
-  app: "1.0",
+  app: "1.2",
   data: "setembro de 2026",
   leis: "Plano Diretor de Desenvolvimento Sustentável; Lei de Uso, Ocupação e Parcelamento do Solo; " +
         "Código de Obras e Edificações; Código de Posturas; Plano de Mobilidade Urbana — São João da Barra/RJ",
@@ -1668,40 +1747,41 @@ const VIA_GEO = {
 
 /* Divergências entre o arquivo de zoneamento, a lei e o texto sancionado */
 const DIVERG = [
-  { t: "Alcance da nota (2) do Anexo II — pavimento ou edificação",
-    l: "A nota (2) libera o 1º e o 2º pavimentos \"quando destinados exclusivamente ao uso comum em condomínios residenciais multifamiliares, aos usos não residenciais, e em edificações com uso misto, hotel, apart-hotel e similares\". São três portas e elas não têm o mesmo sujeito: as duas primeiras qualificam o PAVIMENTO pelo que se faz nele; a terceira qualifica a EDIFICAÇÃO. Adotada a leitura literal, o piso é avaliado um a um — num multifamiliar, o térreo de pilotis entra pela nota (2) e o pavimento de habitação acima dele fica com a nota (3), com plantas diferentes. Pela leitura oposta, bastaria um piso de habitação entre os dois primeiros para a edificação inteira perder a nota (2), o que é mais restritivo que o texto. Cabe ao Município esclarecer." },
+  { z: ["ZC","ZM1","ZM2","ZEU","ZIE"], f: "Alcance da nota (2) do Anexo II — pavimento ou edificação",
+    l: "A nota (2) libera o 1º e o 2º pavimentos \"quando destinados exclusivamente ao uso comum em condomínios residenciais multifamiliares, aos usos não residenciais, e em edificações com uso misto, hotel, apart-hotel e similares\". São três portas e elas não têm o mesmo sujeito: as duas primeiras qualificam o PAVIMENTO pelo que se faz nele; a terceira qualifica a EDIFICAÇÃO.",
+    t: "Adotada a leitura literal: o piso é avaliado um a um. Num multifamiliar, o térreo de pilotis entra pela nota (2) e o pavimento de habitação acima dele fica com a nota (3), com plantas diferentes. Pela leitura oposta, bastaria um piso de habitação entre os dois primeiros para a edificação inteira perder a nota (2), o que é mais restritivo que o texto. Cabe ao Município esclarecer." },
 
-  { f: "Notas (2) e (3) do Anexo II — a taxa de ocupação alcança o embasamento?",
+  { z: ["ZC","ZM1","ZM2","ZEU","ZIE"], f: "Notas (2) e (3) do Anexo II — a taxa de ocupação alcança o embasamento?",
     l: "As duas notas dispensam afastamentos nos dois primeiros pavimentos e mandam observar o afastamento frontal, a taxa de permeabilidade e as normas de iluminação e ventilação. Não citam a taxa de ocupação, que está em coluna própria do mesmo quadro. A redação é a mesma do art. 25, § 3º, que rege o subsolo — e ao subsolo o simulador não aplica a taxa de ocupação.",
     t: "Adotada a leitura conservadora: a taxa de ocupação limita o embasamento, porque o art. 25, II a define como a projeção horizontal da edificação sobre o lote, e o embasamento é projeção horizontal. Na prática é ela que amarra quase sempre — num lote de 360 m² na ZM1, a nota (2) libera 300 m² de envoltória e a taxa de ocupação corta em 216 m². Pela leitura oposta, o embasamento iria a 288 m², limitado só pela permeabilidade. Cabe ao Município esclarecer, e a escolha vale também para o subsolo." },
-  { f: "Hotel e apart-hotel não são categoria do Anexo I",
+  { z: ["ZM1","ZDE"], f: "Hotel e apart-hotel não são categoria do Anexo I",
     l: "A nota (5) do Anexo II cria um regime urbanístico próprio para hotéis, apart-hotéis e similares na ZM1, e o art. 114 estende a eles os parâmetros do Capítulo XI na ZDE. O Anexo I, porém, não traz linha de hotel na matriz de usos por zona: a hospedagem se enquadra na prestação de serviços do art. 10, II.",
     t: "O uso foi criado no simulador para que a nota (5) pudesse ser aplicada, e na matriz de admissibilidade ele acompanha o uso econômico de atendimento geral. A classificação A, AC ou NA de hotel em cada zona é, portanto, derivada — não está escrita no Anexo I." },
   { f: "Art. 155 — se o subsolo entra na contagem de pavimentos do § 1º",
     l: "O § 1º torna o elevador obrigatório nas edificações “com cinco ou mais pavimentos” e não diz se os subsolos contam. O § 5º, por sua vez, dá regra própria para a edificação com subsolo: mais de quatro pavimentos acima do nível do logradouro ou mais de três abaixo dele.",
     t: "Contados apenas os pavimentos acima do logradouro no § 1º, e os subsolos pelo § 5º, II. Se os subsolos entrassem na conta do § 1º, o inciso II do § 5º, que fixa o limite de três, nunca teria aplicação — um prédio com quatro subsolos já teria estourado os cinco pavimentos. Pela leitura contrária, um prédio de quatro pavimentos com um subsolo exigiria elevador." },
-  { f: "Anexo IV, nota 3 — a nota fala da quadra, o simulador conhece o lote",
+  { z: ["ZC","ZM1","ZM2"], f: "Anexo IV, nota 3 — a nota fala da quadra, o simulador conhece o lote",
     l: "A nota veda parcelamento abaixo do MP-4 nas quadras com testada para via arterial ou coletora, na ZC, na ZM1 e na ZM2. A nota (6) da legenda do Anexo II repete a regra sem nomear zona alguma, e remete ao “MP-4 do Anexo V” — mas os modelos de parcelamento estão no Anexo IV, e o Anexo V traz os parâmetros geométricos das vias. O dado de entrada do simulador é a via de acesso do lote, não a relação de faces da quadra.",
     t: "Adotado o alcance maior, o da nota (6): o piso vale onde houver modelo de parcelamento. Na prática só altera a ZC, a ZM1 e a ZM2, porque a ZEU e a ZIE já têm modelo igual ou superior ao MP-4. Quanto à quadra: acesso por arterial ou coletora implica quadra com essa testada, e o piso é aplicado; o contrário não se conclui, e nesse caso o simulador declara a verificação pendente em vez de presumir. A remissão ao Anexo V é tratada como erro material." },
   { f: "Art. 27 — sentido do verbo no cálculo da taxa de permeabilidade",
     l: "O caput diz que no cálculo da taxa de permeabilidade “não deverão ser considerados” a projeção de beirais, platibandas, varandas, sacadas e balcões de até 1 m, as áreas com pavimentação permeável cujos elementos impermeáveis não passem de 20% e os pisos permeáveis. O material didático da Secretaria Municipal de Obras, elaborado sobre o art. 63 da Lei 359/2015 — de lista idêntica —, aplica o oposto: esses elementos “deverão ser computados”. Pela leitura literal, piso drenante não conta como área permeável, o que esvazia a razão de ser do próprio inciso III.",
     t: "Nenhuma das duas leituras foi adotada. O simulador reserva a área permeável mínima do Anexo II e não decide de que superfície ela se compõe. A diferença é grande em lote de porte: pela leitura literal a taxa exige solo natural; pela aplicada, pode ser atendida com piso drenante, pátio e estacionamento. Cabe ao Município esclarecer." },
-  { f: "Exclusões da taxa de ocupação — regra geral que passou a setorial",
+  { z: ["ZDE"], f: "Exclusões da taxa de ocupação — regra geral que passou a setorial",
     l: "O art. 157 da Lei 359/2015 relacionava, para todo o Município, o que não entra na projeção: estacionamento, vias internas, pérgolas, varandas sem cobertura, playgrounds, ajardinados e áreas de recreação. A lei vigente traz lista praticamente igual no art. 111, mas dentro do Capítulo XI, que o art. 98 reserva ao SEDISJB, ao SEPA e à AEIP.",
     t: "Aplicado o escopo literal: a relação do art. 111 só entra no relatório quando a zona é a ZDE, e nas demais o documento declara que a lei não traz relação equivalente. Pela identidade de redação entre os dois artigos, a restrição tem cara de acidente de recodificação — corrigi-la, porém, é competência do Município." },
-  { f: "Camada ZONA_RURAL1_(ZR) no arquivo do Anexo III",
+  { z: ["MZR"], f: "Camada ZONA_RURAL1_(ZR) no arquivo do Anexo III",
     l: "O art. 9º não lista a Zona Rural entre as zonas urbanas. A geometria coincide com a Macrozona Rural do Anexo II.",
     t: "Tratada como Macrozona Rural: o art. 5º, § 2º veda uso, ocupação e parcelamento do solo para fins urbanos. O simulador suspende o cálculo e informa a vedação." },
   { f: "ZRH, ZRG, ZIHC e AESI ausentes do arquivo",
     l: "O art. 9º, VIII, IX e X lista as Zonas de Risco Hidrológico e Geológico, as Zonas de Interesse Histórico e Cultural e as Áreas Especiais Suscetíveis à Inundação. Nenhuma delas tem camada no KMZ do Anexo III.",
     t: "Não é possível enquadrar um lote nessas zonas pelo mapa. A ZIHC pode ser marcada manualmente na entrada (imóvel tombado ou no entorno de bem tombado). A delimitação das AESI depende do Plano Diretor de Macrodrenagem (Plano Diretor, art. 132), e as Zonas de Risco dependem do mapeamento da Defesa Civil (art. 123, § 1º)." },
-  { f: "ZDE sem separação de setores",
+  { z: ["ZDE"], f: "ZDE sem separação de setores",
     l: "O art. 9º, V, divide a ZDE em SEDISJB, SEPA e AEIP, com taxa de ocupação, impermeabilização e afastamentos diferentes (art. 109, 112 e 113). O arquivo traz uma única camada.",
     t: "O setor é escolhido manualmente na entrada e os parâmetros do Capítulo XI seguem essa escolha. O enquadramento real depende de confirmação do órgão municipal." },
   { f: "Perímetro urbano desenhado em polilinha",
     l: "A camada PERÍMETRO_URBANO do Anexo III tem 34 polilinhas, das quais 28 estão abertas — não formam área.",
     t: "Usada a Macrozona Urbana do Anexo II, que é polígono, como perímetro urbano, conforme o Plano Diretor, art. 92, § 1º, I, que a define como correspondente ao perímetro urbano do Município." },
-  { f: "Gabarito da ZIE não fixado",
+  { z: ["ZIE"], f: "Gabarito da ZIE não fixado",
     l: "O Anexo II traz “-” na coluna de gabarito básico da ZIE, embora o art. 120 determine que a zona atenda integralmente aos parâmetros urbanísticos da lei.",
     t: "Número de pavimentos e altura não são verificados na ZIE. O simulador informa a ausência do critério em vez de arbitrar um teto." },
   { f: "Anexo III — faixas de área da unidade residencial",
@@ -1719,10 +1799,10 @@ const DIVERG = [
   { f: "Contagem de pavimentos para o gabarito",
     l: "O Anexo II fixa “nº pav / h. máx (m)”, mas nenhum dispositivo diz quais pavimentos entram nessa contagem. A única exclusão expressa na lei é a do subsolo, e apenas para o cálculo da altura (art. 25, § 2º).",
     t: "Contados no gabarito todos os pavimentos, exclusive o subsolo e a casa de máquinas/caixa-d'água. O relatório exibe também a contagem de pavimentos habitados, para que a divergência de leitura fique visível." },
-  { f: "ZEIS sem parâmetros próprios",
+  { z: ["ZEIS"], f: "ZEIS sem parâmetros próprios",
     l: "O art. 128 permite ajustar Coeficiente de Aproveitamento, taxas, gabarito, afastamentos, lote e modelo de parcelamento conforme a tipologia habitacional, mediante parecer do Conselho Municipal da Cidade (art. 129). O art. 127 remete à Zona Mista mais próxima quando a edificação não é de interesse social.",
     t: "Em habitação de interesse social o cálculo é suspenso. Nos demais casos, o usuário escolhe a ZM de referência e o simulador aplica os parâmetros dela, deixando registrado que a identificação da ZM mais próxima é do responsável técnico." },
-  { f: "ZIA sem parâmetros urbanísticos",
+  { z: ["ZIA"], f: "ZIA sem parâmetros urbanísticos",
     l: "Nem o Anexo II nem o Plano Diretor fixam parâmetros para a Zona de Interesse Ambiental, e o art. 139, parágrafo único, do Plano Diretor exclui as Áreas de Interesse Ambiental e as APPs das demais zonas.",
     t: "Cálculo suspenso. A ferramenta não analisou planos de manejo das unidades de conservação — a viabilidade sob esse aspecto não pode ser aferida aqui." }
 ];
@@ -2114,6 +2194,30 @@ function pnpPoly(lon, lat, mp) {
   return false;
 }
 function retangulo(f, p) { return [{ x: 0, y: 0 }, { x: f, y: 0 }, { x: f, y: p }, { x: 0, y: p }]; }
+
+/* Impõe a um lado a medida exata que a matrícula diz, sem mexer no
+   resto do desenho: o primeiro vértice do lado fica onde está, o
+   segundo desliza sobre a própria direção do lado até a medida bater.
+   A direção do lado é preservada — é o que se quer quando o rumo veio
+   do levantamento e só a distância estava aproximada —, e quem absorve
+   a diferença é o lado seguinte, que o usuário ajusta depois se
+   precisar. Devolve o polígono novo, ou null quando a medida pedida
+   degenera a figura. */
+function ladoComMedida(pts, i, medida) {
+  const n = pts.length;
+  if (n < 3 || i < 0 || i >= n || !isFinite(medida) || medida <= 0.01) return null;
+  const a = pts[i], b = pts[(i + 1) % n];
+  const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+  if (L < 1e-9) return null;
+  const k = medida / L;
+  const novo = pts.map((p, j) => j === (i + 1) % n
+    ? { x: a.x + dx * k, y: a.y + dy * k } : { x: p.x, y: p.y });
+  /* um lado colapsado ou um laço fazem área e afastamento perderem
+     sentido: recusa-se a mudança em vez de entregar figura inválida */
+  for (let j = 0; j < n; j++) if (edgeLen(novo, j) < 0.05) return null;
+  if (areaAbs(novo) < 0.5 || autoIntersecta(novo)) return null;
+  return novo;
+}
 function frenteTotal(pts, fronts) { let s = 0; fronts.forEach(i => s += edgeLen(pts, i)); return s; }
 function frenteMaior(pts, fronts) { let m = 0; fronts.forEach(i => m = Math.max(m, edgeLen(pts, i))); return m; }
 
@@ -3849,6 +3953,7 @@ function setModo(m) {
   const dcm = $("dimhint");
   if (dcm) dcm.style.display = livre ? "none" : "";
   atualizaEdif();
+  montarLados();
   desenhaLote();
 }
 
@@ -3944,11 +4049,74 @@ function sincroniza() {
     $("prof").value = (b.y1 - b.y0).toFixed(2);
   }
   atualizaEdif();
+  montarLados();
   desenhaLote(); calc();
 }
 function retanguloDosCampos() {
   const f = Math.max(1, num($("frente").value)), p = Math.max(1, num($("prof").value));
   LOT.pts = retangulo(f, p); LOT.fronts = [0]; sincroniza();
+}
+
+/* ---------- medida dos lados por número ----------
+   Arrastar vértice serve para dar a forma; não serve para acertar a
+   medida. Quem tem a matrícula ou o levantamento na mão precisa
+   digitar 12,47 e ver o lado ficar com 12,47 — daí um campo por lado,
+   ao lado do desenho, com o mesmo número que as cotas e o relatório
+   usam para se referir a ele. */
+function montarLados() {
+  const box = $("ladosBox"), el = $("lados");
+  if (!box || !el) return;
+  /* no retângulo, testada e profundidade já governam os quatro lados;
+     na edificação, o que se desenha é outro polígono */
+  const mostra = LOT.modo === "draw" || LOT.modo === "front";
+  box.style.display = mostra ? "" : "none";
+  if (!mostra) return;
+  const tipos = (SIM && SIM.R && SIM.R.lados) ? SIM.R.lados : null;
+  /* já montada e com o mesmo número de lados: só atualiza os valores,
+     para não recriar o campo que acabou de ser editado */
+  const atuais = el.querySelectorAll("input[data-lado]");
+  if (atuais.length === LOT.pts.length) {
+    atuais.forEach((inp, i) => {
+      if (document.activeElement !== inp) inp.value = edgeLen(LOT.pts, i).toFixed(2);
+    });
+    el.querySelectorAll(".ld").forEach((d, i) => {
+      const f = LOT.fronts.indexOf(i) >= 0;
+      d.classList.toggle("te", f);
+      d.querySelector(".t").textContent = f ? "testada" : (tipos && tipos[i] ? tipos[i].tipo : "divisa");
+    });
+    return;
+  }
+  el.innerHTML = LOT.pts.map((p, i) => {
+    const front = LOT.fronts.indexOf(i) >= 0;
+    return '<div class="ld' + (front ? " te" : "") + '">' +
+      '<span class="n">' + (i + 1) + "</span>" +
+      '<span class="t">' + (front ? "testada" : (tipos && tipos[i] ? tipos[i].tipo : "divisa")) + "</span>" +
+      '<input type="number" step="0.01" min="0.05" data-lado="' + i +
+      '" value="' + edgeLen(LOT.pts, i).toFixed(2) + '"><span class="u">m</span></div>';
+  }).join("");
+  el.querySelectorAll("input[data-lado]").forEach(inp => {
+    inp.addEventListener("change", ev => {
+      const i = +ev.target.dataset.lado, v = num(ev.target.value);
+      const novo = ladoComMedida(LOT.pts, i, v);
+      if (!novo) {
+        ev.target.value = edgeLen(LOT.pts, i).toFixed(2);
+        avisaLado("Medida recusada: ela colapsaria um lado ou cruzaria o polígono.");
+        return;
+      }
+      LOT.pts = novo;
+      avisaLado("");
+      sincroniza();
+    });
+    /* Enter confirma sem tirar o foco do campo */
+    inp.addEventListener("keydown", ev => { if (ev.key === "Enter") ev.target.blur(); });
+  });
+}
+function avisaLado(txt) {
+  const h = $("ladoshint"); if (!h) return;
+  h.classList.toggle("err", !!txt);
+  h.textContent = txt || "O lado assume a medida digitada mantendo a direção: o primeiro vértice fica parado e o " +
+    "segundo desliza sobre a própria linha. Quem absorve a diferença é o lado seguinte — ajuste-o em seguida, se " +
+    "precisar. Medida que colapse um lado ou cruze o polígono é recusada, e o campo volta ao valor anterior.";
 }
 
 /* ---------- pilha de pavimentos ---------- */
@@ -4166,7 +4334,7 @@ Object.keys(ZONAS).forEach(k => CORES[k] = ZONAS[k].cor);
       if (z) { setZona(z, { macro: m }); isolar(z); }
       else if (m) { setZona("M:" + m, null); }
       else { $("pill").textContent = "Fora das camadas do zoneamento"; setTimeout(() => $("pill").textContent = "Clique numa zona do mapa para isolá-la", 2500); }
-      if (z) sugereVia(lat, lon);
+      if (z) { sugereVia(lat, lon); registraPonto(lat, lon, ""); }
     });
   } catch (err) {
     $("map").innerHTML = '<div id="semmapa" style="display:block"><b>O mapa não pôde ser carregado.</b><br><br>' +
@@ -4211,6 +4379,7 @@ function irParaPonto(lat, lon, rotulo) {
     if (map) map.setView([lat, lon], Math.max(map.getZoom(), 17));
     const sv = typeof viaMaisProxima === "function" ? viaMaisProxima(lat, lon) : null;
     sugereVia(lat, lon);
+    registraPonto(lat, lon, rotulo);
     resBusca('<div class="av"><b>' + rotulo + "</b><br>Enquadrado em <b>" + z + " — " + ZONAS[z].n +
       "</b>" + (m ? " · " + MACRO[m].n : "") + ". A zona já foi aplicada no painel." +
       (sv && VIAS[sv.k] ? " Via de acesso sugerida: <b>" + VIAS[sv.k].n.toLowerCase() + "</b>" +
@@ -5792,6 +5961,10 @@ function relatorio(escopo) {
 let acaoAposAviso = null;
 function abreAviso(acao) {
   acaoAposAviso = acao;
+  /* a escolha entre completo e síntese é do relatório de envoltória;
+     a certidão tem escopo único e a caixa sairia sem função */
+  const esc = document.querySelector("#avisoCx .esc");
+  if (esc) esc.style.display = (typeof certidaoPDF === "function" && acao === certidaoPDF) ? "none" : "";
   $("avisoBg").classList.add("on");
   $("avisoSim").focus();
 }
@@ -6056,6 +6229,9 @@ function montarBaseLegal() {
     $("p-" + b.dataset.p).classList.add("on");
     if (b.dataset.p === "res" && SIM) redesenha(SIM.R);
     if (b.dataset.p === "sim") desenhaLote();
+    /* a certidão é montada na entrada da aba: ela depende do lote e da
+       zona, que mudam na aba ao lado, e remontar é barato */
+    if (b.dataset.p === "cert") renderCert();
   }));
   $("zsel").addEventListener("change", e => {
     const v = e.target.value;
@@ -6225,6 +6401,839 @@ function montarBaseLegal() {
   sincroniza();
   renderVazio();
 })();
+
+/* ============================================================
+   Certidão de Informações Urbanísticas — minuta
+
+   O estudo de envoltória responde "cabe o que eu quero fazer?". Esta
+   aba responde a pergunta anterior, que é a que o balcão recebe: "o
+   que pode ser feito aqui?". A diferença não é de formato — é de
+   sujeito. O estudo parte de um projeto e o confere contra a lei; a
+   certidão parte do terreno e enumera tudo o que a lei admite nele,
+   sem escolher uso, sem pilha de pavimentos e sem projeto.
+
+   Por isso nada aqui depende de SIM.R: o documento é função do lote e
+   da zona, e só. O que muda com o uso — a matriz do Anexo I, o
+   embasamento das notas (2) e (3), o regime de hotel da nota (5), a
+   regra de vagas — entra enumerado, não escolhido.
+
+   O documento sai como MINUTA. Certidão é ato da Administração: quem
+   numera, data e assina é o órgão. O que esta ferramenta produz é a
+   peça instruída, com os campos de assinatura em branco.
+   ============================================================ */
+
+/* ponto que localizou o terreno no mapa — a certidão não é emitida
+   sem ele, porque zona e hierarquia viária saem daí */
+let PT_MAPA = null;
+
+function registraPonto(lat, lon, rot) {
+  PT_MAPA = { lat, lon, rot: rot || "", quando: new Date() };
+}
+
+/* grau em minutos e segundos — como o cartório e a matrícula escrevem */
+function gms(v, pos, neg) {
+  const s = v < 0 ? neg : pos, a = Math.abs(v);
+  const g = Math.floor(a), m = Math.floor((a - g) * 60), sg = ((a - g) * 60 - m) * 60;
+  return g + "° " + String(m).padStart(2, "0") + "′ " +
+    sg.toFixed(1).padStart(4, "0").replace(".", ",") + "″ " + s;
+}
+
+/* ------------------------------------------------------------
+   Envoltória de um jogo qualquer de afastamentos sobre o lote.
+   Devolve null quando o recuo consome o lote — caso real em lote
+   pequeno na ZDE, e que a certidão precisa dizer em vez de arredondar
+   para zero.
+   ------------------------------------------------------------ */
+function envoltoriaDe(pts, rec) {
+  const off = offsetPoly(pts, rec);
+  if (!off || !offsetValido(pts, off)) return null;
+  const a = areaAbs(off);
+  return a > 0.01 ? { pts: off, area: a } : null;
+}
+
+/* vetor de afastamentos por lado: frontal nas testadas, o resto no
+   restante. livres é a lista de índices que ficam em zero — é assim
+   que se mede o embasamento das notas (2) e (3). */
+function vetorRec(pts, fronts, af, livres) {
+  return pts.map((_, i) => {
+    if (livres && livres.indexOf(i) >= 0) return 0;
+    return fronts.indexOf(i) >= 0 ? af.f : af.u;
+  });
+}
+
+/* Qual lateral liberar quando a nota (3) dispensa uma só: a que
+   devolve mais área. Não é escolha do simulador — é o melhor caso, e a
+   certidão diz o máximo que a lei admite, não o que o projeto fará. */
+function melhorUmLado(pts, fronts, af) {
+  let melhor = null;
+  pts.forEach((_, i) => {
+    if (fronts.indexOf(i) >= 0) return;
+    const e = envoltoriaDe(pts, vetorRec(pts, fronts, af, [i]));
+    if (e && (!melhor || e.area > melhor.area)) melhor = { area: e.area, lado: i };
+  });
+  return melhor;
+}
+
+/* ------------------------------------------------------------
+   O motor. Recebe os parâmetros da zona já resolvidos por
+   paramZona(), a geometria do lote e a classe da via, e devolve o
+   conteúdo inteiro da certidão.
+   ------------------------------------------------------------ */
+function motorCert(P, lote, viaK) {
+  if (!P || P.semParametros) return null;
+  const { pts, fronts } = prep(lote.pts, lote.fronts);
+  const A = areaAbs(pts), Per = perim(pts);
+  const testada = frenteTotal(pts, fronts), testadaMaior = frenteMaior(pts, fronts);
+
+  /* afastamentos: a ZDE os mede por faixa de área do terreno, e há
+     setor em que são dispensados de todo */
+  let af, afRot, afFaixa = null;
+  if (P.afZero) { af = { f: 0, l: 0, u: 0 }; afRot = "dispensados no setor"; }
+  else if (P.afPorArea) {
+    afFaixa = afastamentosZDE(A);
+    af = { f: afFaixa.f, l: afFaixa.l, u: afFaixa.u };
+    afRot = "por faixa de área do terreno — " + afFaixa.rot;
+  } else { af = P.af; afRot = "fixos no Anexo II"; }
+
+  /* ---------- envoltórias ---------- */
+  const envTorre = envoltoriaDe(pts, vetorRec(pts, fronts, af, null));
+  /* embasamento: só nas zonas com as notas (2) e (3) do Anexo II */
+  const naoFront = pts.map((_, i) => i).filter(i => fronts.indexOf(i) < 0);
+  const envN2 = P.emb ? envoltoriaDe(pts, vetorRec(pts, fronts, af, naoFront)) : null;
+  const envN3uni = P.emb ? envoltoriaDe(pts, vetorRec(pts, fronts, af, lateraisDe(pts, fronts))) : null;
+  const envN3ver = P.emb ? melhorUmLado(pts, fronts, af) : null;
+
+  /* ---------- usos ---------- */
+  const usos = USOS.map((u, i) => {
+    const c = P.matriz ? P.matriz[i] : "—";
+    return {
+      id: u.id, n: u.n, cod: c,
+      sit: c === "A" ? "admitido" : c === "AC" ? "admitido sob condições" : c === "NA" ? "não admitido" : "não consta",
+      I: USO_INFO[u.id],
+      lim: USO_INFO[u.id].limiteArea || null, limArt: USO_INFO[u.id].limiteArt || null,
+      eiv: !!USO_INFO[u.id].eiv
+    };
+  });
+  const admitidos = usos.filter(u => u.cod === "A" || u.cod === "AC");
+
+  /* ---------- potencial por patamar ----------
+     Cada linha do Anexo II é um teto independente: o Coeficiente diz
+     quanta área construída, a taxa de ocupação quanta projeção, a
+     permeabilidade quanto do lote fica livre, e o gabarito quantos
+     pavimentos. O que amarra é sempre o menor deles. */
+  const patamar = t => {
+    const compMax = t.ca * A;
+    const projTO = (t.to / 100) * A;
+    const permMin = (t.tp / 100) * A;
+    const projTorre = envTorre ? Math.min(projTO, envTorre.area) : 0;
+    const amarra = !envTorre ? "afastamentos" : (projTO <= envTorre.area ? "taxa de ocupação" : "afastamentos");
+    /* teto de permeabilidade: a projeção não pode comer a área que
+       precisa ficar permeável */
+    const projPerm = A - permMin;
+    const projFinal = Math.min(projTorre, projPerm);
+    const amarraFinal = projPerm < projTorre ? "taxa de permeabilidade" : amarra;
+    return {
+      rot: t.rot, ca: t.ca, to: t.to, tp: t.tp, pav: t.pav, h: t.h, out: !!t.out,
+      compMax, projTO, permMin, envTorre: envTorre ? envTorre.area : null,
+      proj: projFinal, amarra: amarraFinal, amarraRot: AMARRA_ROT[amarraFinal] || amarraFinal,
+      /* quantos pavimentos da projeção máxima cabem no Coeficiente —
+         é a leitura que o consulente procura: "dá quantos andares?" */
+      pavPorCA: projFinal > 0 ? compMax / projFinal : null
+    };
+  };
+  const tiers = (P.tiers || []).map(patamar);
+  const tiersHotel = (P.base && P.base.tiersHotel && P.sigla === "ZM1")
+    ? P.base.tiersHotel.map(patamar) : null;
+
+  /* ---------- embasamento por grupo de uso ---------- */
+  const embTO = (num(P.to) / 100) * A;
+  const embPerm = A - (num(P.tp) / 100) * A;
+  const cap = v => v === null ? null : Math.min(v, embTO, embPerm);
+  const emb = P.emb ? [
+    { rot: "Usos não residenciais, uso comum de condomínio multifamiliar, uso misto e hotel",
+      nota: "Anexo II, nota (2)", divisas: "todas as divisas, menos a testada",
+      area: cap(envN2 ? envN2.area : null) },
+    { rot: "Residencial unifamiliar e multifamiliar horizontal (geminada)",
+      nota: "Anexo II, nota (3)", divisas: "as duas divisas laterais; o afastamento de fundos permanece",
+      area: cap(envN3uni ? envN3uni.area : null) },
+    { rot: "Residencial multifamiliar vertical",
+      nota: "Anexo II, nota (3)", divisas: "uma divisa lateral; o afastamento de fundos permanece",
+      area: cap(envN3ver ? envN3ver.area : null) }
+  ] : null;
+
+  /* ---------- parcelamento ----------
+     Anexo IV dá o modelo por zona; a nota 3 do Anexo IV e a nota (6)
+     da legenda do Anexo II elevam ao MP-4 a quadra com testada para
+     via arterial ou coletora. */
+  const cls = VIAS[viaK] ? VIAS[viaK].cls : null;
+  const pisoMP4 = (cls === "arterial" || cls === "coletora") && NOTA3_ZONAS.indexOf(P.sigla) >= 0;
+  let modelos = (P.mp || []).slice();
+  if (pisoMP4) {
+    /* o piso do MP-4 alcança o parcelamento; o desdobro é instrumento
+       à parte e fica na tabela, marcado, em vez de sumir sem aviso */
+    const desd = modelos.filter(m => m.desdobro);
+    let novos = modelos.filter(m => !m.desdobro && m.area >= MP4.area && m.t >= MP4.t);
+    if (!novos.length) novos = [MP4];
+    modelos = novos.concat(desd);
+  }
+  const parcel = modelos.map(m => ({
+    id: m.id, area: m.area, t: m.t, te: m.te, desdobro: !!m.desdobro,
+    varArea: m.varArea, varPct: m.varPct,
+    abaixoMP4: pisoMP4 && (m.area < MP4.area || m.t < MP4.t),
+    okArea: A + 1e-6 >= m.area, okTest: testadaMaior + 1e-6 >= m.t
+  }));
+  const loteMin = P.loteMin || null;
+
+  /* ---------- vagas — Anexo III, enumeradas por categoria ---------- */
+  const vagas = [];
+  if (admitidos.some(u => u.I.res)) {
+    vagas.push(cls === "arterial"
+      ? { q: "Residencial em via arterial", t: "1 vaga por unidade habitacional" }
+      : { q: "Residencial em via coletora ou local",
+          t: "até 35 m² por unidade: 1 vaga a cada 3; acima de 35 até 60 m²: 2 a cada 3; acima de 60 m²: 1 por unidade" });
+  }
+  if (admitidos.some(u => u.I.eco || u.I.ind || u.id === "inst")) {
+    vagas.push({ q: "Não residencial em via " + (cls === "arterial" ? "arterial" : "coletora ou local"),
+      t: "1 vaga para cada " + (cls === "arterial" ? 25 : 50) + " m² de área útil" });
+  }
+
+  /* ---------- instrumentos ---------- */
+  const inst = [];
+  if (P.outorga) inst.push({ n: "Outorga Onerosa do Direito de Construir", inc: "sim",
+    art: "Art. 133 e 134; Anexo VI",
+    t: "Exigida para construir acima do Coeficiente de Aproveitamento básico " + fmt(P.ca.bas, 2) +
+       " e até o máximo " + fmt(P.ca.max, 2) + ". Contrapartida VC′ = (CAP ÷ CAB − 1) × VT, em que VT é o valor da " +
+       "terra nua avaliado pelo órgão municipal competente." });
+  else inst.push({ n: "Outorga Onerosa do Direito de Construir", inc: "não",
+    art: "Art. 133", t: P.outorgaMotivo || "A zona não admite acréscimo de potencial construtivo por outorga." });
+  if (admitidos.some(u => u.eiv)) inst.push({ n: "Estudo e Relatório de Impacto de Vizinhança", inc: "verificar",
+    art: "Plano Diretor, art. 154, II",
+    t: "Exigível em qualquer zona para atividades econômicas, conforme o porte e o potencial poluidor. " +
+       "Incide sobre os usos assinalados AC no quadro de usos." });
+  inst.push({ n: "Licenciamento ambiental", inc: "verificar", art: "Art. 13, parágrafo único",
+    t: "O procedimento observa ato do Poder Executivo municipal e a legislação estadual e federal, conforme o porte e o potencial poluidor." });
+  if (P.desdobro) inst.push({ n: "Desdobro de lote", inc: "sim", art: P.desdobroArt || "Anexo IV",
+    t: "Admitido na zona, observados a área e a testada mínimas do modelo de parcelamento." });
+
+  return {
+    P, lote: { pts, fronts, area: A, perim: Per, lados: pts.length, testada, testadaMaior, fronts_n: fronts.length },
+    af, afRot, afFaixa, envTorre, emb, usos, admitidos, tiers, tiersHotel,
+    parcel, pisoMP4, loteMin, vagas, inst, viaK, cls,
+    gab: P.gab, outorgaGab: P.outorgaGab, ca: P.ca, to: P.to, tp: P.tp
+  };
+}
+
+/* índices das duas laterais: os lados não frontais mais longos são
+   fundos/laterais indistintamente num polígono qualquer, então a nota
+   (3) "duas laterais" é lida como todos os lados não frontais menos o
+   mais oposto à testada — que é o fundo, e cujo afastamento permanece */
+function lateraisDe(pts, fronts) {
+  const naoFront = pts.map((_, i) => i).filter(i => fronts.indexOf(i) < 0);
+  if (naoFront.length <= 1) return [];
+  /* o fundo é o lado cujo ponto médio está mais longe do ponto médio
+     das testadas */
+  const cF = fronts.length
+    ? fronts.reduce((a, i) => { const m = meioLado(pts, i); return { x: a.x + m.x / fronts.length, y: a.y + m.y / fronts.length }; }, { x: 0, y: 0 })
+    : centroid(pts);
+  let fundo = naoFront[0], dmax = -1;
+  naoFront.forEach(i => {
+    const m = meioLado(pts, i), d = Math.hypot(m.x - cF.x, m.y - cF.y);
+    if (d > dmax) { dmax = d; fundo = i; }
+  });
+  return naoFront.filter(i => i !== fundo);
+}
+
+/* ============================================================
+   Apresentação — a mesma montagem serve à tela e ao papel, porque o
+   que muda entre as duas é a folha de estilo, não o conteúdo.
+   ============================================================ */
+const cEsc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const cTab = (cabs, corpo, cls) =>
+  '<table class="doc' + (cls ? " " + cls : "") + '"><thead><tr>' + cabs + "</tr></thead><tbody>" + corpo + "</tbody></table>";
+const m2 = v => v === null ? "não aplicável" : fmt(v, 2) + " m²";
+/* a concordância importa: "limitada pela afastamentos" denuncia texto
+   montado por concatenação, e um documento que vai ao balcão não pode
+   ter esse cheiro */
+const AMARRA_ROT = { "afastamentos": "pelos afastamentos",
+                     "taxa de ocupação": "pela taxa de ocupação",
+                     "taxa de permeabilidade": "pela taxa de permeabilidade" };
+
+function certSituacao(cod) {
+  return cod === "A" ? '<b class="sit-a">admitido</b>'
+       : cod === "AC" ? '<b class="sit-ac">admitido sob condições</b>'
+       : cod === "NA" ? '<b class="sit-na">não admitido</b>' : "não consta do Anexo I";
+}
+
+function certFicha(C, pt) {
+  const L = C.lote, P = C.P;
+  const linhas = [
+    ["Município", "São João da Barra — Rio de Janeiro"],
+    ["Zona de enquadramento", "<b>" + P.sigla + " — " + cEsc(P.nome) + "</b>"],
+    /* o endereço digitado na emissão manda sobre o rótulo da busca:
+       um é dado do processo, o outro é o que o geocodificador achou */
+    ["Localização", pt ? ((EMIS.end || pt.rot) ? cEsc(EMIS.end || pt.rot) + " · " : "") +
+      gms(pt.lat, "S", "N") + " · " + gms(pt.lon, "L", "O") : "—"],
+    ["Via de acesso", (VIAS[C.viaK] ? VIAS[C.viaK].n : "—") +
+      (VIA_SUG && VIA_SUG.k === C.viaK && VIA_SUG.nome ? " — " + cEsc(VIA_SUG.nome) : "")],
+    ["Área do terreno", "<b>" + fmt(L.area, 2) + " m²</b>"],
+    ["Perímetro e testada", fmt(L.perim, 2) + " m de perímetro · " + pl(L.lados, "lado") + " · " +
+      pl(L.fronts_n, "testada") + " somando " + fmt(L.testada, 2) + " m"],
+    ["Modo de levantamento", LOT.modo === "rect" ? "retângulo pelas dimensões informadas" : "perímetro desenhado sobre o lote"],
+    ["Data de emissão", dataEmissao()]
+  ];
+  return '<table class="ficha">' + linhas.map(l =>
+    '<tr><td class="r">' + l[0] + '</td><td class="d">' + l[1] + "</td></tr>").join("") + "</table>";
+}
+
+/* ---------- 1. usos ---------- */
+function certSecUsos(C) {
+  return "<h2>Usos admitidos na zona</h2>" +
+    cTab("<th class=\"w\">Uso — Anexo I</th><th>Anexo I</th><th>Situação</th><th class=\"w\">Limite de porte e condicionantes</th>",
+      C.usos.map(u => "<tr" + (u.cod === "NA" ? ' class="no"' : u.cod === "AC" ? ' class="cond"' : "") + "><td>" + u.n +
+        '</td><td class="st">' + u.cod + "</td><td>" + certSituacao(u.cod) + "</td><td>" +
+        (u.lim ? "Até " + fmt(u.lim, 0) + " m² de área construída — " + cEsc(u.limArt) + ". " : "") +
+        (u.eiv && u.cod !== "NA" ? "Sujeito a Estudo e Relatório de Impacto de Vizinhança conforme o porte e o potencial poluidor." : "") +
+        (!u.lim && !u.eiv ? "—" : "") + "</td></tr>").join("")) +
+    '<p class="obs">' + NOTA_MATRIZ + "</p>" +
+    (C.P.notaUso ? '<p class="obs">' + C.P.notaUso + "</p>" : "") +
+    '<p class="obs">Hotel, apart-hotel e similares não têm linha própria no Anexo I: a hospedagem é prestação de ' +
+    "serviços do art. 10, II, e por isso acompanha aqui o uso econômico de atendimento geral. A classificação " +
+    "dessa linha é derivada, não literal.</p>";
+}
+
+/* ---------- 2. parâmetros da zona ---------- */
+function certSecParam(C) {
+  const P = C.P, af = C.af;
+  const l = [
+    ["Coeficiente de Aproveitamento", "mínimo " + fmt(P.ca.min, 2) + " · básico " + fmt(P.ca.bas, 2) +
+      (P.ca.max ? " · máximo " + fmt(P.ca.max, 2) + " mediante outorga" : " · sem acréscimo por outorga"),
+      "Anexo II; art. 25, I e § 1º"],
+    ["Taxa de ocupação", "máximo " + fmt(P.to, 0) + "%", "Anexo II; art. 24 e art. 25, II"],
+    ["Taxa de permeabilidade", "mínimo " + fmt(P.tp, 0) + "%", "Anexo II; art. 25, III e art. 27"],
+    ["Afastamento frontal", fmt(af.f, 2) + " m", "Anexo II; art. 25, IV, “a”"],
+    ["Afastamentos laterais e de fundos", fmt(af.l, 2) + " m — " + C.afRot,
+      P.afPorArea ? "Capítulo XI" : "Anexo II; art. 25, IV, “b” e “c”"],
+    ["Gabarito básico", P.gab ? pl(P.gab.pav, "pavimento") + " · altura até " + fmt(P.gab.h, 2) + " m"
+      : (P.gabMotivo || "não fixado na lei para esta zona"), "Anexo II, nota (4); art. 25, V"],
+    ["Gabarito com outorga", P.outorgaGab ? pl(P.outorgaGab.pav, "pavimento") + " · altura até " + fmt(P.outorgaGab.h, 2) + " m"
+      : "não se aplica", "Anexo II, nota (1); art. 133"],
+    ["Encostar na divisa", P.emb ? "admitido nos dois primeiros pavimentos acima do solo, conforme o uso — ver a seção seguinte"
+      : (P.afZero ? "os afastamentos são dispensados no setor" : "não há dispensa de afastamento nesta zona"),
+      P.emb ? "Anexo II, notas (2) e (3)" : "—"],
+    ["Lote mínimo", C.loteMin ? fmt(C.loteMin, 0) + " m²" : (C.parcel.length
+      ? C.parcel.map(m => m.id + " — " + fmt(m.area, 0) + " m²").join(" · ") : "sem modelo de parcelamento na zona"),
+      "Anexo IV; art. 42"]
+  ];
+  return "<h2>Parâmetros urbanísticos da zona</h2>" +
+    cTab("<th>Parâmetro</th><th class=\"w\">Estipulado em lei</th><th>Dispositivo</th>",
+      l.map(x => "<tr><td>" + x[0] + "</td><td>" + x[1] + "</td><td>" + x[2] + "</td></tr>").join("")) +
+    (C.tiersHotel ? '<p class="obs">A nota (5) do Anexo II dá regime próprio a hotéis, apart-hotéis e similares ' +
+      "nesta zona, e só nela: Coeficiente básico 2,00 e máximo 4,00, 6 pavimentos e altura até 22,50 m. " +
+      "Escolhido esse uso, valem esses números no lugar dos da linha da zona.</p>" : "") +
+    (P.obs ? '<p class="obs">' + P.obs + "</p>" : "");
+}
+
+/* ---------- 3. o que cabe no terreno ---------- */
+function certSecPotencial(C) {
+  const A = C.lote.area;
+  const bloco = (ts, tit) => "<h3>" + tit + "</h3>" +
+    cTab("<th class=\"w\">Patamar</th><th>CA</th><th>Área computável máxima</th><th>Projeção máxima</th>" +
+         "<th>Perme&aacute;vel mínima</th><th>Gabarito</th><th>Outorga</th>",
+      ts.map(t => "<tr><td>" + t.rot + '</td><td class="n">' + fmt(t.ca, 2) +
+        '</td><td class="n">' + fmt(t.compMax, 2) + " m²</td>" +
+        '<td class="n">' + fmt(t.proj, 2) + ' m²<span class="disp">limitada ' + t.amarraRot + "</span></td>" +
+        '<td class="n">' + fmt(t.permMin, 2) + " m²</td><td>" +
+        (t.pav ? pl(t.pav, "pavimento") + " · " + fmt(t.h, 2) + " m" : "não fixado na lei") +
+        "</td><td>" + (t.out ? "sim" : "não") + "</td></tr>").join("")) +
+    '<p class="obs">A projeção máxima é o menor entre a taxa de ocupação (' + fmt(C.to, 0) + "% de " +
+    fmt(A, 2) + " m² = " + fmt((C.to / 100) * A, 2) + " m²), a envoltória que sobra depois dos afastamentos (" +
+    (C.envTorre ? fmt(C.envTorre.area, 2) + " m²" : "o recuo consome o lote") +
+    ") e o que a taxa de permeabilidade deixa livre (" + fmt(A - (C.tp / 100) * A, 2) + " m²). " +
+    "A área computável é teto de área construída, não de projeção: distribui-se pelos pavimentos que o gabarito admite.</p>";
+
+  return "<h2>O que pode ser construído neste terreno</h2>" +
+    (C.envTorre ? "" : '<div class="nota"><b>Atenção.</b> Os afastamentos exigidos consomem integralmente o terreno: ' +
+      "não resta envoltória edificável com as dimensões levantadas.</div>") +
+    bloco(C.tiers, "Regime geral da zona") +
+    (C.tiersHotel ? bloco(C.tiersHotel, "Hotel, apart-hotel e similares — Anexo II, nota (5)") : "");
+}
+
+/* ---------- 4. embasamento ---------- */
+function certSecEmb(C) {
+  if (!C.emb) return "";
+  return "<h2>Encostar na divisa — os dois primeiros pavimentos</h2>" +
+    '<p class="obs">As notas (2) e (3) do Anexo II dispensam afastamento nos dois primeiros pavimentos acima do solo, ' +
+    "e a dispensa depende do uso. Ela não alcança a torre: do terceiro pavimento em diante valem todos os afastamentos, " +
+    "e a projeção volta a ser a da envoltória — " + (C.envTorre ? fmt(C.envTorre.area, 2) + " m²" : "inexistente") + ". " +
+    "O afastamento frontal, a taxa de ocupação, a taxa de permeabilidade e as normas de iluminação e ventilação " +
+    "permanecem exigíveis em todos os casos.</p>" +
+    cTab("<th class=\"w\">Uso</th><th>Nota</th><th class=\"w\">Divisas dispensadas</th><th>Projeção do embasamento</th>",
+      C.emb.map(e => "<tr><td>" + e.rot + "</td><td>" + e.nota + "</td><td>" + e.divisas +
+        '</td><td class="n">' + m2(e.area) + "</td></tr>").join("")) +
+    '<p class="obs">Os valores acima já estão limitados pela taxa de ocupação e pela taxa de permeabilidade. ' +
+    "Onde a lei dispensa uma só lateral, adotou-se a que devolve mais área — a certidão informa o máximo que a lei " +
+    "admite, e a escolha de qual divisa ocupar é do projeto.</p>";
+}
+
+/* ---------- 5. parcelamento ---------- */
+function certSecParcel(C) {
+  if (!C.parcel.length && !C.loteMin) return "";
+  const L = C.lote;
+  let s = "<h2>Parcelamento do solo</h2>";
+  if (C.parcel.length) {
+    s += cTab("<th>Modelo — Anexo IV</th><th>Área mínima</th><th>Testada mínima</th><th>Testada de esquina</th>" +
+              "<th>Lote atende</th>",
+      C.parcel.map(m => "<tr" + (m.okArea && m.okTest ? (m.abaixoMP4 ? ' class="cond"' : "") : ' class="no"') + "><td>" + m.id +
+        (m.abaixoMP4 ? '<span class="disp">abaixo do MP-4: o piso da nota (6) alcança o parcelamento, e o ' +
+          "enquadramento do desdobro nele deve ser confirmado pelo órgão</span>" : "") +
+        '</td><td class="n">' + fmt(m.area, 0) + ' m²</td><td class="n">' + fmt(m.t, 2) +
+        ' m</td><td class="n">' + fmt(m.te, 2) + " m</td><td>" +
+        (m.okArea && m.okTest ? "sim" : "não — " +
+          [m.okArea ? null : "área de " + fmt(L.area, 2) + " m²",
+           m.okTest ? null : "testada de " + fmt(L.testadaMaior, 2) + " m"].filter(Boolean).join(" e ")) +
+        "</td></tr>").join("")) +
+      (C.parcel.some(m => m.varArea) ? '<p class="obs">O Anexo IV admite variação: lotes a partir de ' +
+        C.parcel.filter(m => m.varArea).map(m => fmt(m.varArea, 0) + " m² no " + m.id +
+          (m.varPct ? " em até " + fmt(m.varPct, 0) + "% dos lotes da gleba" : "")).join(" · ") + ".</p>" : "");
+    if (C.pisoMP4) s += '<div class="nota"><b>Nota (6) do Anexo II e nota 3 do Anexo IV.</b> A quadra tem testada para ' +
+      "via " + (C.cls === "arterial" ? "arterial" : "coletora") + ": o parcelamento não pode ter parâmetros inferiores " +
+      "ao MP-4 — 360 m² de área e 12,00 m de testada. A nota incide sobre a quadra, não sobre o lote isolado: " +
+      "se qualquer face dela der para via arterial ou coletora, o piso é o MP-4.</div>";
+  }
+  if (C.loteMin) s += cTab("<th>Parâmetro</th><th>Estipulado em lei</th><th>Lote atende</th>",
+    "<tr><td>Área mínima do lote</td><td>" + fmt(C.loteMin, 0) + " m²</td><td>" +
+    (L.area + 1e-6 >= C.loteMin ? "sim" : "não — " + fmt(L.area, 2) + " m²") + "</td></tr>");
+  s += '<p class="obs">' + (C.P.desdobro
+    ? "O desdobro de lote é admitido na zona, observados a área e a testada mínimas do modelo."
+    : "A zona não admite desdobro de lote.") + "</p>";
+  return s;
+}
+
+/* ---------- 6. vagas ---------- */
+function certSecVagas(C) {
+  if (!C.vagas.length) return "";
+  return "<h2>Vagas de estacionamento</h2>" +
+    cTab("<th>Situação</th><th class=\"w\">Regra do Anexo III</th>",
+      C.vagas.map(v => "<tr><td>" + v.q + "</td><td>" + v.t + "</td></tr>").join("")) +
+    '<p class="obs">Todas as vagas dentro do lote (art. 33, § 4º). A quantificação depende do número de unidades ' +
+    "habitacionais e da área útil não residencial, que são dados de projeto — esta certidão informa a regra aplicável, " +
+    "não o número de vagas.</p>";
+}
+
+/* ---------- 7. instrumentos ---------- */
+function certSecInst(C) {
+  return "<h2>Instrumentos, estudos e licenças</h2>" +
+    cTab("<th class=\"w\">Item</th><th>Incide</th><th>Dispositivo</th><th class=\"w\">Conteúdo</th>",
+      C.inst.map(i => "<tr" + (i.inc === "verificar" ? ' class="cond"' : "") + "><td>" + i.n +
+        '</td><td class="st">' + i.inc + "</td><td>" + i.art + "</td><td>" + i.t + "</td></tr>").join(""));
+}
+
+/* ---------- croqui: bloco do documento ----------
+   Na tela é um canvas desenhado na hora; no papel é a mesma figura
+   capturada em bitmap, porque o PDF sai por window.print() e canvas
+   não atravessa a impressão. */
+function certSecCroqui(C, img) {
+  const leg = "<b>Croqui do terreno.</b> A linha cheia é a divisa; o traço grosso marca a testada, " +
+    "onde incide o afastamento frontal. Cada lado traz a sua medida e o afastamento aplicado. " +
+    (C.envTorre
+      ? "A área hachurada é a envoltória — o que resta do lote depois de recuar todas as divisas —, e é dentro dela " +
+        "que a edificação se implanta do terceiro pavimento em diante. Não é projeto: nenhuma edificação foi arbitrada aqui."
+      : "Os afastamentos exigidos consomem o terreno: não há envoltória a representar.") +
+    " Croqui de estudo, sem escala gráfica: as medidas leem-se nas cotas, não no papel.";
+  return "<h2>Croqui do terreno</h2>" +
+    (img ? '<figure class="fig-croq"><img src="' + img + '" alt="Croqui do terreno" style="height:' +
+             alturaCroquiMM(C) + 'mm"><figcaption>' + leg + "</figcaption></figure>"
+         : '<canvas id="croqui"></canvas><p class="obs">' + leg + "</p>");
+}
+
+/* ---------- corpo completo ----------
+   As lacunas e divergências declaradas saíram da certidão: o rol
+   continua inteiro na aba Base legal e no relatório de envoltória,
+   que é onde a leitura da lei está sendo defendida. Aqui a peça
+   informa o que a lei admite no terreno; discutir as alternativas de
+   interpretação no corpo de um documento que vai ao balcão tirava o
+   foco de quem só quer saber o que pode construir. */
+function certDoc(C, pt, img) {
+  return certFicha(C, pt) + certSecCroqui(C, img) + certSecUsos(C) + certSecParam(C) + certSecPotencial(C) +
+    certSecEmb(C) + certSecParcel(C) + certSecVagas(C) + certSecInst(C);
+}
+
+/* ============================================================
+   Dados da emissão
+
+   Preenchidos na aba e impressos no PDF. O que é do processo — número,
+   requerente, inscrição — muda a cada certidão e começa vazio; quem
+   assina é sempre o mesmo servidor, então esses três campos voltam na
+   sessão seguinte. Campo não preenchido sai como linha em branco, para
+   ser completado à caneta: a peça é minuta e tem de poder ir ao papel
+   incompleta.
+   ============================================================ */
+const EMIS_CAMPOS = [
+  { k: "num",    r: "Certidão nº",             ph: "ex.: 041/2026" },
+  { k: "proc",   r: "Processo administrativo", ph: "ex.: 2026/0001234" },
+  { k: "req",    r: "Requerente",              ph: "nome do interessado" },
+  { k: "insc",   r: "Inscrição imobiliária",   ph: "cadastro do imóvel" },
+  { k: "end",    r: "Endereço do imóvel",      ph: "logradouro, nº, bairro" },
+  { k: "data",   r: "Data de emissão",         ph: "", tipo: "date" },
+  { k: "val",    r: "Prazo de validade",       ph: "ex.: 180 dias da emissão" },
+  { k: "resp",   r: "Responsável pela emissão", ph: "nome", fixo: true },
+  { k: "respc",  r: "Cargo e matrícula",        ph: "cargo · matrícula", fixo: true },
+  { k: "aut",    r: "Autoridade competente",    ph: "nome", fixo: true },
+  { k: "autc",   r: "Cargo ou secretaria",      ph: "Secretaria Municipal competente", fixo: true }
+];
+const CH_EMIS = "sjb.cert.emissor";
+const EMIS = {};
+let EMIS_LIDO = false;
+
+/* os campos de quem assina sobrevivem à sessão; o armazenamento do
+   navegador pode não existir, e nesse caso a aba funciona igual */
+function carregaEmissor() {
+  try {
+    const v = JSON.parse(localStorage.getItem(CH_EMIS) || "{}");
+    ["resp", "respc", "aut", "autc"].forEach(k => { if (v[k]) EMIS[k] = v[k]; });
+  } catch (e) { /* sem armazenamento: segue sem lembrar */ }
+}
+function salvaEmissor() {
+  try {
+    localStorage.setItem(CH_EMIS, JSON.stringify(
+      { resp: EMIS.resp || "", respc: EMIS.respc || "", aut: EMIS.aut || "", autc: EMIS.autc || "" }));
+  } catch (e) { /* idem */ }
+}
+/* a data começa hoje, e continua editável */
+function dataEmissao() {
+  if (EMIS.data) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(EMIS.data);
+    if (m) return m[3] + "/" + m[2] + "/" + m[1];
+    return EMIS.data;
+  }
+  return new Date().toLocaleDateString("pt-BR");
+}
+function emisISOhoje() {
+  const d = new Date(), z = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+}
+
+function formEmissao() {
+  return '<div class="emisbox"><h3>Dados da emissão</h3>' +
+    '<p class="hint">Preencha o que o órgão já souber: o que ficar vazio sai como linha em branco no PDF, ' +
+    "para completar à mão. Nome e cargo de quem assina ficam guardados para as próximas certidões.</p>" +
+    '<div class="emisg">' + EMIS_CAMPOS.map(c =>
+      '<label class="emisf' + (c.fixo ? " fx" : "") + '"><span>' + c.r + "</span>" +
+      '<input type="' + (c.tipo || "text") + '" data-emis="' + c.k + '"' +
+      (c.ph ? ' placeholder="' + c.ph + '"' : "") +
+      ' value="' + cEsc(EMIS[c.k] || (c.k === "data" ? emisISOhoje() : "")) + '"></label>').join("") +
+    "</div></div>";
+}
+
+function ligaFormEmissao(C) {
+  document.querySelectorAll("#certCorpo input[data-emis]").forEach(i =>
+    i.addEventListener("input", ev => {
+      const k = ev.target.dataset.emis;
+      EMIS[k] = ev.target.value;
+      if (["resp", "respc", "aut", "autc"].indexOf(k) >= 0) salvaEmissor();
+      /* a data e o endereço aparecem na ficha do documento: redesenha
+         só o corpo, nunca o formulário — refazer o formulário tiraria
+         o cursor do campo a cada tecla */
+      if (k === "data" || k === "end") {
+        const d = document.querySelector("#certCorpo .certdoc");
+        if (d && C) { d.innerHTML = certDoc(C, PT_MAPA); dimensionaCroqui(C); desenhaCroqui(C); }
+      }
+    }));
+}
+
+/* ============================================================
+   A aba
+   ============================================================ */
+function certPronta() {
+  if (!PT_MAPA) return { ok: false, m: "localize" };
+  const P = paramZona(zonaAtual, setorAtual, $("zeis") ? $("zeis").value : zeisRef);
+  if (!P) return { ok: false, m: "zona" };
+  if (P.semParametros) return { ok: false, m: "semparam", P };
+  return { ok: true, P };
+}
+
+function renderCert() {
+  const el = $("certCorpo"); if (!el) return;
+  const st = certPronta();
+  if (!st.ok) {
+    /* no computador o mapa está ao lado e não há aba para abrir; no
+       celular ele é aba, e aí vale o atalho */
+    const ondeMapa = CELULAR ? "Abra a aba <b>Mapa</b> e clique sobre o terreno"
+                             : "Clique sobre o terreno no mapa ao lado";
+    const txt = st.m === "localize"
+      ? "<b>Localize o terreno no mapa.</b><br><br>A certidão é emitida a partir do ponto: é dele que saem o " +
+        "enquadramento na zona e a hierarquia da via de acesso, e sem eles o documento não tem como afirmar " +
+        "o que pode ser construído. " + ondeMapa + ", ou busque o endereço no campo de busca."
+      : st.m === "semparam"
+      ? "<b>" + st.P.sigla + " — " + st.P.nome + ".</b><br><br>" + (st.P.motivo || "A lei não fixa parâmetros urbanísticos para esta zona.") +
+        " Não há o que certificar em termos de potencial construtivo."
+      : "<b>Nenhuma zona com parâmetros selecionada.</b><br><br>Clique sobre o terreno na aba Mapa.";
+    el.innerHTML = '<div class="nota">' + txt + "</div>" +
+      (CELULAR ? '<button class="b" id="certVaiMapa" style="margin-top:12px">Ir para o mapa</button>' : "");
+    const b = $("certVaiMapa");
+    if (b) b.addEventListener("click", () => {
+      const t = document.querySelector('#tabs button[data-p="mapa"]');
+      if (t) t.click();
+    });
+    return;
+  }
+  const C = motorCert(st.P, LOT, $("via").value);
+  if (!C) { el.innerHTML = '<div class="nota">Não foi possível montar a certidão para esta zona.</div>'; return; }
+  if (!EMIS_LIDO) { carregaEmissor(); EMIS_LIDO = true; }
+  window.__CERT = C;
+  el.innerHTML =
+    '<div class="tarja">Minuta — sem valor de certidão</div>' +
+    '<p class="hint">Peça instruída para o órgão municipal conferir, numerar, datar e assinar. ' +
+    "Certidão é ato da Administração: esta ferramenta produz o conteúdo, não o ato.</p>" +
+    formEmissao() +
+    '<div class="certdoc">' + certDoc(C, PT_MAPA) + "</div>" +
+    '<button class="b pr" id="btnCert" style="margin-top:16px">Gerar minuta de certidão em PDF</button>';
+  ligaFormEmissao(C);
+  dimensionaCroqui(C);
+  desenhaCroqui(C);
+  const b = $("btnCert");
+  if (b) b.addEventListener("click", () => abreAviso(certidaoPDF));
+}
+
+/* ---------- o papel ---------- */
+function certidaoPDF() {
+  const st = certPronta();
+  if (!st.ok) { alert("Localize o terreno no mapa antes de emitir a certidão."); return; }
+  const C = motorCert(st.P, LOT, $("via").value);
+  if (!C) return;
+
+  /* o croqui é capturado na paleta clara e em resolução dobrada, como
+     as peças do relatório: canvas não sobrevive ao window.print().
+     A aba precisa estar à vista para o canvas ter largura medida — se
+     o pedido vier de outra aba, mostra-se esta antes, como o relatório
+     faz com a de resultado. */
+  let imgCroqui = null;
+  const cv = $("croqui");
+  if (cv) {
+    document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x.dataset.p === "cert"));
+    document.querySelectorAll(".pane").forEach(x => x.classList.toggle("on", x.id === "p-cert"));
+    const alt0 = cv.style.height, lar0 = cv.style.width;
+    PRINT = true; PAL = PAL_LIGHT;
+    let larg = cv.getBoundingClientRect().width;
+    if (larg < 2) { cv.style.width = "760px"; larg = 760; }
+    cv.style.height = Math.round(larg / (CROQ_LARG_MM / alturaCroquiMM(C))) + "px";
+    desenhaCroqui(C);
+    imgCroqui = cv.toDataURL("image/png");
+    PRINT = false; PAL = PAL_DARK;
+    cv.style.height = alt0; cv.style.width = lar0;
+    dimensionaCroqui(C);
+    desenhaCroqui(C);
+  }
+
+  /* a folha de assinatura não se parte: campos em branco numa página
+     e as firmas na seguinte é convite a assinar peça incompleta.
+     Campo preenchido imprime o valor; campo vazio imprime a linha. */
+  const linha = (rot, v) => '<tr><td class="r">' + rot + '</td><td class="d' +
+    (v ? '">' + cEsc(v) : ' bl">') + "</td></tr>";
+  const firma = (nome, cargo, rotPad, cargoPad) =>
+    '<div><div class="ln"></div><div class="fn">' + cEsc(nome || rotPad) + "</div>" +
+    '<div class="fc">' + cEsc(cargo || cargoPad) + "</div></div>";
+
+  const assina =
+    '<section class="pg-emis"><h2>Emissão</h2>' +
+    '<table class="ficha assina">' +
+    linha("Certidão nº", EMIS.num) +
+    linha("Processo administrativo", EMIS.proc) +
+    linha("Requerente", EMIS.req) +
+    linha("Inscrição imobiliária", EMIS.insc) +
+    linha("Endereço do imóvel", EMIS.end) +
+    linha("Data de emissão", dataEmissao()) +
+    linha("Prazo de validade", EMIS.val) + "</table>" +
+    '<div class="firma">' +
+    firma(EMIS.resp, EMIS.respc, "Responsável pela emissão", "Nome, cargo e matrícula") +
+    firma(EMIS.aut, EMIS.autc, "Autoridade competente", "Secretaria Municipal competente") +
+    "</div>";
+
+  const ress = '<div class="ressalva"><b>Ressalva.</b> Este documento é uma <b>minuta</b> produzida por ferramenta de ' +
+    "apoio à decisão e <b>não constitui certidão</b>: certidão é ato da Administração, e só passa a existir quando " +
+    "numerada, datada e assinada pela autoridade competente. O conteúdo reproduz o Plano Diretor, a Lei de Uso, " +
+    "Ocupação e Parcelamento do Solo e o Código de Obras e Edificações vigentes na data de emissão, aplicados à " +
+    "geometria informada para o terreno — que não foi confrontada com a matrícula, o cadastro imobiliário nem " +
+    "levantamento topográfico. Não substitui o projeto arquitetônico, o licenciamento ambiental nem a análise do " +
+    "órgão municipal competente, e a decisão sobre qual leitura da lei prevalece é de quem assina. Havendo unidade " +
+    "de conservação, área de preservação permanente ou bem tombado no recorte, a viabilidade sob esses aspectos não " +
+    "pode ser aferida aqui.</div></section>";
+
+  const doc =
+    '<div class="tarja-pdf">Minuta — sem valor de certidão</div>' +
+    "<h1>Certidão de Informações Urbanísticas</h1>" +
+    '<p class="sub">Informações sobre o uso e a ocupação do solo no terreno · ' +
+    st.P.sigla + " — " + cEsc(st.P.nome) + " · " + dataEmissao() + "</p>" +
+    /* a ressalva fecha a mesma seção da assinatura: ninguém assina
+       uma folha cuja ressalva ficou na anterior */
+    certDoc(C, PT_MAPA, imgCroqui) + assina + ress;
+
+  const cabeca = '<div class="ph"><div class="sp">' +
+    '<div class="t1">Certidão de Informações Urbanísticas — minuta</div>' +
+    '<div class="t2">São João da Barra/RJ · ' + cEsc(st.P.nome) + " · sem valor de certidão</div></div>" +
+    '<img src="' + (LOGOS.prefPdf || LOGOS.pref || "") + '" alt="Prefeitura de São João da Barra"></div>';
+  const rodape = '<div class="pf">' +
+    '<img src="' + (LOGOS.neplanPdf || LOGOS.neplan || "") + '" alt="NEPLAN">' +
+    '<span><b>NEPLAN</b> — Núcleo de Engenharia em Planejamento e Infraestrutura Urbana · neplan@ufv.br · ' +
+    "versão " + VERSAO.app + ", " + VERSAO.data +
+    "<br><b>Minuta sem valor de certidão</b> — o ato é da Administração e depende de numeração, data e assinatura." +
+    "<br>Base legal: " + VERSAO.leis +
+    "<br>Origem do dado espacial: " + VERSAO.geo + "</span></div>";
+
+  $("print").innerHTML =
+    '<table class="folha"><thead><tr><td>' + cabeca + "</td></tr></thead>" +
+    "<tfoot><tr><td>" + rodape + "</td></tr></tfoot>" +
+    '<tbody><tr><td><div class="doc cert">' + doc + "</div></td></tr></tbody></table>";
+  setTimeout(() => window.print(), 150);
+}
+
+/* ============================================================
+   Croqui do terreno
+
+   Peça gráfica da certidão. Não é a planta do relatório: ali há um
+   projeto para conferir, aqui não há projeto nenhum. O croqui mostra
+   só o que a certidão afirma — a forma e as medidas do lote, qual
+   lado é testada, e o que sobra depois dos afastamentos. A mancha
+   hachurada é a envoltória, não uma edificação.
+
+   Traço à mão livre, como as demais peças: é croqui de estudo, e o
+   desenho tem de dizer isso antes de qualquer ressalva escrita.
+   ============================================================ */
+const CROQ_FOLGA = 46;
+
+function desenhaCroqui(C, alvo) {
+  const F = ctxBase(alvo || "croqui");
+  if (!F || !C) return;
+  const g = F.g, W = F.W, H = F.H;
+  const pts = C.lote.pts, fronts = C.lote.fronts;
+  const env = C.envTorre;
+
+  const cxLeg = caixaCroqui(g, !!env);
+  let s = escalaFit(pts, W, H, CROQ_FOLGA, CROQ_FOLGA, 0);
+  const P0 = pts.map(p => T(p, s));
+  const bx0 = Math.min(...P0.map(p => p.X)) - CROQ_FOLGA;
+  const by1 = Math.max(...P0.map(p => p.Y)) + CROQ_FOLGA;
+  if (bx0 < cxLeg.x + cxLeg.w + 6 && by1 > H - cxLeg.h - 14)
+    s = escalaFit(pts, W, H, CROQ_FOLGA, CROQ_FOLGA, cxLeg.h + 12);
+  cxLeg.y = H - cxLeg.h - 8;
+  const tela = Q => Q.map(p => T(p, s));
+
+  /* o que sobra depois dos afastamentos, hachurado */
+  if (env) {
+    const pe = tela(env.pts);
+    hachuraMao(g, pe, PAL.proj, PAL.face, 8, -38, 5);
+    poliMao(g, pe, PAL.env, 1.0, { sem: 11, dash: [7, 3, 1.5, 3], over: 1.2, amp: .8, alfa: .85 });
+  }
+
+  /* divisas */
+  poliMao(g, tela(pts), PAL.lote, 1.7, { sem: 3, passes: 2, over: 3 });
+
+  /* testadas, por cima */
+  fronts.forEach((i, j) => {
+    const a = T(pts[i], s), b = T(pts[(i + 1) % pts.length], s);
+    g.beginPath(); riscoMao(g, a.X, a.Y, b.X, b.Y, 41 + j, 1.1, 2);
+    g.strokeStyle = PAL.rec; g.lineWidth = 3.4; g.lineCap = "round"; g.stroke();
+    g.lineCap = "butt";
+  });
+
+  /* cotas: a medida do lado e o afastamento que incide nele */
+  g.font = ftx(9.8);
+  const cen = centroid(pts);
+  pts.forEach((p, i) => {
+    const q = pts[(i + 1) % pts.length];
+    const mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
+    const dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy) || 1;
+    let nx = -dy / L, ny = dx / L;
+    if ((mid.x + nx - cen.x) ** 2 + (mid.y + ny - cen.y) ** 2 < (mid.x - cen.x) ** 2 + (mid.y - cen.y) ** 2)
+      { nx = -nx; ny = -ny; }
+    const frontal = fronts.indexOf(i) >= 0;
+    const rec = frontal ? C.af.f : C.af.u;
+    const t2 = rec > 1e-6 ? "afast. " + fmt(rec, 2) + " m" + (frontal ? " (frontal)" : "")
+                          : "sem afastamento exigido";
+    cotaMao(g, T(p, s), T(q, s), nx, -ny, 200 + i,
+      fmt(edgeLen(pts, i), 2) + " m", PAL.lote, t2, frontal ? PAL.rec : PAL.tx);
+  });
+
+  /* a área do lote no meio da figura, que é o número que se procura */
+  const cq = T(cen, s);
+  g.font = ftx(11); g.textAlign = "center"; g.textBaseline = "middle";
+  const rot = fmt(C.lote.area, 2) + " m²", lw = g.measureText(rot).width;
+  g.fillStyle = PRINT ? "rgba(255,255,255,.86)" : "rgba(11,13,17,.80)";
+  g.fillRect(cq.X - lw / 2 - 7, cq.Y - 10, lw + 14, 20);
+  g.fillStyle = PAL.lote; rotulo(g, rot, cq.X, cq.Y);
+
+  desenhaLegCroqui(g, cxLeg, !!env);
+  g.textBaseline = "alphabetic"; g.textAlign = "left";
+}
+
+function itensCroqui(temEnv) {
+  const it = [{ t: "linha", cor: PAL.lote, larg: 1.7, txt: "divisa do lote" },
+              { t: "linha", cor: PAL.rec, larg: 3.4, txt: "testada — onde incide o afastamento frontal" }];
+  if (temEnv) {
+    it.push({ t: "tracejo", cor: PAL.env, larg: 1.0, txt: "limite dos afastamentos (envoltória)" });
+    it.push({ t: "hachura", cor: PAL.proj, txt: "o que resta do lote depois dos afastamentos" });
+  }
+  return it;
+}
+function caixaCroqui(g, temEnv) {
+  const it = itensCroqui(temEnv);
+  g.font = ftx(LEG_FS);
+  const w = Math.max(...it.map(i => g.measureText(i.txt).width)) + LEG_AM + LEG_GAP + LEG_PAD * 2;
+  return { x: 8, y: 0, w, h: it.length * LEG_LH + LEG_PAD * 2 - 3, n: it.length };
+}
+function desenhaLegCroqui(g, LG, temEnv) {
+  const it = itensCroqui(temEnv);
+  g.fillStyle = PRINT ? "rgba(255,255,255,.92)" : "rgba(11,13,17,.88)";
+  g.fillRect(LG.x, LG.y, LG.w, LG.h);
+  poliMao(g, [{ X: LG.x, Y: LG.y }, { X: LG.x + LG.w, Y: LG.y },
+              { X: LG.x + LG.w, Y: LG.y + LG.h }, { X: LG.x, Y: LG.y + LG.h }],
+    PAL.ar, 0.9, { sem: 93, over: 1.2, amp: .5 });
+  g.font = ftx(LEG_FS); g.textAlign = "left"; g.textBaseline = "middle";
+  it.forEach((i, j) => {
+    const y = LG.y + LEG_PAD + j * LEG_LH + LEG_LH / 2 - 1;
+    const x0 = LG.x + LEG_PAD, x1 = x0 + LEG_AM;
+    if (i.t === "hachura") {
+      hachuraMao(g, [{ X: x0, Y: y - 4 }, { X: x1, Y: y - 4 }, { X: x1, Y: y + 4 }, { X: x0, Y: y + 4 }],
+        i.cor, PAL.face, 5, -38, 7 + j);
+      poliMao(g, [{ X: x0, Y: y - 4 }, { X: x1, Y: y - 4 }, { X: x1, Y: y + 4 }, { X: x0, Y: y + 4 }],
+        i.cor, 0.8, { sem: 21 + j, over: .8, amp: .4 });
+    } else {
+      g.strokeStyle = i.cor; g.lineWidth = i.larg; g.lineCap = "round";
+      if (i.t === "tracejo") g.setLineDash([7, 3, 1.5, 3]);
+      g.beginPath(); riscoMao(g, x0, y, x1, y, 31 + j, .5, 1); g.stroke();
+      g.setLineDash([]); g.lineCap = "butt";
+    }
+    g.fillStyle = PAL.tx;
+    rotulo(g, i.txt, x1 + LEG_GAP, y);
+  });
+}
+
+/* A moldura acompanha a forma do lote. Um lote de 12 × 30 m numa
+   caixa deitada desperdiçaria quatro quintos da largura e sairia
+   ilegível; a proporção da figura é a do lote mais a folga que as
+   cotas ocupam, limitada ao que cabe na folha. */
+function aspectoCroqui(C) {
+  const b = bbox(C.lote.pts);
+  const wl = Math.max(b.x1 - b.x0, .001), hl = Math.max(b.y1 - b.y0, .001);
+  const folga = Math.max(wl, hl) * 0.18;
+  return Math.min(2.4, Math.max(1.05, (wl + 2 * folga) / (hl + 2 * folga)));
+}
+/* altura da figura no papel, em milímetros, para a largura útil da
+   folha A4 com as margens do relatório */
+/* o teto de altura é o que sobra da primeira folha depois do
+   cabeçalho, da ficha e da legenda da figura: passando disso o croqui
+   empurra a si mesmo para a página seguinte e deixa a primeira vazia */
+const CROQ_LARG_MM = 176, CROQ_H_MIN = 68, CROQ_H_MAX = 116;
+function alturaCroquiMM(C) {
+  return Math.round(Math.min(CROQ_H_MAX, Math.max(CROQ_H_MIN, CROQ_LARG_MM / aspectoCroqui(C))));
+}
+/* o canvas não tem altura própria: recebe a da largura disponível */
+function dimensionaCroqui(C) {
+  const c = $("croqui"); if (!c) return;
+  const w = c.getBoundingClientRect().width;
+  const a = C ? CROQ_LARG_MM / alturaCroquiMM(C) : 1.06;
+  if (w > 2) c.style.height = Math.round(w / a) + "px";
+}
 
 </script>
 </body>
