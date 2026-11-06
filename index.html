@@ -862,6 +862,49 @@ table.ex tr.sim td{background:rgba(242,181,68,.07)}
 h3{font-size:12.5px;margin:16px 0 7px;letter-spacing:.3px}
 h3:first-child{margin-top:0}
 .hint{font-size:11px;color:var(--tx2);line-height:1.5;margin:6px 0 0}
+/* ---- barra do estudo e referência ---- */
+#barraEstudo{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:12px 0 2px;
+  padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+#barraEstudo .bh{font-size:10.5px;color:var(--tx2);flex:1;min-width:120px}
+#vistaTools{align-items:center;margin-top:-2px}
+#vistaTools .b{padding:4px 9px}
+#vistaTools #vMais,#vistaTools #vMenos{min-width:30px;font-size:14px;line-height:1}
+#vhint{font-size:10px;flex:1;min-width:120px}
+#arqMsg{margin:7px 0 0}
+#refDet{border:1px solid var(--line);border-radius:7px;padding:0 9px;margin:0 0 10px;background:var(--panel2)}
+#refDet>summary{cursor:pointer;font-size:11.5px;padding:7px 0;list-style:none;color:var(--tx)}
+#refDet>summary::-webkit-details-marker{display:none}
+#refDet>summary::before{content:"▸ ";color:var(--acc)}
+#refDet[open]>summary::before{content:"▾ "}
+#refDet[open]{padding-bottom:8px}
+#refDet .tools{margin:2px 0 4px}
+/* ---- arquivo e referência ---- */
+.refhd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:10px 0 2px}
+.refhd b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.refhd span{font-size:10px;color:var(--tx2);flex:none}
+#refCam{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin:4px 0 2px}
+.chk2{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);margin:0}
+/* a regra global dá 100% de largura a todo input: aqui o check tem de
+   ficar do tamanho dele, senão empurra o nome da camada para fora */
+.chk2 input{width:auto;flex:none;margin:0}
+.chk2 span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rf{display:flex;align-items:center;gap:6px;margin:3px 0}
+.rf .d{flex:1;min-width:0;font-size:11px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rf .b{padding:3px 8px;font-size:10.5px}
+/* ---- lista de edificações ---- */
+#edifs{display:flex;flex-direction:column;gap:5px}
+.ed{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:7px;padding:6px 8px;cursor:pointer}
+.ed.sel{border-color:var(--acc);background:rgba(91,157,255,.10)}
+.ed .m{flex:none;width:21px;height:21px;border-radius:5px;background:var(--line);color:var(--tx);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ed.sel .m{background:var(--acc);color:#07122a}
+.ed .d{flex:1;min-width:0}
+.ed .d b{font-size:12px;display:block;line-height:1.3}
+.ed .d span{font-size:10px;color:var(--tx2);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed .x{flex:none;background:none;border:0;color:var(--tx2);font-size:15px;line-height:1;cursor:pointer;padding:2px 4px}
+.ed .x:hover{color:var(--err)}
+.ed .av{flex:none;color:var(--warn);font-size:11px}
 /* ---- medida dos lados do lote ---- */
 #ladosBox{margin-top:12px}
 #lados{display:grid;grid-template-columns:1fr 1fr;gap:6px 9px;margin:6px 0 2px}
@@ -1263,7 +1306,28 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
       </div>
       <div id="zidx"></div>
 
+
+      <!-- Salvar e abrir não são um passo do estudo: são o que se faz
+           antes de começar e depois de terminar. Ficam numa barra no
+           alto, fora da numeração. -->
+      <div id="barraEstudo">
+        <button class="b" id="btnSalvar">Salvar estudo</button>
+        <button class="b" id="btnAbrir">Abrir estudo</button>
+        <span class="bh">arquivo .json com tudo o que está na tela</span>
+        <input type="file" id="fileEstudo" accept=".json,application/json" style="display:none">
+      </div>
+      <div id="arqMsg" class="msg" style="display:none"></div>
+
       <fieldset><legend>1. Lote</legend>
+        <!-- A implantação de referência abre a seção porque é o que se
+             faz antes de desenhar: ela é o fundo sobre o qual o lote é
+             traçado, e de onde o contorno pode vir pronto. -->
+        <details id="refDet">
+          <summary>Implantação de referência <span class="cite">— DXF, para desenhar por cima</span></summary>
+          <div class="tools"><button class="b" id="btnDXF">Importar .dxf</button></div>
+          <input type="file" id="fileDXF" accept=".dxf,.dwg,.pdf,text/plain" style="display:none">
+          <div id="refBox"></div>
+        </details>
         <div class="tools">
           <button class="b on" id="mRect">Retângulo</button>
           <button class="b" id="mDraw">Desenhar polígono</button>
@@ -1271,8 +1335,16 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
           <button class="b" id="mEdif">Desenhar edificação</button>
           <button class="b" id="mClear">Limpar</button>
         </div>
+        <div class="tools" id="vistaTools">
+          <button class="b" id="vMais" title="aproximar">+</button>
+          <button class="b" id="vMenos" title="afastar">−</button>
+          <button class="b" id="vTudo">Enquadrar tudo</button>
+          <button class="b" id="vLote">Enquadrar lote</button>
+          <span class="cite" id="vhint">roda do mouse amplia · arraste com Shift ou com o botão do meio para deslocar</span>
+        </div>
         <canvas id="lotc"></canvas>
         <p class="hint" id="lothint"></p>
+        <p class="hint" id="edifinfo" style="display:none"></p>
         <div id="ladosBox" style="display:none">
           <label>Medida dos lados <span class="cite">— digite para fixar a medida exata</span></label>
           <div id="lados"></div>
@@ -1280,10 +1352,6 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
           parado e o segundo desliza sobre a própria linha. Quem absorve a diferença é o lado seguinte — ajuste-o em
           seguida, se precisar. Medida que colapse um lado ou cruze o polígono é recusada, e o campo volta ao valor anterior.</p>
         </div>
-        <p class="hint" id="edifinfo" style="display:none"></p>
-        <label>Encostar na divisa — 1º e 2º pavimentos acima do solo</label>
-        <div id="encostas"></div>
-        <p class="hint" id="encinfo"></p>
         <div class="row">
           <div><label>Testada / frente (m)</label><input type="number" id="frente" value="12" min="1" step="0.1"></div>
           <div><label>Profundidade (m)</label><input type="number" id="prof" value="30" min="1" step="0.1"></div>
@@ -1293,6 +1361,41 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
           <div><label>Área do lote (m²)</label><input type="number" id="lote" value="360" min="1" step="1"></div>
           <div><label>Perímetro (m)</label><input type="number" id="perim" value="84" readonly></div>
         </div>
+      </fieldset>
+
+      <fieldset><legend>2. Edificações do lote</legend>
+        <div id="edifs"></div>
+        <div class="tools" style="margin:8px 0 4px">
+          <button class="b" id="addEdif">+ Edificação</button>
+        </div>
+        <p class="hint" id="edifhint">O lote pode receber mais de uma construção — a lei admite a multifamiliar
+        horizontal, vila ou geminada. Cada edificação tem o seu perímetro, a sua pilha de pavimentos e o seu uso.
+        Taxa de ocupação, permeabilidade e Coeficiente de Aproveitamento medem o conjunto; gabarito, altura e o
+        direito de encostar na divisa ficam com cada uma. <b>Com duas ou mais, cada uma precisa de perímetro
+        desenhado</b>: repartir a área entre elas é decisão de projeto, não da lei.</p>
+        <label>Uso da edificação em foco</label>
+        <select id="uso"></select>
+        <div class="chk" id="boxGeminada" style="display:none"><input type="checkbox" id="geminada"><label for="geminada" style="margin:0">Multifamiliar horizontal (vila ou geminada) <span class="cite">— computa toda a área, art. 26, caput</span></label></div>
+        <label>Unidades habitacionais <span class="cite">— para o cálculo de vagas (Anexo III)</span></label>
+        <input type="number" id="unid" value="0" min="0" step="1">
+        <p class="hint">Deixe em zero se não souber: o relatório apresenta a regra de vagas aplicável em vez de um número.</p>
+        <label>Encostar na divisa — 1º e 2º pavimentos acima do solo</label>
+        <div id="encostas"></div>
+        <p class="hint" id="encinfo"></p>
+        <label>Pavimentos da edificação em foco <span class="cite">— de baixo para cima</span></label>
+        <div class="tools">
+          <button class="b" id="addPav">+ Pavimento</button>
+          <button class="b" id="addSub">+ Subsolo</button>
+          <button class="b" id="addCob">+ Cobertura</button>
+          <button class="b" id="addCx">+ Caixa d'água</button>
+          <button class="b" id="limpaPav">Limpar</button>
+        </div>
+        <div class="pvhd"><span>Nível</span><span>Posição</span><span>Ocupação</span><span>Pé-dir.</span><span></span></div>
+        <div id="pilha"></div>
+        <p class="hint">A ocupação de cada pavimento define se ele é <b>habitado</b> e se a área <b>computa no Coeficiente de Aproveitamento</b> (art. 26). A altura da edificação exclui o subsolo, a casa de máquinas e a caixa d'água (art. 25, V e § 2º). Os pés-direitos mínimos vêm dos Anexos IV e V do Código de Obras.</p>
+      </fieldset>
+
+      <fieldset><legend>3. Enquadramento do lote</legend>
         <label>Via de acesso <span class="cite">— Anexo III do Plano de Mobilidade</span></label>
         <select id="via"></select>
         <p class="hint" id="viahint" style="display:none"></p>
@@ -1306,29 +1409,6 @@ table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
         <div class="chk"><input type="checkbox" id="declive"><label for="declive" style="margin:0">Declividade igual ou superior a 30% <span class="cite">(art. 38, VI)</span></label></div>
         <div class="chk"><input type="checkbox" id="tombado"><label for="tombado" style="margin:0">Imóvel tombado ou no entorno de bem tombado <span class="cite">(art. 21; ZIHC)</span></label></div>
         <div class="chk"><input type="checkbox" id="parcel"><label for="parcel" style="margin:0">Envolve parcelamento do solo (loteamento, desmembramento ou desdobro)</label></div>
-      </fieldset>
-
-
-
-      <fieldset><legend>2. Uso da edificação</legend>
-        <select id="uso"></select>
-        <div class="chk" id="boxGeminada" style="display:none"><input type="checkbox" id="geminada"><label for="geminada" style="margin:0">Multifamiliar horizontal (vila ou geminada) <span class="cite">— computa toda a área, art. 26, caput</span></label></div>
-        <label>Unidades habitacionais <span class="cite">— para o cálculo de vagas (Anexo III)</span></label>
-        <input type="number" id="unid" value="0" min="0" step="1">
-        <p class="hint">Deixe em zero se não souber: o relatório apresenta a regra de vagas aplicável em vez de um número.</p>
-      </fieldset>
-
-      <fieldset><legend>3. Pavimentos — de baixo para cima</legend>
-        <div class="tools">
-          <button class="b" id="addPav">+ Pavimento</button>
-          <button class="b" id="addSub">+ Subsolo</button>
-          <button class="b" id="addCob">+ Cobertura</button>
-          <button class="b" id="addCx">+ Caixa d'água</button>
-          <button class="b" id="limpaPav">Limpar</button>
-        </div>
-        <div class="pvhd"><span>Nível</span><span>Posição</span><span>Ocupação</span><span>Pé-dir.</span><span></span></div>
-        <div id="pilha"></div>
-        <p class="hint">A ocupação de cada pavimento define se ele é <b>habitado</b> e se a área <b>computa no Coeficiente de Aproveitamento</b> (art. 26). A altura da edificação exclui o subsolo, a casa de máquinas e a caixa d'água (art. 25, V e § 2º). Os pés-direitos mínimos vêm dos Anexos IV e V do Código de Obras.</p>
       </fieldset>
 
     </div>
@@ -1406,8 +1486,8 @@ const VIAS_GEO={"n":["Avenida Rotary","Rodovia Alberto Duaire","Rua Joaquim De B
    1. Base legal
    ============================================================ */
 const VERSAO = {
-  app: "1.2",
-  data: "setembro de 2026",
+  app: "1.3",
+  data: "novembro de 2026",
   leis: "Plano Diretor de Desenvolvimento Sustentável; Lei de Uso, Ocupação e Parcelamento do Solo; " +
         "Código de Obras e Edificações; Código de Posturas; Plano de Mobilidade Urbana — São João da Barra/RJ",
   geo: "Anexo II (macrozoneamento) e Anexo III (zoneamento urbano) — arquivos KMZ fornecidos pelo Município"
@@ -1900,7 +1980,6 @@ const AF_FRONTAL = {
   nota: "O simulador aplica automaticamente apenas o inciso IV, ao permitir que o subsolo totalmente enterrado ocupe o afastamento frontal. Os demais incisos são liberdades de projeto: não alteram a envoltória calculada, mas alteram o que pode ser implantado dentro dela."
 };
 
-
 /* ============================================================
    2. Geometria e motor de cálculo
    ============================================================ */
@@ -2305,6 +2384,15 @@ function calcVagas(P, uso, via, unid, areaResid, areaNaoResid) {
    ============================================================ */
 function motor(est) {
   const R = { erros: [], avisos: [], infos: [], check: [], exig: [] };
+  /* Havendo mais de uma edificação no lote, os índices que medem o
+     LOTE — taxa de ocupação, taxa de permeabilidade e Coeficiente de
+     Aproveitamento — não podem ser julgados aqui: cada construção é
+     parcela, e quem soma e decide é motorLote(). Os números continuam
+     sendo calculados; o que não se faz é transformá-los em veredito
+     de uma edificação isolada. */
+  const MULTI = !!est.multi;
+  R.multi = MULTI;
+  R.nome = est.nome || "";
   const ck = (req, exig, proj, st, art) => R.check.push({ req, exig, proj, st, art });
   const P = paramZona(est.zona, est.setor, est.zeisRef);
   R.P = P;
@@ -2351,6 +2439,16 @@ function motor(est) {
 
   /* ---- 2. pavimentos ---- */
   const pavs = est.pav.map(p => ({ ...p, O: OCUP[p.ocup], Q: POS[p.pos] }));
+  /* o rótulo do nível acompanha o pavimento: T, 2, 3… acima do solo e
+     S1, S2… abaixo. Vem daqui, e não da pilha da tela, porque o corte e
+     o relatório podem estar desenhando a pilha de outra edificação. */
+  {
+    let _s = 0, _a = 0;
+    pavs.forEach(q => {
+      q.rot = q.Q.sub ? "S" + (++_s) : (++_a === 1 ? "T" : String(_a));
+      q.edif = est.nome || "";
+    });
+  }
   const habUni = est.uso === "res_uni" || (USO_INFO[est.uso].multi && est.geminada);
   const multiOuMisto = ["res_multi", "misto_local", "misto_geral"].indexOf(est.uso) >= 0;
   /* Na ZDE o cômputo não sai do art. 26. O Capítulo XI tem regra própria:
@@ -2891,7 +2989,7 @@ function motor(est) {
 
   /* o que a escolha pediu e o cálculo não pôde entregar */
   R.divisaPerdida = R.emb ? R.emb.lados.filter(i => R.naDivisa.indexOf(i) < 0) : [];
-  if (R.divisaPerdida.length) {
+  if (R.divisaPerdida.length && amarra) {
     const nome = i => "divisa " + (i + 1) + " (" + tipoLado(i) + ")";
     R.infos.push("A projeção do embasamento foi limitada pela " + amarra + ": a envoltória com as " +
       "divisas escolhidas daria " + fmt(embArea, 2) + " m², acima do permitido. A edificação encurtou " +
@@ -2974,11 +3072,16 @@ function motor(est) {
     }
   }
 
-  /* ---- 8. coeficiente de aproveitamento ---- */
+  /* ---- 8. coeficiente de aproveitamento ----
+     O Coeficiente mede o lote, não a construção: havendo mais de uma,
+     quem o julga é o consolidador, sobre a soma das áreas computáveis.
+     Aqui o número continua sendo calculado — serve de parcela — mas
+     não vira veredito, senão duas construções pequenas passariam
+     separadas e reprovariam juntas, ou o contrário. */
   const caProj = areaComp / S;
   const caBas = P.ca.bas, caMax = P.ca.max;
   R.ca = { proj: caProj, bas: caBas, max: caMax, min: P.ca.min, outorga: false };
-  if (caBas !== null && caBas !== undefined) {
+  if (!MULTI && caBas !== null && caBas !== undefined) {
     if (caProj <= caBas + 1e-9) {
       ck("Coeficiente de Aproveitamento", "até " + fmt(caBas, 2) + " (básico)", fmt(caProj, 2), "ok", "Anexo II; art. 25, I, “b”");
     } else if (caMax && caProj <= caMax + 1e-9) {
@@ -3057,16 +3160,18 @@ function motor(est) {
      tetos de verdade. */
   const dispAf = (af.rot === "Anexo II" ? "Anexo II" : "Anexo II — " + af.rot) + "; art. 25, IV";
   if (desOk) {
-    const okTO = proj <= toMax + 1e-6;
-    ck("Taxa de ocupação", "até " + fmt(P.to, 0) + "% (" + fmt(toMax, 2) + " m²)",
-       fmt(R.toProj, 1) + "% (" + fmt(proj, 2) + " m²) — perímetro desenhado",
-       okTO ? "ok" : "no", "Anexo II; art. 24 e art. 25, II");
-    if (!okTO) R.erros.push("A taxa de ocupação do perímetro desenhado (" + fmt(R.toProj, 1) + "% — " +
-      fmt(proj, 2) + " m²) excede a máxima da zona, de " + fmt(P.to, 0) + "% (" + fmt(toMax, 2) + " m²).");
+    if (!MULTI) {
+      const okTO = proj <= toMax + 1e-6;
+      ck("Taxa de ocupação", "até " + fmt(P.to, 0) + "% (" + fmt(toMax, 2) + " m²)",
+         fmt(R.toProj, 1) + "% (" + fmt(proj, 2) + " m²) — perímetro desenhado",
+         okTO ? "ok" : "no", "Anexo II; art. 24 e art. 25, II");
+      if (!okTO) R.erros.push("A taxa de ocupação do perímetro desenhado (" + fmt(R.toProj, 1) + "% — " +
+        fmt(proj, 2) + " m²) excede a máxima da zona, de " + fmt(P.to, 0) + "% (" + fmt(toMax, 2) + " m²).");
 
-    ck("Taxa de permeabilidade", "ao menos " + fmt(P.tp, 0) + "% (" + fmt(permMin, 2) + " m²)",
-       fmt(permMin, 2) + " m² reservados — área livre do lote: " + fmt(R.livre, 2) +
-       " m² (" + fmt(R.livrePct, 1) + "%)", "ok", "Anexo II; art. 25, III e art. 27");
+      ck("Taxa de permeabilidade", "ao menos " + fmt(P.tp, 0) + "% (" + fmt(permMin, 2) + " m²)",
+         fmt(permMin, 2) + " m² reservados — área livre do lote: " + fmt(R.livre, 2) +
+         " m² (" + fmt(R.livrePct, 1) + "%)", "ok", "Anexo II; art. 25, III e art. 27");
+    }
 
     /* O limite do desenho é a envoltória do EMBASAMENTO — a que já
        incorpora as divisas escolhidas. Conferir contra a envoltória
@@ -3111,19 +3216,21 @@ function motor(est) {
       R.avisos.push("Depois do recorte pelos afastamentos não sobra área para a torre: a forma desenhada está " +
         "inteiramente fora da envoltória dos pavimentos acima do segundo.");
 
-    if (proj + permMin > S + 1e-6) {
+    if (!MULTI && proj + permMin > S + 1e-6) {
       R.erros.push("O perímetro desenhado (" + fmt(proj, 2) + " m²) somado à área permeável mínima (" +
         fmt(permMin, 2) + " m²) supera a área do lote (" + fmt(S, 2) + " m²).");
       ck("Coerência entre projeção e área permeável", "soma não maior que a área do lote",
          fmt(proj + permMin, 2) + " m²", "no", "Art. 25, II e III");
     }
   } else {
-    ck("Taxa de ocupação", "até " + fmt(P.to, 0) + "% (" + fmt(toMax, 2) + " m²)",
-       fmt(R.toProj, 1) + "% (" + fmt(proj, 2) + " m²) — limite aplicado no cálculo", "ok",
-       "Anexo II; art. 24 e art. 25, II");
-    ck("Taxa de permeabilidade", "ao menos " + fmt(P.tp, 0) + "% (" + fmt(permMin, 2) + " m²)",
-       fmt(permMin, 2) + " m² reservados — área livre do lote: " + fmt(R.livre, 2) +
-       " m² (" + fmt(R.livrePct, 1) + "%)", "ok", "Anexo II; art. 25, III e art. 27");
+    if (!MULTI) {
+      ck("Taxa de ocupação", "até " + fmt(P.to, 0) + "% (" + fmt(toMax, 2) + " m²)",
+         fmt(R.toProj, 1) + "% (" + fmt(proj, 2) + " m²) — limite aplicado no cálculo", "ok",
+         "Anexo II; art. 24 e art. 25, II");
+      ck("Taxa de permeabilidade", "ao menos " + fmt(P.tp, 0) + "% (" + fmt(permMin, 2) + " m²)",
+         fmt(permMin, 2) + " m² reservados — área livre do lote: " + fmt(R.livre, 2) +
+         " m² (" + fmt(R.livrePct, 1) + "%)", "ok", "Anexo II; art. 25, III e art. 27");
+    }
     ck("Afastamentos", "frente " + fmt(af.f, 2) + " m; laterais e fundos " + fmt(af.l, 2) + " m",
        envOk ? "envoltória de " + fmt(envArea, 2) + " m²" : "não sobra envoltória",
        envOk ? "ok" : "no", dispAf);
@@ -3342,6 +3449,240 @@ function motor(est) {
   return R;
 }
 
+/* ============================================================
+   Consolidador do lote
+
+   Com uma edificação só, o resultado do motor já é o estudo: devolve-se
+   ele mesmo, com a lista de um elemento, para o resto da ferramenta
+   poder iterar sempre do mesmo jeito.
+
+   Com duas ou mais, cada construção roda no motor com o mesmo lote, a
+   mesma zona e a mesma via, e aqui se soma o que é do lote. A divisão
+   não é arbitrária: ela segue o sujeito de cada dispositivo. A taxa de
+   ocupação do art. 25, II é "a projeção horizontal da edificação sobre
+   o lote" e o Coeficiente do art. 25, I é a área computável sobre a
+   área do terreno — ambos medem o terreno inteiro, e somam. O gabarito
+   do Anexo II, a altura do art. 25, V, os pés-direitos do Código de
+   Obras e a dispensa de afastamento das notas (2) e (3) qualificam a
+   edificação, uma a uma, e não somam.
+
+   Duas coisas o consolidador recusa, e uma ele declara:
+   — sobreposição entre construções, porque dois volumes no mesmo chão
+     contariam a mesma projeção duas vezes na taxa de ocupação;
+   — a soma das projeções acima da taxa de ocupação, ou das áreas
+     computáveis acima do Coeficiente;
+   — a distância entre construções é lacuna: não há dispositivo na lei
+     do Município que a fixe, e nada foi estimado em seu lugar.
+   ============================================================ */
+
+/* área da interseção de dois polígonos convexos; para côncavos o
+   recorte de Sutherland–Hodgman não vale, e aí se usa a amostragem */
+function areaComum(A, B) {
+  if (convexo(A) && convexo(B)) {
+    const c = recorta(A, B);
+    return (c && c.length >= 3) ? areaAbs(c) : 0;
+  }
+  /* amostragem em grade: resposta aproximada, suficiente para acusar
+     sobreposição — o valor exato não é usado em conta nenhuma */
+  const ba = bbox(A), bb = bbox(B);
+  const x0 = Math.max(ba.x0, bb.x0), x1 = Math.min(ba.x1, bb.x1);
+  const y0 = Math.max(ba.y0, bb.y0), y1 = Math.min(ba.y1, bb.y1);
+  if (x1 <= x0 || y1 <= y0) return 0;
+  const N = 60, dx = (x1 - x0) / N, dy = (y1 - y0) / N;
+  let n = 0;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const p = { x: x0 + (i + .5) * dx, y: y0 + (j + .5) * dy };
+    if (inside(p, A) && inside(p, B)) n++;
+  }
+  return n * dx * dy;
+}
+
+function motorLote(ests) {
+  const lista = ests.map(motor);
+  const R0 = lista[0];
+  if (lista.length === 1) { R0.edifs = lista; R0.soma = null; return R0; }
+
+  const R = Object.assign({}, R0);
+  R.edifs = lista;
+  R.erros = []; R.avisos = []; R.infos = []; R.check = []; R.exig = [];
+  const ck = (req, exig, proj, st, art) => R.check.push({ req, exig, proj, st, art });
+
+  /* zona sem parâmetros ou lote inválido: o primeiro já suspendeu */
+  if (R0.suspenso) { R.suspenso = R0.suspenso; R.selo = "sus"; return R; }
+
+  const P = R0.P, S = R0.lote.area;
+
+  /* ---- o que cada edificação traz, e o que ela diz de si ---- */
+  /* o que todas dizem igual é do lote, não de cada uma: sai uma vez,
+     sem prefixo. Seis edificações repetindo a mesma nota do Anexo IV
+     enterrariam o que é específico de cada uma. */
+  const comum = campo => {
+    const prim = lista[0][campo] || [];
+    return prim.filter(m => lista.every(E => (E[campo] || []).indexOf(m) >= 0));
+  };
+  const COM = { erros: comum("erros"), avisos: comum("avisos"), infos: comum("infos") };
+  ["erros", "avisos", "infos"].forEach(c => COM[c].forEach(m => R[c].push(m)));
+
+  lista.forEach(E => {
+    const pre = "Edificação " + E.nome + ": ";
+    E.erros.forEach(m => { if (COM.erros.indexOf(m) < 0) R.erros.push(pre + m); });
+    E.avisos.forEach(m => { if (COM.avisos.indexOf(m) < 0) R.avisos.push(pre + m); });
+    E.infos.forEach(m => { if (COM.infos.indexOf(m) < 0) R.infos.push(pre + m); });
+    /* só o que é da edificação entra no checklist com o nome dela; o
+       que é do lote foi silenciado no motor ou é refeito abaixo */
+    const refeitos = ["Vagas de estacionamento"];
+    E.check.forEach(c => {
+      if (refeitos.indexOf(c.req) >= 0) return;
+      R.check.push(Object.assign({}, c, { req: c.req + " — edificação " + E.nome }));
+    });
+    (E.exig || []).forEach(x => {
+      if (!R.exig.some(y => y.t === x.t)) R.exig.push(x);
+    });
+  });
+
+  /* ---- soma ---- */
+  const som = f => lista.reduce((a, E) => a + (f(E) || 0), 0);
+  const proj = som(E => E.proj);
+  const areas = {
+    total: som(E => E.areas ? E.areas.total : 0), comp: som(E => E.areas ? E.areas.comp : 0),
+    hab: som(E => E.areas ? E.areas.hab : 0), sub: som(E => E.areas ? E.areas.sub : 0),
+    resid: som(E => E.areas ? E.areas.resid : 0), naoResid: som(E => E.areas ? E.areas.naoResid : 0)
+  };
+  R.proj = proj;
+  R.projSub = som(E => E.projSub);
+  R.areas = areas;
+  R.vol = { acima: som(E => E.vol ? E.vol.acima : 0), sub: som(E => E.vol ? E.vol.sub : 0),
+            total: som(E => E.vol ? E.vol.total : 0) };
+  R.toMax = R0.toMax; R.permMin = R0.permMin;
+  R.toProj = proj / S * 100;
+  R.livre = Math.max(0, S - proj); R.livrePct = R.livre / S * 100;
+  R.tpProj = R.livre / S * 100;
+  R.amarra = null;
+  R.soma = { n: lista.length, proj, areas,
+             gabMax: Math.max.apply(null, lista.map(E => (E.pav ? E.pav.gab : 0))),
+             altMax: Math.max.apply(null, lista.map(E => (E.pav ? E.pav.altura : 0))) };
+  /* o cabeçalho do estudo mostra o maior gabarito e a maior altura do
+     conjunto: são esses que respondem "quantos pavimentos tem" */
+  R.pav = Object.assign({}, R0.pav, {
+    gab: R.soma.gabMax, altura: R.soma.altMax,
+    hab: som(E => E.pav ? E.pav.hab : 0), lista: [].concat.apply([], lista.map(E => (E.pav ? E.pav.lista : [])))
+  });
+
+  /* ---- toda edificação precisa de perímetro ----
+     Com uma só, a ferramenta arbitra a envoltória máxima e o desenho é
+     opcional. Com várias, não há máximo a arbitrar: a área que uma
+     deixaria de ocupar é da outra, e essa divisão é do projeto, não da
+     lei. Então cada uma tem de vir desenhada. */
+  const semForma = lista.filter(E => !E.edif || !E.edif.ok);
+  semForma.forEach(E => R.erros.push("A edificação " + E.nome + " não tem perímetro desenhado. " +
+    "Com mais de uma construção no lote, cada uma precisa do seu: a repartição da área entre elas é " +
+    "decisão de projeto, e o simulador não a arbitra."));
+  ck("Perímetro de cada edificação", "todas desenhadas dentro do lote",
+     semForma.length ? "faltam " + semForma.map(E => E.nome).join(", ")
+                     : pl(lista.length, "edificação desenhada", "edificações desenhadas"),
+     semForma.length ? "no" : "ok", "Art. 25, II — a projeção é a da edificação sobre o lote");
+
+  /* ---- sobreposição ---- */
+  const chocam = [];
+  for (let i = 0; i < lista.length; i++)
+    for (let j = i + 1; j < lista.length; j++) {
+      const A = lista[i].edif, B = lista[j].edif;
+      if (!A || !B || !A.pts || !B.pts || A.pts.length < 3 || B.pts.length < 3) continue;
+      const a = areaComum(A.pts, B.pts);
+      if (a > 0.05) chocam.push({ a: lista[i].nome, b: lista[j].nome, area: a });
+    }
+  chocam.forEach(c => R.erros.push("As edificações " + c.a + " e " + c.b + " se sobrepõem em " +
+    fmt(c.area, 2) + " m². Duas construções não ocupam o mesmo chão, e a projeção sobreposta seria contada " +
+    "duas vezes na taxa de ocupação."));
+  ck("Edificações sem sobreposição", "cada construção com projeção própria",
+     chocam.length ? chocam.map(c => c.a + " e " + c.b).join("; ") : pl(lista.length, "edificação", "edificações") + " sem sobreposição",
+     chocam.length ? "no" : "ok", "Art. 25, II — a taxa de ocupação é a projeção horizontal sobre o lote");
+
+  /* ---- taxa de ocupação do conjunto ---- */
+  const okTO = proj <= R0.toMax + 1e-6;
+  ck("Taxa de ocupação do lote", "até " + fmt(P.to, 0) + "% (" + fmt(R0.toMax, 2) + " m²)",
+     fmt(R.toProj, 1) + "% (" + fmt(proj, 2) + " m²) — soma de " + pl(lista.length, "edificação", "edificações"),
+     okTO ? "ok" : "no", "Anexo II; art. 24 e art. 25, II");
+  if (!okTO) R.erros.push("A soma das projeções (" + fmt(proj, 2) + " m², " + fmt(R.toProj, 1) +
+    "%) excede a taxa de ocupação máxima da zona, de " + fmt(P.to, 0) + "% (" + fmt(R0.toMax, 2) + " m²).");
+
+  /* ---- permeabilidade ---- */
+  const okTP = proj + R0.permMin <= S + 1e-6;
+  ck("Taxa de permeabilidade", "ao menos " + fmt(P.tp, 0) + "% (" + fmt(R0.permMin, 2) + " m²)",
+     fmt(R0.permMin, 2) + " m² reservados — área livre do lote: " + fmt(R.livre, 2) +
+     " m² (" + fmt(R.livrePct, 1) + "%)", okTP ? "ok" : "no", "Anexo II; art. 25, III e art. 27");
+  if (!okTP) R.erros.push("A soma das projeções (" + fmt(proj, 2) + " m²) com a área permeável mínima (" +
+    fmt(R0.permMin, 2) + " m²) supera a área do lote (" + fmt(S, 2) + " m²).");
+
+  /* ---- coeficiente de aproveitamento do conjunto ---- */
+  const caProj = areas.comp / S, caBas = P.ca.bas, caMax = P.ca.max;
+  R.ca = { proj: caProj, bas: caBas, max: caMax, min: P.ca.min, outorga: false };
+  if (caBas !== null && caBas !== undefined) {
+    if (caProj <= caBas + 1e-9) {
+      ck("Coeficiente de Aproveitamento do lote", "até " + fmt(caBas, 2) + " (básico)", fmt(caProj, 2), "ok",
+         "Anexo II; art. 25, I, “b”");
+    } else if (caMax && caProj <= caMax + 1e-9) {
+      R.ca.outorga = true;
+      ck("Coeficiente de Aproveitamento do lote", "básico " + fmt(caBas, 2) + "; máximo " + fmt(caMax, 2) + " mediante outorga",
+         fmt(caProj, 2), "cond",
+         "Art. 25, § 1º e art. 133 — Outorga Onerosa do Direito de Construir ou Transferência do Direito de Construir");
+    } else if (caMax) {
+      R.erros.push("O Coeficiente de Aproveitamento do conjunto (" + fmt(caProj, 2) +
+        ") excede o máximo da zona (" + fmt(caMax, 2) + ").");
+      ck("Coeficiente de Aproveitamento do lote", "máximo " + fmt(caMax, 2), fmt(caProj, 2), "no",
+         "Art. 25, I, “c” — proibida a edificação de área superior ao Coeficiente Máximo");
+    } else {
+      R.erros.push("O Coeficiente de Aproveitamento do conjunto (" + fmt(caProj, 2) + ") excede o básico (" +
+        fmt(caBas, 2) + ") e a zona não tem Coeficiente Máximo. " + (P.outorgaMotivo || ""));
+      ck("Coeficiente de Aproveitamento do lote", "até " + fmt(caBas, 2) + " (básico; sem coeficiente máximo)",
+         fmt(caProj, 2), "no", "Art. 25, § 1º; art. 133, § 1º");
+    }
+    if (P.ca.min !== null && P.ca.min !== undefined && P.ca.min > 0 && caProj < P.ca.min - 1e-9) {
+      ck("Coeficiente de Aproveitamento mínimo", "ao menos " + fmt(P.ca.min, 2), fmt(caProj, 2), "cond",
+         "Art. 25, I, “a” — abaixo do mínimo o imóvel fica sujeito à edificação compulsória (Plano Diretor, art. 155 e 156)");
+      R.avisos.push("A área computável do conjunto fica abaixo do Coeficiente de Aproveitamento mínimo da zona: " +
+        "o imóvel pode ser considerado subutilizado para fins de parcelamento, edificação ou utilização compulsórios.");
+    }
+  }
+
+  /* ---- vagas: a regra é por edificação, o total é do lote ---- */
+  const regras = [], vag = { regras, total: null, resid: 0, naoResid: 0, parcial: false };
+  lista.forEach(E => {
+    if (!E.vagas) return;
+    E.vagas.regras.forEach(r => {
+      const q = r.q + " — edificação " + E.nome;
+      if (!regras.some(x => x.q === q)) regras.push({ q, t: r.t });
+    });
+    if (E.vagas.parcial) vag.parcial = true;
+    vag.resid += E.vagas.resid || 0;
+    vag.naoResid += E.vagas.naoResid || 0;
+  });
+  vag.total = vag.parcial ? null : vag.resid + vag.naoResid;
+  R.vagas = vag;
+  ck("Vagas de estacionamento", regras.map(r => r.t).join("; ") || "—",
+     vag.total !== null ? pl(vag.total, "vaga") : "informe o número de unidades para quantificar",
+     vag.total !== null ? "ok" : "cond",
+     "Anexo III; art. 33, § 1º — nenhum projeto é aprovado sem o número mínimo de vagas");
+
+  /* ---- a lacuna da distância entre construções ---- */
+  R.infos.push("A lei do Município não fixa afastamento entre edificações no mesmo lote: o Anexo II trata das " +
+    "divisas do terreno, e nenhum dispositivo alcança a distância entre construções. A lacuna está declarada e " +
+    "nada foi estimado em seu lugar — o que se verificou foi que as projeções não se sobrepõem. As normas de " +
+    "iluminação e ventilação dos compartimentos, essas, continuam exigíveis e dependem do projeto.");
+
+  /* ---- selo ---- */
+  const temNo = R.check.some(c => c.st === "no");
+  const temCond = R.check.some(c => c.st === "cond");
+  R.selo = temNo ? "no" : (temCond ? "cond" : "ok");
+  if (R.erros.length && !temNo) {
+    R.check.push({ req: "Pendência registrada no cálculo", exig: "sem irregularidade", proj: R.erros[0], st: "no",
+      art: "Item gerado pela verificação de coerência do simulador" });
+    R.selo = "no";
+  }
+  return R;
+}
+
+
 /* ---------- hierarquia viária ----------
 
    Origem: Anexo III do Plano de Mobilidade, camada classificacao_vias
@@ -3541,16 +3882,64 @@ function viaMaisProxima(lat, lon) {
 let zonaAtual = null, SIM = null, PRINT = false;
 let setorAtual = "SEDISJB", zeisRef = "ZM1";
 const LOT = { pts: retangulo(12, 30), fronts: [0], modo: "rect" };
-/* perímetro da edificação desenhado à mão dentro do lote. Vazio, o
-   estudo calcula a envoltória máxima; com três pontos ou mais, esta
-   forma passa a ser a projeção. */
-const EDIF = { pts: [] };
-/* Divisas em que os dois primeiros pavimentos encostam. A escolha é do
-   usuário, um check por lado, e a lei diz quais lados aceitam. Enquanto
-   "pronto" é falso a lista ainda não foi materializada: o motor roda no
-   modo máximo e o resultado vira o estado inicial dos checks. */
-const ENC = { lados: [], pronto: false, assin: "", refaz: false };
-const PAV = [{ pos: "terreo", ocup: "habitacao", pd: 2.60 }];
+
+/* ---------- as edificações do lote ----------
+
+   Um lote pode receber mais de uma construção — a lei admite
+   expressamente a multifamiliar horizontal, vila ou geminada —, e cada
+   uma tem o seu perímetro, a sua pilha de pavimentos e o seu uso. Daí
+   uma lista, e não um objeto só.
+
+   O que é do LOTE continua sendo do lote e passa a ser somatório:
+   taxa de ocupação, taxa de permeabilidade e Coeficiente de
+   Aproveitamento medem o conjunto. O que é da EDIFICAÇÃO fica com
+   ela: gabarito, altura, pé-direito e o direito de encostar na divisa
+   pelas notas (2) e (3), que dependem do uso daquela construção.
+
+   Com uma edificação só e sem perímetro desenhado, o estudo continua
+   calculando a envoltória máxima. Com duas ou mais, cada uma precisa
+   de perímetro: aí não há um máximo a arbitrar — há um conjunto a
+   conferir, e é isso que a ferramenta faz.
+
+   EDIF e PAV apontam para a edificação selecionada. O resto do código
+   fala de "a edificação" sem precisar saber que existem várias. */
+const LETRA = i => String.fromCharCode(65 + (i % 26)) + (i >= 26 ? String(Math.floor(i / 26)) : "");
+function novaEdif(i) {
+  return { nome: LETRA(i), pts: [], uso: "res_uni",
+           pav: [{ pos: "terreo", ocup: "habitacao", pd: 2.60 }],
+           /* Divisas em que os dois primeiros pavimentos desta
+              edificação encostam. A escolha é do usuário, um check por
+              lado, e a lei diz quais lados aceitam. Enquanto "pronto" é
+              falso a lista ainda não foi materializada: o motor roda no
+              modo máximo e o resultado vira o estado inicial dos
+              checks. Cada edificação tem as suas, porque o direito de
+              encostar depende do uso dela. */
+           enc: { lados: [], pronto: false, assin: "", refaz: false } };
+}
+const EDIFS = [novaEdif(0)];
+let EDIF_SEL = 0;
+let EDIF = EDIFS[0];
+let PAV = EDIFS[0].pav;
+let ENC = EDIFS[0].enc;
+const multiEdif = () => EDIFS.length > 1;
+
+/* troca a edificação em foco: EDIF, PAV e ENC passam a apontar para
+   ela, e a interface é remontada a partir dos dados dela */
+function selecionaEdif(i) {
+  if (i < 0 || i >= EDIFS.length) return;
+  EDIF_SEL = i; EDIF = EDIFS[i]; PAV = EDIFS[i].pav; ENC = EDIFS[i].enc;
+  if ($("uso")) {
+    $("uso").value = EDIF.uso;
+    $("boxGeminada").style.display = USO_INFO[EDIF.uso].multi ? "" : "none";
+  }
+  montarEdifs(); renderPilha(); desenhaLote(); calc();
+}
+
+/* implantação de referência importada de DXF: contorno de fundo para
+   desenhar por cima, e fonte de polígonos prontos para o lote e as
+   edificações. Declarada aqui, e não no módulo de arquivo, porque a
+   interface é montada antes de aquele arquivo ser avaliado. */
+let REF = null;
 const $ = id => document.getElementById(id);
 
 /* declaradas fora do try do mapa — o resto da ferramenta depende delas */
@@ -3558,21 +3947,86 @@ let map = null, isolar = null, mostrarTudo = null;
 let zonaEm = () => null, macroEm = () => null, dentroUrbano = () => null;
 let marcarPonto = () => {};
 
-function estudoAtual() {
+const pto3 = p => ({ x: +p.x.toFixed(3), y: +p.y.toFixed(3) });
+
+/* O estudo de UMA edificação, no formato que o motor consome. Com uma
+   só, é o estudo inteiro; com várias, é uma das parcelas que o
+   consolidador do lote soma. */
+function estudoDe(E) {
   return {
     v: VERSAO.app, zona: zonaAtual, setor: setorAtual, zeisRef: $("zeis") ? $("zeis").value : zeisRef,
-    lote: { pts: LOT.pts.map(p => ({ x: +p.x.toFixed(3), y: +p.y.toFixed(3) })), fronts: LOT.fronts.slice(), modo: LOT.modo },
-    edif: EDIF.pts.map(p => ({ x: +p.x.toFixed(3), y: +p.y.toFixed(3) })),
-    encostaModo: ENC.pronto ? "manual" : "max",
-    encosta: ENC.lados.slice(),
-    pav: PAV.map(p => ({ pos: p.pos, ocup: p.ocup, pd: +num(p.pd).toFixed(2) })),
-    uso: $("uso").value, via: $("via").value, mp: $("mp").value, unid: num($("unid").value),
+    lote: { pts: LOT.pts.map(pto3), fronts: LOT.fronts.slice(), modo: LOT.modo },
+    nome: E.nome,
+    edif: E.pts.map(pto3),
+    encostaModo: E.enc.pronto ? "manual" : "max",
+    encosta: E.enc.lados.slice(),
+    pav: E.pav.map(p => ({ pos: p.pos, ocup: p.ocup, pd: +num(p.pd).toFixed(2) })),
+    uso: E.uso, via: $("via").value, mp: $("mp").value, unid: num($("unid").value),
     viaNome: (VIA_SUG && VIA_SUG.k === $("via").value) ? VIA_SUG.nome : "",
     geminada: $("geminada").checked, esquina: $("esquina").checked, antigo: $("antigo").checked,
     varquadra: $("varquadra").checked, hidrico: $("hidrico").checked, declive: $("declive").checked,
-    tombado: $("tombado").checked, parcel: $("parcel").checked, subEnterrado: !!(window.__subEnt)
+    tombado: $("tombado").checked, parcel: $("parcel").checked, subEnterrado: !!(window.__subEnt),
+    /* com mais de uma edificação os índices do lote são do conjunto:
+       o motor deixa de julgá-los um a um e quem julga é o lote */
+    multi: EDIFS.length > 1
   };
 }
+function estudoAtual() { return estudoDe(EDIF); }
+/* todos os estudos do lote, na ordem em que as edificações aparecem */
+function estudosDoLote() { return EDIFS.map(estudoDe); }
+/* o resultado da edificação em foco; com uma só, é o estudo inteiro */
+function Rsel() {
+  if (!SIM || !SIM.R) return null;
+  if (!SIM.R.edifs) return SIM.R;
+  return SIM.R.edifs[EDIF_SEL] || SIM.R.edifs[0];
+}
+
+/* ---------- lista de edificações ---------- */
+function montarEdifs() {
+  const el = $("edifs"); if (!el) return;
+  const Rs = (SIM && SIM.R && SIM.R.edifs) ? SIM.R.edifs : [];
+  el.innerHTML = EDIFS.map((E, i) => {
+    const r = Rs[i];
+    const a = E.pts.length >= 3 ? areaAbs(E.pts) : 0;
+    const nAcima = E.pav.filter(p => !POS[p.pos].sub && !POS[p.pos].topo).length;
+    const falta = EDIFS.length > 1 && E.pts.length < 3;
+    const resumo = (a ? fmt(a, 2) + " m² de projeção" : "sem perímetro desenhado") +
+      " · " + pl(nAcima, "pavimento") + " · " + USOS.filter(u => u.id === E.uso)[0].n.toLowerCase();
+    return '<div class="ed' + (i === EDIF_SEL ? " sel" : "") + '" data-ed="' + i + '">' +
+      '<span class="m">' + E.nome + "</span>" +
+      '<span class="d"><b>Edificação ' + E.nome + "</b><span>" + resumo + "</span></span>" +
+      (falta ? '<span class="av" title="falta o perímetro">!</span>' : "") +
+      (r && r.selo === "no" ? '<span class="av" style="color:var(--err)" title="desconformidade">\u25cf</span>' : "") +
+      (EDIFS.length > 1 ? '<button class="x" data-rem="' + i + '" title="remover">\u00d7</button>' : "") +
+      "</div>";
+  }).join("");
+  el.querySelectorAll(".ed").forEach(d => d.addEventListener("click", ev => {
+    if (ev.target.dataset.rem !== undefined) return;
+    selecionaEdif(+d.dataset.ed);
+  }));
+  el.querySelectorAll("[data-rem]").forEach(b => b.addEventListener("click", ev => {
+    ev.stopPropagation();
+    removeEdif(+ev.target.dataset.rem);
+  }));
+  const h = $("edifhint");
+  if (h) h.style.display = EDIFS.length > 1 ? "" : "";
+}
+
+function addEdif() {
+  const E = novaEdif(EDIFS.length);
+  EDIFS.push(E);
+  /* a nova nasce em foco e no modo de desenho: sem perímetro ela não
+     entra na conta, e é isso que o usuário precisa fazer em seguida */
+  selecionaEdif(EDIFS.length - 1);
+  setModo("edif");
+}
+function removeEdif(i) {
+  if (EDIFS.length <= 1 || i < 0 || i >= EDIFS.length) return;
+  EDIFS.splice(i, 1);
+  EDIFS.forEach((E, k) => { if (/^[A-Z][0-9]*$/.test(E.nome)) E.nome = LETRA(k); });
+  selecionaEdif(Math.min(EDIF_SEL, EDIFS.length - 1));
+}
+
 /* ---------- selects ---------- */
 function montarSelects() {
   const zs = $("zsel");
@@ -3713,10 +4167,77 @@ function renderIndices() {
 
 /* ---------- editor de lote ---------- */
 let arrast = -1, drag = null, hoverLado = -1, arrastE = -1;
+/* ---------- enquadramento do quadro do lote ----------
+
+   Antes o quadro enquadrava o lote e mais nada. Com uma implantação
+   importada isso não serve: a referência quase sempre é maior que o
+   terreno — é a quadra, às vezes o loteamento inteiro — e ficava
+   desenhada fora da área visível, inútil justamente para o que ela
+   existe, que é desenhar por cima.
+
+   Agora o enquadramento considera tudo o que está no quadro, e há
+   zoom e deslocamento: sem eles não se traça um vértice sobre um canto
+   da referência com precisão nenhuma. VISTA guarda o ponto do mundo
+   que fica no centro e o fator de ampliação sobre o enquadramento
+   automático; enquanto "auto" é verdadeiro, o quadro se reenquadra
+   sozinho a cada mudança de geometria. */
+const VISTA = { auto: true, zoom: 1, cx: 0, cy: 0 };
+
+/* tudo o que o quadro precisa mostrar, em coordenadas do lote */
+function extensaoDesenho(tudo) {
+  let b = bbox(LOT.pts);
+  const junta = pts => {
+    if (!pts || !pts.length) return;
+    const q = bbox(pts);
+    b = { x0: Math.min(b.x0, q.x0), x1: Math.max(b.x1, q.x1),
+          y0: Math.min(b.y0, q.y0), y1: Math.max(b.y1, q.y1) };
+  };
+  if (tudo !== "lote") {
+    EDIFS.forEach(E => junta(E.pts));
+    if (typeof refVisiveis === "function") refVisiveis().forEach(e => junta(e.p));
+  }
+  return b;
+}
+
+function enquadra(alvo) {
+  const b = extensaoDesenho(alvo);
+  VISTA.auto = alvo !== "lote";
+  VISTA.zoom = 1;
+  VISTA.cx = (b.x0 + b.x1) / 2;
+  VISTA.cy = (b.y0 + b.y1) / 2;
+  VISTA.fixo = alvo === "lote" ? b : null;
+  desenhaLote();
+}
+
 function escalaSobreCentro(c) {
-  const b = bbox(LOT.pts), w = b.x1 - b.x0, h = b.y1 - b.y0;
-  const k = Math.min((c.width - 60) / Math.max(w, 1), (c.height - 60) / Math.max(h, 1));
-  return { k, cx: c.width / 2 - (b.x0 + w / 2) * k, cy: c.height / 2 + (b.y0 + h / 2) * k };
+  const b = VISTA.fixo && !VISTA.auto ? VISTA.fixo : extensaoDesenho();
+  const w = Math.max(b.x1 - b.x0, 1), h = Math.max(b.y1 - b.y0, 1);
+  const kFit = Math.min((c.width - 60) / w, (c.height - 60) / h);
+  const k = kFit * VISTA.zoom;
+  if (VISTA.auto) { VISTA.cx = (b.x0 + b.x1) / 2; VISTA.cy = (b.y0 + b.y1) / 2; }
+  return { k, kFit, cx: c.width / 2 - VISTA.cx * k, cy: c.height / 2 + VISTA.cy * k };
+}
+
+/* ampliação em torno de um ponto da tela: o que está sob o cursor
+   continua sob o cursor, que é o que se espera de um zoom */
+function amplia(fator, X, Y, c) {
+  const s0 = escalaSobreCentro(c);
+  const antes = Tinv(X === undefined ? c.width / 2 : X, Y === undefined ? c.height / 2 : Y, s0);
+  VISTA.auto = false; VISTA.fixo = null;
+  VISTA.zoom = Math.max(0.25, Math.min(40, VISTA.zoom * fator));
+  const s1 = escalaSobreCentro(c);
+  const depois = Tinv(X === undefined ? c.width / 2 : X, Y === undefined ? c.height / 2 : Y, s1);
+  VISTA.cx += antes.x - depois.x;
+  VISTA.cy += antes.y - depois.y;
+  desenhaLote();
+}
+
+function desloca(dX, dY, c) {
+  const s = escalaSobreCentro(c);
+  VISTA.auto = false; VISTA.fixo = null;
+  VISTA.cx -= dX / s.k;
+  VISTA.cy += dY / s.k;
+  desenhaLote();
 }
 function T(p, s) { return { X: s.cx + p.x * s.k, Y: s.cy - p.y * s.k }; }
 function Tinv(X, Y, s) { return { x: (X - s.cx) / s.k, y: (s.cy - Y) / s.k }; }
@@ -3730,17 +4251,22 @@ function desenhaLote() {
   const W = r.width, H = r.height;
   g.clearRect(0, 0, W, H);
   const s = escalaSobreCentro({ width: W, height: H });
-  /* grade 5 m */
+  /* grade métrica sobre a área visível, com passo que acompanha o
+     zoom: fixa em 5 m, ela sumiria afastada e viraria massa de perto */
+  const v0 = Tinv(0, H, s), v1 = Tinv(W, 0, s);
+  const passos = [0.5, 1, 2, 5, 10, 25, 50, 100, 250];
+  const passo = passos.find(q => q * s.k >= 26) || passos[passos.length - 1];
   g.strokeStyle = "#1b2029"; g.lineWidth = 1;
-  const b = bbox(LOT.pts);
-  for (let x = Math.floor(b.x0 / 5) * 5 - 10; x <= b.x1 + 10; x += 5) {
-    const a = T({ x, y: b.y0 - 10 }, s), d = T({ x, y: b.y1 + 10 }, s);
+  for (let x = Math.ceil(v0.x / passo) * passo; x <= v1.x; x += passo) {
+    const a = T({ x, y: v0.y }, s), d = T({ x, y: v1.y }, s);
     g.beginPath(); g.moveTo(a.X, a.Y); g.lineTo(d.X, d.Y); g.stroke();
   }
-  for (let y = Math.floor(b.y0 / 5) * 5 - 10; y <= b.y1 + 10; y += 5) {
-    const a = T({ x: b.x0 - 10, y }, s), d = T({ x: b.x1 + 10, y }, s);
+  for (let y = Math.ceil(v0.y / passo) * passo; y <= v1.y; y += passo) {
+    const a = T({ x: v0.x, y }, s), d = T({ x: v1.x, y }, s);
     g.beginPath(); g.moveTo(a.X, a.Y); g.lineTo(d.X, d.Y); g.stroke();
   }
+  /* a implantação importada, por baixo de tudo */
+  if (typeof desenhaRef === "function") desenhaRef(g, s);
   /* polígono */
   g.beginPath();
   LOT.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
@@ -3749,7 +4275,8 @@ function desenhaLote() {
   g.strokeStyle = "#e8eaed"; g.lineWidth = 1.6; g.stroke();
   /* divisas encostadas: traço grosso verde por cima da divisa, para
      ler de relance onde o embasamento vai até o limite do lote */
-  const encEf = (SIM && SIM.R && SIM.R.encosta) ? SIM.R.encosta.escolhidas : [];
+  const RS = Rsel();
+  const encEf = (RS && RS.encosta) ? RS.encosta.escolhidas : [];
   const encPed = ENC.pronto ? ENC.lados : encEf;
   g.lineWidth = 6; g.lineCap = "round";
   encPed.forEach(i => {
@@ -3768,7 +4295,7 @@ function desenhaLote() {
   });
   /* medidas dos lados. No modo de encostar, cada lado ganha o número
      e o tipo — é por esse número que o relatório se refere a ele. */
-  const tipos = (SIM && SIM.R && SIM.R.lados) ? SIM.R.lados : null;
+  const tipos = (RS && RS.lados) ? RS.lados : null;
   g.font = "10px system-ui"; g.textAlign = "center";
   LOT.pts.forEach((p, i) => {
     const m = T(meioLado(LOT.pts, i), s);
@@ -3786,48 +4313,79 @@ function desenhaLote() {
     g.fillStyle = i === arrast ? "#5b9dff" : "#e8eaed"; g.fill();
   });
   /* envoltória dos afastamentos, como guia do desenho */
-  if (LOT.modo === "edif" && SIM && SIM.R && SIM.R.env && SIM.R.env.ok) {
+  if (LOT.modo === "edif" && RS && RS.env && RS.env.ok) {
     g.setLineDash([5, 4]); g.strokeStyle = "#f2b544"; g.lineWidth = 1.2;
     g.beginPath();
-    SIM.R.env.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
+    RS.env.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
     g.closePath(); g.stroke(); g.setLineDash([]);
   }
-  /* perímetro da edificação */
-  if (EDIF.pts.length) {
+  /* perímetro das edificações: a em foco em verde cheio, as demais
+     apagadas, para arrastar um canto sem confundir de quem ele é */
+  EDIFS.forEach((E, k) => {
+    if (!E.pts.length) return;
+    const foco = k === EDIF_SEL;
+    const cor = foco ? "#3ecf8e" : "#6b8f80";
     g.beginPath();
-    EDIF.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
-    if (EDIF.pts.length >= 3) {
-      g.closePath(); g.fillStyle = "rgba(62,207,142,.20)"; g.fill();
+    E.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
+    if (E.pts.length >= 3) {
+      g.closePath();
+      g.fillStyle = foco ? "rgba(62,207,142,.20)" : "rgba(62,207,142,.07)"; g.fill();
     }
-    g.strokeStyle = "#3ecf8e"; g.lineWidth = 2; g.stroke();
-    if (EDIF.pts.length >= 3) {
+    g.strokeStyle = cor; g.lineWidth = foco ? 2 : 1.3; g.stroke();
+    if (E.pts.length >= 3) {
       g.font = "600 11px system-ui"; g.textAlign = "center";
-      const c = centroid(EDIF.pts), q = T(c, s);
-      const rot = fmt(areaAbs(EDIF.pts), 2) + " m²", w = g.measureText(rot).width;
+      const c = centroid(E.pts), q = T(c, s);
+      const rot = (EDIFS.length > 1 ? E.nome + " · " : "") + fmt(areaAbs(E.pts), 2) + " m²";
+      const w = g.measureText(rot).width;
       g.fillStyle = "rgba(11,13,17,.82)";
       g.beginPath(); g.rect(q.X - w / 2 - 5, q.Y - 9, w + 10, 17); g.fill();
-      g.fillStyle = "#3ecf8e";
+      g.fillStyle = cor;
       g.fillText(rot, q.X, q.Y + 4);
     }
-    EDIF.pts.forEach((p, i) => {
+    if (foco) E.pts.forEach((p, i) => {
       const q = T(p, s);
       g.beginPath(); g.arc(q.X, q.Y, i === arrastE ? 6 : 4.5, 0, 7);
       g.fillStyle = i === arrastE ? "#8ff0c4" : "#3ecf8e"; g.fill();
     });
-  }
-  /* marca do ímã: onde o próximo clique vai cair. Quadrado no vértice
-     do lote, círculo sobre a divisa — a mesma convenção dos CADs. */
-  if (LOT.modo === "edif" && IMA_ALVO) {
+  });
+  /* Marca do ímã: onde o próximo clique vai cair. Quadrado no vértice
+     do lote, círculo sobre a divisa, losango quando o ponto veio de
+     fora — a convenção dos CADs. A referência importada tem marca
+     própria, uma cruz, e cor própria: é preciso saber de relance se o
+     que vai prender é o terreno ou o desenho de fundo. */
+  if ((LOT.modo === "edif" || LOT.modo === "draw") && IMA_ALVO) {
     const q = T(IMA_ALVO, s);
-    g.strokeStyle = "#f2b544"; g.lineWidth = 1.8;
+    const daRef = IMA_ALVO.tipo === "refvert" || IMA_ALVO.tipo === "reflado";
+    g.strokeStyle = daRef ? "#7fd4ff" : "#f2b544"; g.lineWidth = 1.8;
     g.beginPath();
-    if (IMA_ALVO.tipo === "vertice") g.rect(q.X - 6, q.Y - 6, 12, 12);
+    if (IMA_ALVO.tipo === "refvert") {
+      g.moveTo(q.X - 7, q.Y - 7); g.lineTo(q.X + 7, q.Y + 7);
+      g.moveTo(q.X + 7, q.Y - 7); g.lineTo(q.X - 7, q.Y + 7);
+    } else if (IMA_ALVO.tipo === "reflado") g.arc(q.X, q.Y, 6, 0, 7);
+    else if (IMA_ALVO.tipo === "vertice") g.rect(q.X - 6, q.Y - 6, 12, 12);
     else if (IMA_ALVO.tipo === "cerca") {
       g.moveTo(q.X, q.Y - 7); g.lineTo(q.X + 7, q.Y);
       g.lineTo(q.X, q.Y + 7); g.lineTo(q.X - 7, q.Y); g.closePath();
     } else g.arc(q.X, q.Y, 6, 0, 7);
     g.stroke();
   }
+  /* escala gráfica: com zoom livre, sem ela não se sabe de que
+     tamanho é o que está na tela */
+  {
+    const alvo = Math.min(W * 0.32, 150);
+    const passos = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 500];
+    let m = passos[passos.length - 1];
+    for (const q of passos) if (q * s.k <= alvo) m = q;
+    const px = m * s.k, x0 = 12, y0 = H - 14;
+    g.strokeStyle = "#9aa2b1"; g.lineWidth = 1.4; g.globalAlpha = .9;
+    g.beginPath();
+    g.moveTo(x0, y0 - 4); g.lineTo(x0, y0); g.lineTo(x0 + px, y0); g.lineTo(x0 + px, y0 - 4);
+    g.stroke();
+    g.globalAlpha = 1;
+    g.font = "10px system-ui"; g.textAlign = "left"; g.fillStyle = "#9aa2b1";
+    g.fillText(m >= 1 ? m + " m" : (m * 100) + " cm", x0 + px + 6, y0 + 1);
+  }
+
   /* botão de inserir vértice */
   if (hoverLado >= 0 && LOT.modo === "draw") {
     const m = T(meioLado(LOT.pts, hoverLado), s);
@@ -3852,6 +4410,72 @@ function achaVertice(X, Y, s) {
    Devolve o ponto ajustado e o que prendeu, para o desenho mostrar. */
 const IMA_PX = 13;
 let IMA_ALVO = null;   /* ponto que o ímã vai prender, para o desenho mostrar */
+/* ---------- ímã na implantação importada ----------
+
+   Desenhar por cima de uma referência sem ímã é mira livre: o vértice
+   cai a dez centímetros do canto e o lote sai torto. Com ímã, clicar
+   perto de um canto do DXF prende nele, e o contorno traçado tem as
+   coordenadas do levantamento, não as do pulso.
+
+   A referência pode trazer dezenas de milhares de pontos, e o ímã roda
+   a cada movimento do cursor. Por isso os pontos já transformados ficam
+   em cache, invalidado por uma assinatura do posicionamento — assim não
+   é preciso lembrar de limpar o cache em cada lugar que mexe no REF. */
+let REF_CACHE = null;
+function refAssin() {
+  return REF ? [REF.esc, REF.dx, REF.dy, REF.rot, REF.ativas.join("|"), REF.ent.length].join(",") : "";
+}
+function refGeo() {
+  const a = refAssin();
+  if (REF_CACHE && REF_CACHE.a === a) return REF_CACHE;
+  const pts = [], seg = [];
+  if (REF) refVisiveis().forEach(e => {
+    const n = e.p.length;
+    e.p.forEach((q, i) => {
+      pts.push(q);
+      const j = i + 1;
+      if (j < n) seg.push([q, e.p[j]]);
+      else if (e.c && n > 2) seg.push([q, e.p[0]]);
+    });
+  });
+  REF_CACHE = { a, pts, seg };
+  return REF_CACHE;
+}
+
+/* ímã temporariamente desligado: Alt, como nos CADs */
+let SEM_IMA = false;
+
+function imanRef(p, s) {
+  if (!REF) return null;
+  const G = refGeo();
+  if (!G.pts.length) return null;
+  const tol = IMA_PX / (s.k || 1), t2 = tol * tol;
+  let melhor = null;
+  for (let i = 0; i < G.pts.length; i++) {
+    const v = G.pts[i], dx = p.x - v.x, dy = p.y - v.y, d2 = dx * dx + dy * dy;
+    if (d2 <= t2 && (!melhor || d2 < melhor.d2)) melhor = { d2, p: { x: v.x, y: v.y }, tipo: "refvert" };
+  }
+  if (melhor) return { d: Math.sqrt(melhor.d2), p: melhor.p, tipo: "refvert", rank: 0 };
+  for (let i = 0; i < G.seg.length; i++) {
+    const a = G.seg[i][0], b = G.seg[i][1];
+    const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+    if (L2 < 1e-12) continue;
+    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const q = { x: a.x + t * dx, y: a.y + t * dy };
+    const ex = p.x - q.x, ey = p.y - q.y, d2 = ex * ex + ey * ey;
+    if (d2 <= t2 && (!melhor || d2 < melhor.d2)) melhor = { d2, p: q, tipo: "reflado" };
+  }
+  return melhor ? { d: Math.sqrt(melhor.d2), p: melhor.p, tipo: melhor.tipo, rank: 1 } : null;
+}
+
+/* o ímã que vale para desenhar o LOTE: só a referência, porque prender
+   um vértice do lote noutro vértice do próprio lote o colapsaria */
+function imanDoLote(p, s) {
+  if (SEM_IMA) return { p: p, tipo: null };
+  return imanRef(p, s) || { p: p, tipo: null };
+}
+
 function imanLote(p, s) {
   if (!LOT.pts || LOT.pts.length < 2) return { p: p, tipo: null };
   const tol = IMA_PX / (s.k || 1);          /* pixels convertidos em metros */
@@ -3901,8 +4525,28 @@ function bordaMaisPerto(p, poly) {
    cantos dentro do lote podem ser ligados por uma aresta que passa por
    fora. Aí não é pontaria, é a forma, e o aviso continua certo. */
 function pontoEdif(p, s) {
-  const im = imanLote(p, s);
-  if (im.tipo) return { p: im.p, tipo: im.tipo };
+  if (SEM_IMA) {
+    if (LOT.pts.length >= 3 && !inside(p, LOT.pts))
+      return { p: bordaMaisPerto(p, LOT.pts), tipo: "cerca" };
+    return { p: p, tipo: null };
+  }
+  /* Vértice vem antes de lado, e entre dois vértices ganha o mais
+     perto: a referência não tem precedência sobre o lote nem o
+     contrário — precedência é do tipo, que é o que a mão espera.
+     Um ponto da referência fora do lote é descartado: a edificação não
+     sai do terreno, e prender nele seria furar a cerca. */
+  const cand = [];
+  const lot = imanLote(p, s);
+  if (lot.tipo) cand.push({ d: lot.d, p: lot.p, tipo: lot.tipo, rank: lot.tipo === "vertice" ? 0 : 1 });
+  const ref = imanRef(p, s);
+  const naBorda = q => {
+    for (let i = 0; i < LOT.pts.length; i++)
+      if (distSeg(q, LOT.pts[i], LOT.pts[(i + 1) % LOT.pts.length]) < 0.02) return true;
+    return false;
+  };
+  if (ref && (LOT.pts.length < 3 || inside(ref.p, LOT.pts) || naBorda(ref.p))) cand.push(ref);
+  cand.sort((a, b) => a.rank - b.rank || a.d - b.d);
+  if (cand.length) return { p: cand[0].p, tipo: cand[0].tipo };
   if (LOT.pts.length >= 3 && !inside(p, LOT.pts))
     return { p: bordaMaisPerto(p, LOT.pts), tipo: "cerca" };
   return { p: p, tipo: null };
@@ -3935,9 +4579,11 @@ function setModo(m) {
   Object.values(bt).forEach(id => $(id).classList.toggle("on", id === bt[m]));
   $("lothint").innerHTML = {
     rect: "Ajuste testada e profundidade nos campos abaixo. O lado inferior é a testada.",
-    draw: "Arraste um vértice para movê-lo. Passe o cursor sobre um lado e clique no <b>+</b> para inserir vértice. Duplo clique remove um vértice.",
+    draw: "Arraste um vértice para movê-lo. Passe o cursor sobre um lado e clique no <b>+</b> para inserir vértice. " +
+          "Duplo clique remove um vértice. Com implantação carregada, o vértice <b>prende nos cantos e nas linhas do " +
+          "DXF</b> — a cruz azul mostra onde vai cair. Segure <b>Alt</b> para soltar o ímã.",
     front: "Clique sobre um lado para marcá-lo ou desmarcá-lo como testada. Mais de uma testada é permitido — lote de esquina.",
-      edif: "Clique para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. O ponto <b>nunca sai do lote</b>: perto da divisa adere à linha ou ao vértice, e clique fora cai sobre a divisa mais próxima. O marcador âmbar mostra onde vai cair — quadrado no vértice, círculo na divisa, losango quando o ponto foi trazido de fora. O tracejado é o limite dos afastamentos: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
+      edif: "Clique para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. O ponto <b>nunca sai do lote</b>: perto da divisa adere à linha ou ao vértice, e clique fora cai sobre a divisa mais próxima. O marcador mostra onde vai cair — <b>âmbar no lote</b> (quadrado no vértice, círculo na divisa, losango quando o ponto veio de fora) e <b>azul na implantação importada</b> (cruz no canto, círculo na linha). Vértice tem prioridade sobre linha; segure <b>Alt</b> para soltar o ímã. O tracejado é o limite dos afastamentos: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
   }[m];
   /* No polígono desenhado, testada e profundidade deixam de governar o
      lote — passam a ser leitura do que foi desenhado. Ficam tachados e
@@ -3966,7 +4612,9 @@ function setModo(m) {
 function montarEncostas() {
   const el = $("encostas"), inf = $("encinfo");
   if (!el) return;
-  const R = SIM && SIM.R;
+  /* as divisas encostadas são da edificação em foco: o direito vem do
+     uso dela, e cada construção escolhe as suas */
+  const R = Rsel();
   if (!R || R.suspenso || !R.lados) { el.innerHTML = ""; inf.textContent = ""; return; }
   const EP = R.encostaPerm || { art: null, lat: 0, fundos: false };
 
@@ -4071,7 +4719,8 @@ function montarLados() {
   const mostra = LOT.modo === "draw" || LOT.modo === "front";
   box.style.display = mostra ? "" : "none";
   if (!mostra) return;
-  const tipos = (SIM && SIM.R && SIM.R.lados) ? SIM.R.lados : null;
+  const _R = Rsel();
+  const tipos = (_R && _R.lados) ? _R.lados : null;
   /* já montada e com o mesmo número de lados: só atualiza os valores,
      para não recriar o campo que acabou de ser editado */
   const atuais = el.querySelectorAll("input[data-lado]");
@@ -4521,12 +5170,18 @@ function camDaRua(R) {
 function calc() {
   if (!zonaAtual) { renderVazio(); return; }
   setorAtual = $("setor") ? $("setor").value : setorAtual;
-  const est = estudoAtual();
-  const R = motor(est);
-  SIM = { est, R };
+  const ests = estudosDoLote();
+  const est = ests[EDIF_SEL] || ests[0];
+  /* uma edificação: o motor devolve o estudo. Várias: cada uma roda e
+     o consolidador soma o que é do lote. R.edifs existe nos dois casos,
+     com um elemento ou com vários, para o desenho e o relatório
+     iterarem sempre do mesmo jeito. */
+  const R = motorLote(ests);
+  SIM = { est, ests, R, sel: EDIF_SEL };
   camDaRua(R);
   render(R, est);
   /* os checks de divisa dependem do que a lei permitiu nesta rodada */
+  montarEdifs();
   montarEncostas();
   desenhaLote();
 }
@@ -4858,16 +5513,36 @@ function desenhaPlanta(R) {
   poliMao(g, tela(pts), PAL.lote, 1.7, { sem: 3, passes: 2, over: 3 });
 
   if (R.env.ok) poliMao(g, tela(R.env.pts), PAL.env, 0.9, { sem: 11, dash: [7, 3, 1.5, 3], over: 1.2, amp: .8, alfa: .8 });
-  if (R.projPts) {
+  /* uma mancha por edificação. Com uma só, R.edifs tem um elemento e o
+     desenho é o de sempre; com várias, cada uma entra com a sua
+     projeção, a sua torre e a sua letra, e os traços não se misturam
+     porque o semente de cada passada é deslocado pelo índice. */
+  const EDS = R.edifs || [R];
+  EDS.forEach((E, k) => {
+    if (!E.projPts) return;
     /* a forma desenhada, quando houver; senão a redução da envoltória.
        Com embasamento, a mancha hachurada é a dos dois primeiros
        pavimentos e a torre entra por dentro, em tracejado largo. */
-    const pr = tela(R.projPts);
-    hachuraMao(g, pr, PAL.proj, PAL.faceh, 7, -38, 5);
-    poliMao(g, pr, PAL.proj, 1.5, { sem: 19, passes: 2, over: 2 });
-    if (R.emb && R.torrePts)
-      poliMao(g, tela(R.torrePts), PAL.rec, 1.7, { sem: 47, dash: [9, 4], over: 1.6, amp: .7, passes: 2 });
-  }
+    const pr = tela(E.projPts);
+    hachuraMao(g, pr, PAL.proj, PAL.faceh, 7, -38, 5 + k * 13);
+    poliMao(g, pr, PAL.proj, 1.5, { sem: 19 + k * 31, passes: 2, over: 2 });
+    if (E.emb && E.torrePts)
+      poliMao(g, tela(E.torrePts), PAL.rec, 1.7, { sem: 47 + k * 31, dash: [9, 4], over: 1.6, amp: .7, passes: 2 });
+    /* a letra no meio da mancha: sem ela, duas construções iguais no
+       mesmo desenho não têm como ser referidas no quadro ao lado */
+    if (EDS.length > 1) {
+      const c = T(centroid(E.projPts), s);
+      g.font = ftx(13); g.textAlign = "center"; g.textBaseline = "middle";
+      const w = g.measureText(E.nome).width + 11;
+      g.fillStyle = PRINT ? "rgba(255,255,255,.88)" : "rgba(11,13,17,.80)";
+      g.fillRect(c.X - w / 2, c.Y - 9, w, 18);
+      poliMao(g, [{ X: c.X - w / 2, Y: c.Y - 9 }, { X: c.X + w / 2, Y: c.Y - 9 },
+                  { X: c.X + w / 2, Y: c.Y + 9 }, { X: c.X - w / 2, Y: c.Y + 9 }],
+        PAL.ar, 0.8, { sem: 700 + k, over: .9, amp: .4 });
+      g.fillStyle = PAL.lote; rotulo(g, E.nome, c.X, c.Y);
+      g.textBaseline = "alphabetic";
+    }
+  });
 
   /* Parede na divisa: faixa cheia por dentro do lado encostado.
      Sem ela a aresta da projeção cai exatamente sobre a linha da
@@ -4875,12 +5550,18 @@ function desenhaPlanta(R) {
      divisa em que se construiu daquela de que se recuou. A faixa
      cheia é a convenção de parede cega, e é o que faz a escolha
      aparecer. */
-  const NADIV = R.naDivisa || [];
+  /* as divisas encostadas são a união do que cada edificação alcança:
+     a cota do lado precisa dizer "na divisa" se qualquer construção
+     assenta ali */
+  const NADIV = (R.edifs && R.edifs.length > 1)
+    ? [].concat.apply([], R.edifs.map(E => E.naDivisa || [])).filter((v, i, a) => a.indexOf(v) === i)
+    : (R.naDivisa || []);
   const cenL = centroid(pts);
   /* o motor entrega o segmento de parede pronto: a divisa segue além
      da edificação, onde o afastamento frontal manda recuar, e ali não
      há parede nenhuma */
-  (R.paredes || []).forEach((W, j) => {
+  const PAREDES = [].concat.apply([], EDS.map(E => E.paredes || []));
+  PAREDES.forEach((W, j) => {
     const p = W.a, q = W.b;
     const dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy) || 1;
     if (L < 1e-6) return;
@@ -4929,7 +5610,9 @@ function desenhaPlanta(R) {
        taxa de ocupação teve de sair dali —, a cota diz os dois valores:
        senão o desenho mostraria a edificação longe de uma linha que a
        cota jura estar a 5 m */
-    const maior = R.projRec && R.projRec[i] > R.rec[i] + 0.005;
+    /* com várias edificações não há um embasamento só a comparar: a
+       cota fica no afastamento exigido, que é o que vale para todas */
+    const maior = EDS.length === 1 && R.projRec && R.projRec[i] > R.rec[i] + 0.005;
     const t2 = naDiv
       ? "na divisa · torre " + fmt(R.rec[i], 2) + " m"
       : maior
@@ -5148,7 +5831,10 @@ function desenhaCorte(R, dir, alvo) {
   [[xDivA, iA], [xDivB, iB]].forEach(t => rotulo(g, nomeLado(t[1]), t[0], yTopoDes - 4));
 
   let y = yTerreno + hSub * k;
-  const nv = niveis();
+  /* o rótulo vem do próprio pavimento: com mais de uma edificação a
+     lista do corte é a de todas, e a pilha da tela é a de uma só */
+  const MUITAS = !!(R.edifs && R.edifs.length > 1);
+  const nv = pavs.map(p => (MUITAS && p.edif ? p.edif + " · " : "") + (p.rot || "?"));
   const TOL = 0.02;
   pavs.forEach((p, i) => {
     const h = num(p.pd) * k;
@@ -5289,12 +5975,20 @@ function desenha3d(R) {
   const F = ctxBase("iso");
   if (!F) return;
   const g = F.g, W = F.W, H = F.H;
-  if (!R.env.ok || !R.pav.lista.length) return;
+  if (!R.env.ok) return;
 
-  if (!R.projPts) return;
-  const cen = centroid(R.projPts);
+  /* Uma massa por edificação. Com uma só, a lista tem um elemento e o
+     desenho é exatamente o de antes; com várias, o terreno é o mesmo,
+     a câmera enquadra o conjunto e cada volume é erguido sobre a sua
+     própria projeção, com a sua pilha e a sua altura. */
+  const EDS = (R.edifs || [R]).filter(E => E.projPts && E.pav && E.pav.lista.length);
+  if (!EDS.length) return;
+  const UMA = EDS.length === 1;
+  /* com várias, o centro é o do lote: centrar numa delas jogaria as
+     outras para fora do enquadramento */
+  const cen = UMA ? centroid(EDS[0].projPts) : centroid(R.lote.pts);
   const desl = Q => Q.map(p => ({ x: p.x - cen.x, y: p.y - cen.y }));
-  const base = desl(R.projPts);
+  const base = desl(EDS[0].projPts);
   /* Com divisa encostada, o embasamento e a torre têm formas
      diferentes — não é a mesma planta reduzida. Cada pavimento usa o
      seu próprio contorno, e só o que varia dentro de um mesmo contorno
@@ -5309,12 +6003,17 @@ function desenha3d(R) {
     return kk > 0.9999 ? Q : Q.map(q => ({ x: q.x * kk, y: q.y * kk }));
   };
   const lote = R.lote.pts.map(p => ({ x: p.x - cen.x, y: p.y - cen.y }));
-  const subP = anelSubsolo(R);
-  const anelSub = subP ? subP.map(p => ({ x: p.x - cen.x, y: p.y - cen.y })) : null;
-  const pavs = R.pav.lista.filter(p => !POS[p.pos].sub);
-  const subs = R.pav.lista.filter(p => POS[p.pos].sub);
-  const hTot = pavs.reduce((s, p) => s + num(p.pd), 0);
-  const hSub = subs.reduce((s, p) => s + num(p.pd), 0);
+  const MASSAS = EDS.map(E => {
+    const sp = anelSubsolo(E);
+    const pv = E.pav.lista.filter(q => !POS[q.pos].sub);
+    const sb = E.pav.lista.filter(q => POS[q.pos].sub);
+    return { E, base: desl(E.projPts), pavs: pv, subs: sb,
+             anelSub: sp ? desl(sp) : null,
+             hTot: pv.reduce((a, q) => a + num(q.pd), 0),
+             hSub: sb.reduce((a, q) => a + num(q.pd), 0) };
+  });
+  const hTot = Math.max.apply(null, MASSAS.map(M => M.hTot));
+  const hSub = Math.max.apply(null, MASSAS.map(M => M.hSub));
 
   /* ---- câmera ---- */
   const raio = Math.max(Math.max(...lote.map(p => Math.hypot(p.x, p.y))), hTot * 0.6, 4);
@@ -5340,8 +6039,10 @@ function desenha3d(R) {
 
   const todos = [];
   lote.forEach(p => { todos.push(proj3(p, 0)); todos.push(proj3(p, -esp)); });
-  base.forEach(p => { todos.push(proj3(p, 0)); todos.push(proj3(p, hTot)); });
-  if (anelSub && hSub > 0) anelSub.forEach(p => todos.push(proj3(p, -hSub)));
+  MASSAS.forEach(M => {
+    M.base.forEach(p => { todos.push(proj3(p, 0)); todos.push(proj3(p, M.hTot)); });
+    if (M.anelSub && M.hSub > 0) M.anelSub.forEach(p => todos.push(proj3(p, -M.hSub)));
+  });
   const xs = todos.map(p => p.X), ys = todos.map(p => p.Y);
   const m = 34;
   const k = Math.min((W - 2 * m) / Math.max(Math.max(...xs) - Math.min(...xs), 1e-6),
@@ -5350,25 +6051,28 @@ function desenha3d(R) {
   const oy = H / 2 + (Math.max(...ys) + Math.min(...ys)) / 2 * k;
   const S3 = (p, z) => { const q = proj3(p, z); return { X: ox + q.X * k, Y: oy - q.Y * k, Z: q.Z }; };
 
-  /* ---- subsolo: abaixo do plano do terreno, em tracejado ---- */
-  if (anelSub && hSub > 0) {
+  /* ---- subsolos: abaixo do plano do terreno, em tracejado ---- */
+  MASSAS.forEach((M, im) => {
+    const anelSub = M.anelSub, hSub = M.hSub;
+    if (!anelSub || hSub <= 0) return;
     const topo = anelSub.map(p => S3(p, 0)), fundo = anelSub.map(p => S3(p, -hSub));
-    hachuraMao(g, fundo, PAL.env, null, 11, 38, 811, .4);
+    hachuraMao(g, fundo, PAL.env, null, 11, 38, 811 + im * 7, .4);
     for (let i = 0; i < anelSub.length; i++) {
       const j = (i + 1) % anelSub.length;
       poliMao(g, [topo[i], topo[j], fundo[j], fundo[i]], PAL.env, 1,
-        { sem: 820 + i, dash: [4, 3], over: 1, alfa: .95 });
+        { sem: 820 + im * 40 + i, dash: [4, 3], over: 1, alfa: .95 });
     }
-    poliMao(g, fundo, PAL.env, 1.1, { sem: 840, dash: [4, 3], over: 1.2 });
+    poliMao(g, fundo, PAL.env, 1.1, { sem: 840 + im * 7, dash: [4, 3], over: 1.2 });
     let prof = null;
     anelSub.forEach(p => { const q = S3(p, -hSub); if (!prof || q.X < prof.X) prof = { X: q.X, p }; });
     if (prof) {
       const a0 = S3(prof.p, 0), b0 = S3(prof.p, -hSub);
       g.font = ftx(8.8); g.fillStyle = PAL.tx; g.textAlign = "right"; g.textBaseline = "middle";
-      rotulo(g, "subsolo " + fmt(hSub, 2) + " m", Math.min(a0.X, b0.X) - 9, (a0.Y + b0.Y) / 2 + 7);
+      rotulo(g, (UMA ? "" : M.E.nome + " · ") + "subsolo " + fmt(hSub, 2) + " m",
+        Math.min(a0.X, b0.X) - 9, (a0.Y + b0.Y) / 2 + 7);
       g.textAlign = "left"; g.textBaseline = "alphabetic";
     }
-  }
+  });
 
   /* Terreno como placa com espessura, e não como linha no vazio.
 
@@ -5401,19 +6105,12 @@ function desenha3d(R) {
   /* as divisas em que a edificação assenta, reforçadas na borda da
      placa — desenhadas antes do volume, para o volume tapá-las onde
      de fato as cobre */
-  const naDiv3 = R.naDivisa || [];
-  (R.paredes || []).forEach((W, j) => {
+  MASSAS.forEach((M, im) => (M.E.paredes || []).forEach((W, j) => {
     const a = S3({ x: W.a.x - cen.x, y: W.a.y - cen.y }, 0);
     const b = S3({ x: W.b.x - cen.x, y: W.b.y - cen.y }, 0);
-    g.beginPath(); riscoMao(g, a.X, a.Y, b.X, b.Y, 230 + j, .7, 2.5);
+    g.beginPath(); riscoMao(g, a.X, a.Y, b.X, b.Y, 230 + im * 40 + j, .7, 2.5);
     g.strokeStyle = PAL.rec; g.lineWidth = 3; g.lineCap = "round"; g.stroke();
-  });
-
-  /* sombra projetada da implantação */
-  const somb = base.map(p => S3({ x: p.x + 0.42 * hTot * .32, y: p.y + 0.5 * hTot * .32 }, 0));
-  g.save(); caminhoReto(g, somb); g.clip();
-  g.fillStyle = PRINT ? "rgba(0,0,0,.07)" : "rgba(0,0,0,.42)"; g.fill();
-  g.restore();
+  }));
 
   /* ---- volume acima do terreno ---- */
   const claro = PAL === PAL_LIGHT;
@@ -5426,9 +6123,29 @@ function desenha3d(R) {
   const azl = yaw - Math.PI / 4;
   const LUZ = v3.norm({ x: Math.cos(azl) * 0.8, y: Math.sin(azl) * 0.8, z: 0.6 });
 
-  let z = 0, ultimoAnel = base, rotDiv = null;
+  let rotDiv = null;
   /* silhueta do volume em tela, para a cota da altura ficar fora dele */
   const silX = [];
+  /* as massas são pintadas do fundo para a frente: sem isso a de trás
+     cobriria a da frente onde elas se encobrem na perspectiva */
+  const ORD = MASSAS.map((M, i) => ({ M, i,
+    d: v3.dot({ x: centroid(M.base).x - cam.x, y: centroid(M.base).y - cam.y, z: -cam.z }, fw) }))
+    .sort((u, v) => v.d - u.d);
+  ORD.forEach(({ M, i: im }) => {
+  const base = M.base, pavs = M.pavs, hTot = M.hTot;
+  const anelDe = (a, p) => {
+    const Q = (p && p.pts) ? desl(p.pts) : base;
+    const ref = areaAbs(Q);
+    const kk = Math.sqrt(Math.max(0, Math.min(1, a / Math.max(ref, 1e-9))));
+    return kk > 0.9999 ? Q : Q.map(q => ({ x: q.x * kk, y: q.y * kk }));
+  };
+  /* sombra projetada da implantação */
+  const somb = base.map(p => S3({ x: p.x + 0.42 * hTot * .32, y: p.y + 0.5 * hTot * .32 }, 0));
+  g.save(); caminhoReto(g, somb); g.clip();
+  g.fillStyle = PRINT ? "rgba(0,0,0,.07)" : "rgba(0,0,0,.42)"; g.fill();
+  g.restore();
+  let z = 0, ultimoAnel = base;
+  M.ultimoAnel = base;
   pavs.forEach((p, ip) => {
     const h = num(p.pd), zi = z, zf = z + h; z = zf;
     const anel = anelDe(p.area, p);
@@ -5451,7 +6168,7 @@ function desenha3d(R) {
            segmentos de parede. Testar por geometria, e não pelo índice
            do anel, é o que faz isto valer também no perímetro
            desenhado, cujos vértices não correspondem aos do lote. */
-        divisa: !!p.emb && (R.paredes || []).some(W => {
+        divisa: !!p.emb && (M.E.paredes || []).some(W => {
           const wa = { x: W.a.x - cen.x, y: W.a.y - cen.y }, wb = { x: W.b.x - cen.x, y: W.b.y - cen.y };
           return distSeg(A, wa, wb) <= 0.12 && distSeg(B, wa, wb) <= 0.12;
         }),
@@ -5461,23 +6178,37 @@ function desenha3d(R) {
     }
     faces.sort((u, v) => v.d - u.d);
     faces.forEach(fc => {
-      hachuraMao(g, fc.pts, cb, tomDe(cb, fc.tom), 8, fc.ang, 300 + ip * 11 + fc.i, claro ? .34 : .28);
+      hachuraMao(g, fc.pts, cb, tomDe(cb, fc.tom), 8, fc.ang, 300 + im * 177 + ip * 11 + fc.i, claro ? .34 : .28);
       if (fc.divisa) {
         /* parede cega assentada na divisa: massa por cima da hachura e
            traço reforçado, como na planta e no corte */
         g.save(); caminhoReto(g, fc.pts);
         g.fillStyle = PAL.rec; g.globalAlpha = claro ? .30 : .26; g.fill();
         g.restore(); g.globalAlpha = 1;
-        poliMao(g, fc.pts, PAL.rec, 2, { sem: 400 + ip * 11 + fc.i, over: 1.6, amp: .5, passes: 2 });
+        poliMao(g, fc.pts, PAL.rec, 2, { sem: 400 + im * 177 + ip * 11 + fc.i, over: 1.6, amp: .5, passes: 2 });
         /* a face encostada mais próxima da câmera ganha o rótulo */
         if (!rotDiv || fc.d < rotDiv.d) rotDiv = { d: fc.d, pts: fc.pts };
-      } else poliMao(g, fc.pts, cb, 1, { sem: 400 + ip * 11 + fc.i, over: 1.4, amp: .7 });
+      } else poliMao(g, fc.pts, cb, 1, { sem: 400 + im * 177 + ip * 11 + fc.i, over: 1.4, amp: .7 });
     });
     /* laje do nível: fica exposta onde o nível de cima recua */
     const laje = anel.map(q => S3(q, zf));
-    hachuraMao(g, laje, cb, tomDe(cb, tomLaje), 8, -40, 500 + ip, claro ? .3 : .22);
+    hachuraMao(g, laje, cb, tomDe(cb, tomLaje), 8, -40, 500 + im * 31 + ip, claro ? .3 : .22);
     poliMao(g, laje, cb, ip === pavs.length - 1 ? 1.3 : 0.9,
-      { sem: 520 + ip, passes: ip === pavs.length - 1 ? 2 : 1, over: 1.6 });
+      { sem: 520 + im * 31 + ip, passes: ip === pavs.length - 1 ? 2 : 1, over: 1.6 });
+    M.ultimoAnel = anel;
+  });
+  /* a letra da edificação, no topo da massa, quando há mais de uma */
+  if (!UMA) {
+    const topo = M.ultimoAnel.map(q => S3(q, hTot));
+    const cx = topo.reduce((a, q) => a + q.X, 0) / topo.length;
+    const cy = topo.reduce((a, q) => a + q.Y, 0) / topo.length;
+    g.font = ftx(12); g.textAlign = "center"; g.textBaseline = "middle";
+    const wl = g.measureText(M.E.nome).width + 10;
+    g.fillStyle = PRINT ? "rgba(255,255,255,.88)" : "rgba(11,13,17,.82)";
+    g.fillRect(cx - wl / 2, cy - 8, wl, 16);
+    g.fillStyle = PAL.lote; rotulo(g, M.E.nome, cx, cy);
+    g.textAlign = "left"; g.textBaseline = "alphabetic";
+  }
   });
 
   /* rótulo da parede na divisa, sobre a face voltada para a câmera */
@@ -5494,21 +6225,25 @@ function desenha3d(R) {
     g.textAlign = "left"; g.textBaseline = "alphabetic";
   }
 
-  /* cota da altura da edificação do art. 25, V — a mesma do corte */
-  const cand = base.map(p => ({ p, d: proj3(p, 0).Z, X: S3(p, 0).X }))
+  /* Cota da altura do art. 25, V — a mesma do corte. Com várias
+     edificações cota-se a mais alta: é dela que o gabarito do lote
+     fala, e uma cota por massa encheria o desenho de números. */
+  const MA = MASSAS.slice().sort((u, v) => (v.E.pav.altura || 0) - (u.E.pav.altura || 0))[0];
+  const baseA = MA.base, hA = MA.hTot, altA = MA.E.pav.altura;
+  const cand = baseA.map(p => ({ p, d: proj3(p, 0).Z, X: S3(p, 0).X }))
     .sort((u, v) => u.d - v.d)
-    .slice(0, Math.max(1, Math.ceil(base.length / 2)));   /* só as quinas da frente */
+    .slice(0, Math.max(1, Math.ceil(baseA.length / 2)));   /* só as quinas da frente */
   /* a silhueta é a de tudo o que foi desenhado do volume, e não só das
      quinas da base: com a câmera da rua o embasamento avança além do
      topo, e a cota encostada na base caía por cima da massa */
   const sil = silX.length ? silX.slice() : [];
-  base.forEach(p => sil.push(S3(p, 0).X));
-  ultimoAnel.forEach(p => sil.push(S3(p, hTot).X));
+  baseA.forEach(p => sil.push(S3(p, 0).X));
+  (MA.ultimoAnel || baseA).forEach(p => sil.push(S3(p, hA).X));
   const sMin = Math.min(...sil), sMax = Math.max(...sil), meio = (sMin + sMax) / 2;
   let perto = null;
   cand.forEach(c => { if (!perto || Math.abs(c.X - meio) > Math.abs(perto.X - meio)) perto = c; });
   if (perto) {
-    const a = S3(perto.p, 0), b = S3(perto.p, Math.min(R.pav.altura, hTot));
+    const a = S3(perto.p, 0), b = S3(perto.p, Math.min(altA, hA));
     /* fica do lado em que houver folga na tela; se não houver em
        nenhum, do lado de maior folga, encostado na borda */
     let lado = perto.X >= meio ? 1 : -1;
@@ -5531,7 +6266,7 @@ function desenha3d(R) {
     g.rotate(-Math.PI / 2);
     g.font = ftx(9.5); g.fillStyle = PAL.rec;
     g.textAlign = "center"; g.textBaseline = "middle";
-    rotulo(g, "H = " + fmt(R.pav.altura, 2) + " m", 0, 0);
+    rotulo(g, (UMA ? "" : MA.E.nome + " · ") + "H = " + fmt(altA, 2) + " m", 0, 0);
     g.restore();
     g.textAlign = "left"; g.textBaseline = "alphabetic";
   }
@@ -5604,11 +6339,18 @@ function relatorio(escopo) {
   const ficha = [
     ["Município", "São João da Barra — Rio de Janeiro"],
     ["Zona de enquadramento", P.nome],
-    ["Uso pretendido", R.uso.n + (R.uso.cls ? " — classificação " + R.uso.cls + " no Anexo I" : "")],
+    ["Uso pretendido", (R.edifs && R.edifs.length > 1)
+      ? R.edifs.map(E => E.nome + ": " + E.uso.n + (E.uso.cls ? " (" + E.uso.cls + ")" : "")).join(" · ")
+      : R.uso.n + (R.uso.cls ? " — classificação " + R.uso.cls + " no Anexo I" : "")],
     ["Via de acesso", VIAS[est.via].n + (est.viaNome ? " — " + est.viaNome : "")],
     ["Área do lote", fmt(R.lote.area, 2) + " m²  ·  perímetro " + fmt(R.lote.perim, 2) + " m  ·  " +
       pl(R.lote.n, "lado") + "  ·  " + pl(R.lote.fronts, "testada")],
-    ["Modo de análise", "Envoltória máxima edificável"],
+    /* com várias construções não há envoltória máxima a arbitrar: a
+       repartição da área entre elas é do projeto, e o que a ferramenta
+       faz é conferir o conjunto desenhado */
+    ["Modo de análise", (R.edifs && R.edifs.length > 1)
+      ? "Conferência do conjunto — " + pl(R.edifs.length, "edificação desenhada", "edificações desenhadas")
+      : (R.edif && R.edif.ok ? "Conferência do perímetro desenhado" : "Envoltória máxima edificável")],
     ["Data de emissão", hoje]
   ];
 
@@ -5660,19 +6402,42 @@ function relatorio(escopo) {
   LST.forEach((p, i) => {
     if (p.Q.sub || p.Q.topo || !p.emb) return;
     const t = LST.find(q => !q.Q.sub && !q.Q.topo && !q.emb && q.ocup === p.ocup);
-    if (t && p.area - t.area > 5e-3) desnivel.push({ n: niveis()[i], d: p.area - t.area });
+    if (t && p.area - t.area > 5e-3) desnivel.push({ n: p.rot, d: p.area - t.area });
   });
 
   /* a área por pavimento é a memória de cálculo do Coeficiente: o total
      computável aparece ao pé da tabela, e a coluna diz de onde vem cada
      laje — embasamento, torre ou subsolo */
+  const MUITAS = !!(R.edifs && R.edifs.length > 1);
+  /* com mais de uma construção, o quadro do conjunto vem primeiro: é
+     ele que responde o que o lote comporta, e as pilhas vêm depois,
+     identificadas */
+  const secConj = MUITAS ? "<h2>Edificações do lote</h2>" +
+    tab("<th>Edificação</th><th>Uso</th><th>Projeção</th><th>Pavimentos</th><th>Altura</th>" +
+        "<th>Área construída</th><th>Área computável</th>",
+      R.edifs.map(E => "<tr><td><b>" + E.nome + "</b></td><td>" + (E.uso ? E.uso.n : "—") +
+        '</td><td class="n">' + fmt(E.proj, 2) + ' m²</td><td class="n">' + (E.pav ? E.pav.gab : "—") +
+        '</td><td class="n">' + (E.pav ? fmt(E.pav.altura, 2) + " m" : "—") +
+        '</td><td class="n">' + fmt(E.areas ? E.areas.total : 0, 2) + ' m²</td><td class="n">' +
+        fmt(E.areas ? E.areas.comp : 0, 2) + " m²</td></tr>").join("") +
+      '<tr><td colspan="2"><b>Conjunto</b></td><td class="n"><b>' + fmt(R.proj, 2) +
+      ' m²</b></td><td colspan="2">taxa de ocupação <b>' + fmt(R.toProj, 1) + '%</b></td><td class="n"><b>' +
+      fmt(R.areas.total, 2) + ' m²</b></td><td class="n"><b>' + fmt(R.areas.comp, 2) + " m²</b></td></tr>") +
+    '<p class="obs">Taxa de ocupação, taxa de permeabilidade e Coeficiente de Aproveitamento medem o lote e por ' +
+    "isso somam as edificações; gabarito, altura, pé-direito e a dispensa de afastamento das notas (2) e (3) " +
+    "qualificam cada construção e são verificados uma a uma. A lei do Município não fixa distância entre " +
+    "edificações no mesmo lote — a lacuna está declarada, e o que se conferiu foi que as projeções não se " +
+    "sobrepõem.</p>" : "";
+
   const secPav = "<h2>Composição dos pavimentos</h2>" +
-    tab("<th>Nível</th><th>Posição</th><th>Ocupação</th><th>Pé-direito</th><th>Área</th><th>Projeção</th><th>Habitado</th><th>Computa no CA</th>",
-      R.pav.lista.map((p, i) => "<tr><td>" + niveis()[i] + "</td><td>" + rotPos(i) + "</td><td>" + p.O.n +
+    tab((MUITAS ? "<th>Edif.</th>" : "") +
+        "<th>Nível</th><th>Posição</th><th>Ocupação</th><th>Pé-direito</th><th>Área</th><th>Projeção</th><th>Habitado</th><th>Computa no CA</th>",
+      R.pav.lista.map((p, i) => "<tr>" + (MUITAS ? "<td>" + (p.edif || "—") + "</td>" : "") +
+        "<td>" + (p.rot || "—") + "</td><td>" + rotPos(i) + "</td><td>" + p.O.n +
         '</td><td class="n">' + fmt(p.pd, 2) + ' m</td><td class="n">' + fmt(p.area, 2) + " m²</td><td>" +
         (p.Q.sub ? "subsolo" : p.Q.topo ? "volume técnico" : p.emb ? "embasamento" : R.emb ? "torre" : "envoltória") +
         "</td><td>" + (p.O.hab ? "sim" : "não") + "</td><td>" + (p.computa ? "sim" : "não") + "</td></tr>").join("") +
-      '<tr><td colspan="4"><b>Área construída total</b></td><td class="n"><b>' + fmt(R.areas.total, 2) +
+      '<tr><td colspan="' + (MUITAS ? 5 : 4) + '"><b>Área construída total</b></td><td class="n"><b>' + fmt(R.areas.total, 2) +
       ' m²</b></td><td colspan="2">computável <b>' + fmt(R.areas.comp, 2) + " m²</b></td><td><b>CA " +
       fmt(R.ca.proj, 2) + "</b></td></tr>") +
     (R.emb ? '<p class="obs">Os dois primeiros pavimentos acima do solo formam o embasamento — ' + R.emb.rot +
@@ -5930,8 +6695,8 @@ function relatorio(escopo) {
      verificação abre o corpo, o quadro fecha a parte numérica e as
      peças antecedem os alertas e as premissas. */
   doc += SIN
-    ? secQuadro + secVerif + secExigLinha + secAlertas + secRess + secFigs
-    : secPav + secAdens + secVerif + secExig + secVagas + secQuadro + secCalc + secLegenda + secNaoConta + secAfast +
+    ? secConj + secQuadro + secVerif + secExigLinha + secAlertas + secRess + secFigs
+    : secConj + secPav + secAdens + secVerif + secExig + secVagas + secQuadro + secCalc + secLegenda + secNaoConta + secAfast +
       secFigs + secAlertas + secPrem + secRess;
 
   /* ---------- montagem final ---------- */
@@ -6243,9 +7008,27 @@ function montarBaseLegal() {
   if ($("zeis")) $("zeis").addEventListener("change", () => { renderIndices(); calc(); });
   $("mp").addEventListener("change", calc);
   $("uso").addEventListener("change", e => {
+    EDIF.uso = e.target.value;
     $("boxGeminada").style.display = USO_INFO[e.target.value].multi ? "" : "none";
     calc();
   });
+  $("addEdif").addEventListener("click", addEdif);
+  $("vMais").addEventListener("click", () => amplia(1.3, undefined, undefined, dim()));
+  $("vMenos").addEventListener("click", () => amplia(1 / 1.3, undefined, undefined, dim()));
+  $("vTudo").addEventListener("click", () => enquadra("tudo"));
+  $("vLote").addEventListener("click", () => enquadra("lote"));
+  $("btnSalvar").addEventListener("click", salvaEstudo);
+  $("btnAbrir").addEventListener("click", () => $("fileEstudo").click());
+  $("btnDXF").addEventListener("click", () => $("fileDXF").click());
+  $("fileEstudo").addEventListener("change", ev => {
+    if (ev.target.files[0]) abreEstudo(ev.target.files[0]);
+    ev.target.value = "";
+  });
+  $("fileDXF").addEventListener("change", ev => {
+    if (ev.target.files[0]) importaDXF(ev.target.files[0]);
+    ev.target.value = "";
+  });
+  montarRef();
   ["via", "unid"].forEach(id => $(id).addEventListener("input", calc));
   $("via").addEventListener("change", () => {
     /* mexeu na mão: a leitura da sugestão sai, para o relatório não
@@ -6258,7 +7041,11 @@ function montarBaseLegal() {
   $("mDraw").addEventListener("click", () => setModo("draw"));
   $("mFront").addEventListener("click", () => setModo("front"));
   $("mEdif").addEventListener("click", () => setModo("edif"));
-  $("mClear").addEventListener("click", () => { LOT.pts = retangulo(12, 30); LOT.fronts = [0]; EDIF.pts.length = 0; setModo("rect"); sincroniza(); });
+  $("mClear").addEventListener("click", () => {
+    LOT.pts = retangulo(12, 30); LOT.fronts = [0];
+    EDIFS.length = 0; EDIFS.push(novaEdif(0));
+    selecionaEdif(0); setModo("rect"); sincroniza();
+  });
   $("addPav").addEventListener("click", () => addPav("pav", "habitacao"));
   $("addSub").addEventListener("click", () => addPav("subsolo", "garagem"));
   $("addCob").addEventListener("click", () => addPav("cobertura", "lazer"));
@@ -6313,8 +7100,24 @@ function montarBaseLegal() {
     const t = ev.touches ? ev.touches[0] : ev;
     return { X: t.clientX - r.left, Y: t.clientY - r.top, s: escalaSobreCentro({ width: r.width, height: r.height }) };
   };
+  /* deslocamento do quadro: botão do meio, ou Shift com o esquerdo.
+     Fica fora dos modos porque tem de funcionar em todos — é navegação,
+     não edição. */
+  let pan = null;
+  const dim = () => { const r = c.getBoundingClientRect(); return { width: r.width, height: r.height }; };
+  c.addEventListener("wheel", ev => {
+    ev.preventDefault();
+    const { X, Y } = pos(ev);
+    amplia(ev.deltaY < 0 ? 1.18 : 1 / 1.18, X, Y, dim());
+  }, { passive: false });
+  c.addEventListener("contextmenu", ev => ev.preventDefault());
   c.addEventListener("pointerdown", ev => {
+    SEM_IMA = !!ev.altKey;
     const { X, Y, s } = pos(ev);
+    if (ev.button === 1 || (ev.button === 0 && ev.shiftKey)) {
+      pan = { X, Y }; c.setPointerCapture(ev.pointerId); c.style.cursor = "grabbing";
+      ev.preventDefault(); return;
+    }
     if (LOT.modo === "front") {
       const i = achaLado(X, Y, s);
       if (i >= 0) { const k = LOT.fronts.indexOf(i); k >= 0 ? LOT.fronts.splice(k, 1) : LOT.fronts.push(i); sincroniza(); }
@@ -6337,15 +7140,32 @@ function montarBaseLegal() {
     if (v >= 0) { arrast = v; drag = true; c.setPointerCapture(ev.pointerId); desenhaLote(); }
   });
   c.addEventListener("pointermove", ev => {
+    SEM_IMA = !!ev.altKey;
     const { X, Y, s } = pos(ev);
+    if (pan) { desloca(X - pan.X, Y - pan.Y, dim()); pan = { X, Y }; return; }
     if (drag && arrastE >= 0) {
       const p = pontoEdif(Tinv(X, Y, s), s).p;
       EDIF.pts[arrastE] = { x: +p.x.toFixed(2), y: +p.y.toFixed(2) };
       atualizaEdif(); desenhaLote(); if (EDIF.pts.length >= 3) calc();
       return;
     }
-    if (drag && arrast >= 0) { const p = Tinv(X, Y, s); LOT.pts[arrast] = { x: +p.x.toFixed(2), y: +p.y.toFixed(2) }; sincroniza(); return; }
-    if (LOT.modo === "draw") { const h = achaLado(X, Y, s); if (h !== hoverLado) { hoverLado = h; desenhaLote(); } }
+    if (drag && arrast >= 0) {
+      const liv = Tinv(X, Y, s);
+      const im = imanDoLote(liv, s);
+      LOT.pts[arrast] = im.tipo ? { x: +im.p.x.toFixed(3), y: +im.p.y.toFixed(3) }
+                                : { x: +liv.x.toFixed(2), y: +liv.y.toFixed(2) };
+      IMA_ALVO = im.tipo ? { x: im.p.x, y: im.p.y, tipo: im.tipo } : null;
+      sincroniza(); return;
+    }
+    if (LOT.modo === "draw") {
+      const h = achaLado(X, Y, s); let mud = false;
+      if (h !== hoverLado) { hoverLado = h; mud = true; }
+      const im = imanDoLote(Tinv(X, Y, s), s);
+      const novo = im.tipo ? { x: im.p.x, y: im.p.y, tipo: im.tipo } : null;
+      if (!!novo !== !!IMA_ALVO || (novo && IMA_ALVO &&
+          (novo.x !== IMA_ALVO.x || novo.y !== IMA_ALVO.y))) { IMA_ALVO = novo; mud = true; }
+      if (mud) desenhaLote();
+    }
     if (LOT.modo === "edif") {
       /* marca onde o clique vai cair: sem essa pista o ímã surpreende */
       const im = pontoEdif(Tinv(X, Y, s), s);
@@ -6355,7 +7175,10 @@ function montarBaseLegal() {
       if (mudou) { IMA_ALVO = novo; desenhaLote(); }
     }
   });
-  c.addEventListener("pointerup", () => { drag = false; arrast = -1; arrastE = -1; desenhaLote(); });
+  c.addEventListener("pointerup", () => {
+    pan = null; c.style.cursor = "";
+    drag = false; arrast = -1; arrastE = -1; desenhaLote();
+  });
   c.addEventListener("pointerleave", () => {
     let m = false;
     if (hoverLado >= 0) { hoverLado = -1; m = true; }
@@ -7233,6 +8056,542 @@ function dimensionaCroqui(C) {
   const w = c.getBoundingClientRect().width;
   const a = C ? CROQ_LARG_MM / alturaCroquiMM(C) : 1.06;
   if (w > 2) c.style.height = Math.round(w / a) + "px";
+}
+
+/* ============================================================
+   6. Arquivo — salvar o estudo e importar a implantação
+
+   Duas portas de entrada e saída, ambas locais: nada sai da máquina
+   do usuário, porque a ferramenta é um arquivo só e não fala com
+   servidor nenhum.
+
+   O estudo salva em .json porque é o formato que preserva o estudo
+   exatamente como ele está — geometria em metros, com três casas —, é
+   pequeno, é legível a olho nu e pode ser anexado a um processo. O
+   arquivo leva a versão do formato: o que for salvo hoje continua
+   abrindo depois que o modelo de dados mudar.
+
+   A implantação de referência entra em DXF. Não é escolha de gosto:
+   DWG é formato binário proprietário e não há leitor confiável em
+   JavaScript; DXF é texto, o leitor cabe aqui sem biblioteca nenhuma,
+   e todo CAD exporta. E o DXF dá o que uma imagem de fundo não daria —
+   a polilinha vem com as coordenadas exatas e pode virar o polígono do
+   lote ou da edificação sem ninguém redesenhar por cima.
+   ============================================================ */
+
+const FORMATO = 3;   /* 3 — lista de edificações; 2 — edificação única */
+
+/* ---------- salvar ---------- */
+function pacoteEstudo() {
+  return {
+    app: "simulador-envoltoria-sjb",
+    formato: FORMATO,
+    versao: VERSAO.app,
+    salvoEm: new Date().toISOString(),
+    municipio: "São João da Barra/RJ",
+    zona: zonaAtual, setor: setorAtual,
+    zeis: $("zeis") ? $("zeis").value : zeisRef,
+    lote: { pts: LOT.pts.map(pto3), fronts: LOT.fronts.slice(), modo: LOT.modo },
+    edifs: EDIFS.map(E => ({
+      nome: E.nome, uso: E.uso,
+      pts: E.pts.map(pto3),
+      pav: E.pav.map(p => ({ pos: p.pos, ocup: p.ocup, pd: +num(p.pd).toFixed(2) })),
+      enc: { lados: E.enc.lados.slice(), pronto: !!E.enc.pronto }
+    })),
+    sel: EDIF_SEL,
+    campos: {
+      via: $("via").value, mp: $("mp").value, unid: $("unid").value,
+      geminada: $("geminada").checked, esquina: $("esquina").checked, antigo: $("antigo").checked,
+      varquadra: $("varquadra").checked, hidrico: $("hidrico").checked,
+      declive: $("declive").checked, tombado: $("tombado").checked, parcel: $("parcel").checked
+    },
+    ponto: PT_MAPA ? { lat: PT_MAPA.lat, lon: PT_MAPA.lon, rot: PT_MAPA.rot } : null,
+    via: VIA_SUG ? { k: VIA_SUG.k, nome: VIA_SUG.nome, d: VIA_SUG.d } : null,
+    emissao: Object.assign({}, EMIS),
+    /* a referência importada viaja junto: reabrir o estudo sem o
+       desenho de fundo obrigaria a importar o DXF de novo */
+    ref: REF ? { nome: REF.nome, un: REF.un, esc: REF.esc, dx: REF.dx, dy: REF.dy, rot: REF.rot,
+                 camadas: REF.camadas, ativas: REF.ativas.slice(),
+                 ent: REF.ent.map(e => ({ c: e.c, f: e.f, p: e.p.map(pto3) })) } : null
+  };
+}
+
+function baixa(nome, texto, tipo) {
+  const b = new Blob([texto], { type: tipo || "application/json;charset=utf-8" });
+  const u = URL.createObjectURL(b), a = document.createElement("a");
+  a.href = u; a.download = nome;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(u); }, 400);
+}
+
+function salvaEstudo() {
+  const P = pacoteEstudo();
+  const d = new Date(), z = n => String(n).padStart(2, "0");
+  const nome = "estudo_" + (zonaAtual || "sem-zona") + "_" +
+    d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + "_" + z(d.getHours()) + z(d.getMinutes()) + ".json";
+  baixa(nome, JSON.stringify(P, null, 1));
+  avisoArquivo("Estudo salvo em <b>" + nome + "</b>. Abra-o por este mesmo painel para continuar de onde parou.", "ok");
+}
+
+/* ---------- abrir ---------- */
+function aplicaEstudo(P) {
+  if (!P || P.app !== "simulador-envoltoria-sjb")
+    throw new Error("Este arquivo não é um estudo do simulador.");
+  if (!(P.formato >= 2))
+    throw new Error("Formato de arquivo não reconhecido.");
+
+  LOT.pts = (P.lote.pts || []).map(p => ({ x: +p.x, y: +p.y }));
+  LOT.fronts = (P.lote.fronts || [0]).slice();
+  LOT.modo = P.lote.modo || "rect";
+
+  /* formato 2 guardava uma edificação só, no topo do pacote */
+  const lista = P.formato >= 3 ? (P.edifs || [])
+    : [{ nome: "A", uso: P.uso || "res_uni", pts: P.edif || [], pav: P.pav || [],
+         enc: { lados: P.encosta || [], pronto: P.encostaModo === "manual" } }];
+  EDIFS.length = 0;
+  (lista.length ? lista : [null]).forEach((E, i) => {
+    const N = novaEdif(i);
+    if (E) {
+      N.nome = E.nome || LETRA(i);
+      N.uso = USO_INFO[E.uso] ? E.uso : "res_uni";
+      N.pts = (E.pts || []).map(p => ({ x: +p.x, y: +p.y }));
+      if (E.pav && E.pav.length) N.pav = E.pav.map(p => ({
+        pos: POS[p.pos] ? p.pos : "pav", ocup: OCUP[p.ocup] ? p.ocup : "habitacao", pd: num(p.pd) || 2.6 }));
+      N.enc = { lados: (E.enc && E.enc.lados || []).slice(), pronto: !!(E.enc && E.enc.pronto),
+                assin: "", refaz: false };
+    }
+    EDIFS.push(N);
+  });
+
+  const C = P.campos || {};
+  ["via", "mp", "unid"].forEach(k => { if ($(k) && C[k] !== undefined) $(k).value = C[k]; });
+  ["geminada", "esquina", "antigo", "varquadra", "hidrico", "declive", "tombado", "parcel"]
+    .forEach(k => { if ($(k) && C[k] !== undefined) $(k).checked = !!C[k]; });
+
+  PT_MAPA = P.ponto ? { lat: P.ponto.lat, lon: P.ponto.lon, rot: P.ponto.rot || "", quando: new Date() } : null;
+  VIA_SUG = P.via || null;
+  Object.keys(EMIS).forEach(k => delete EMIS[k]);
+  Object.assign(EMIS, P.emissao || {});
+
+  REF = null;
+  if (P.ref && P.ref.ent) {
+    REF = { nome: P.ref.nome || "referência", un: P.ref.un || "m", esc: P.ref.esc || 1,
+            dx: P.ref.dx || 0, dy: P.ref.dy || 0, rot: P.ref.rot || 0,
+            camadas: P.ref.camadas || [], ativas: (P.ref.ativas || []).slice(),
+            ent: P.ref.ent.map(e => ({ c: e.c, f: e.f, p: e.p.map(q => ({ x: +q.x, y: +q.y })) })) };
+  }
+
+  if (P.setor) { setorAtual = P.setor; if ($("setor")) $("setor").value = P.setor; }
+  if (P.zeis && $("zeis")) $("zeis").value = P.zeis;
+  setZona(P.zona || null, null);
+  if (P.zona && isolar && ZONAS[P.zona]) isolar(P.zona);
+  if (PT_MAPA && marcarPonto) marcarPonto(PT_MAPA.lat, PT_MAPA.lon, PT_MAPA.rot || "Estudo reaberto");
+  setModo(LOT.modo === "rect" ? "rect" : LOT.modo);
+  selecionaEdif(Math.min(P.sel || 0, EDIFS.length - 1));
+  sincroniza();
+  montarRef();
+  enquadra("tudo");
+  if (typeof renderCert === "function" && $("certCorpo")) renderCert();
+}
+
+function abreEstudo(arq) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      aplicaEstudo(JSON.parse(fr.result));
+      avisoArquivo("Estudo <b>" + arq.name + "</b> aberto.", "ok");
+    } catch (e) {
+      avisoArquivo("Não foi possível abrir <b>" + arq.name + "</b>: " + (e.message || e), "err");
+    }
+  };
+  fr.onerror = () => avisoArquivo("Não foi possível ler o arquivo.", "err");
+  fr.readAsText(arq, "utf-8");
+}
+
+function avisoArquivo(html, tipo) {
+  const el = $("arqMsg"); if (!el) return;
+  el.className = "msg " + (tipo === "err" ? "m-err" : "m-ok");
+  el.innerHTML = html;
+  el.style.display = "block";
+  clearTimeout(avisoArquivo._t);
+  avisoArquivo._t = setTimeout(() => { el.style.display = "none"; }, 9000);
+}
+
+/* ============================================================
+   Leitor de DXF
+
+   DXF é uma lista de pares (código, valor), um por linha. Interessa a
+   seção ENTITIES e, dentro dela, o que descreve contorno: LWPOLYLINE,
+   POLYLINE/VERTEX, LINE, ARC e CIRCLE. Arco e círculo são convertidos
+   em segmentos — o desenho é fundo de referência, não geometria de
+   cálculo, e um arco com 24 cordas é indistinguível de um arco a olho.
+
+   O que NÃO se lê, e por quê: blocos (INSERT) exigiriam resolver a
+   tabela de blocos com rotação e escala, e a implantação que interessa
+   quase sempre está explodida; textos e cotas não são contorno. Fica
+   declarado em vez de silenciado: o painel conta quantas entidades
+   foram ignoradas e de que tipo.
+
+   Unidade: o cabeçalho $INSUNITS diz em que unidade o arquivo está.
+   Quando ele falta — e falta com frequência —, a ferramenta pergunta
+   em vez de adivinhar, porque errar a unidade por mil é o erro mais
+   caro que um import de CAD comete.
+   ============================================================ */
+
+/* $INSUNITS do DXF — só as que aparecem em implantação */
+const DXF_UN = { 1: ["pol", 0.0254], 2: ["pé", 0.3048], 4: ["mm", 0.001],
+                 5: ["cm", 0.01], 6: ["m", 1], 7: ["km", 1000] };
+const DXF_ARCO = 24;   /* cordas por volta inteira */
+
+function leDXF(texto) {
+  /* pares (código, valor), um par por duas linhas */
+  const L = texto.split(/\r\n|\r|\n/);
+  const par = [];
+  for (let i = 0; i + 1 < L.length; i += 2) {
+    const c = parseInt(L[i], 10);
+    if (isNaN(c)) { i -= 1; continue; }     /* linha solta: reencaixa */
+    par.push([c, L[i + 1]]);
+  }
+
+  /* --- cabeçalho: unidade --- */
+  let insunits = null;
+  for (let i = 0; i < par.length - 2; i++) {
+    if (par[i][0] === 9 && par[i][1].trim() === "$INSUNITS") {
+      const v = parseInt(par[i + 1][1], 10);
+      if (!isNaN(v)) insunits = v;
+      break;
+    }
+  }
+
+  /* --- entidades --- */
+  let i0 = -1;
+  for (let i = 0; i < par.length; i++)
+    if (par[i][0] === 2 && par[i][1].trim() === "ENTITIES") { i0 = i + 1; break; }
+  const ent = [], ignoradas = {};
+  const camadas = {};
+  if (i0 < 0) return { ent: [], camadas: [], un: insunits, ignoradas: { "sem seção ENTITIES": 1 } };
+
+  let at = null, dados = null;
+  const fecha = () => {
+    if (!at) return;
+    const saida = montaEnt(at, dados);
+    if (saida) { saida.forEach(e => { ent.push(e); camadas[e.f] = (camadas[e.f] || 0) + 1; }); }
+    else ignoradas[at] = (ignoradas[at] || 0) + 1;
+    at = null; dados = null;
+  };
+  for (let i = i0; i < par.length; i++) {
+    const [c, vRaw] = par[i];
+    const v = vRaw === undefined ? "" : vRaw.trim();
+    if (c === 0) {
+      fecha();
+      if (v === "ENDSEC" || v === "EOF") break;
+      at = v; dados = { g: {}, x: [], y: [], b: [], seq: [] };
+      continue;
+    }
+    if (!dados) continue;
+    if (c === 10) dados.x.push(parseFloat(v));
+    else if (c === 20) dados.y.push(parseFloat(v));
+    /* o segundo ponto da LINE vem em 11/21, fora da série de 10/20 */
+    else if (c === 11) dados.x2 = parseFloat(v);
+    else if (c === 21) dados.y2 = parseFloat(v);
+    else if (c === 42) dados.b[Math.max(0, dados.x.length - 1)] = parseFloat(v);
+    else dados.g[c] = v;
+  }
+  fecha();
+
+  return { ent, un: insunits,
+           camadas: Object.keys(camadas).sort().map(n => ({ n, q: camadas[n] })),
+           ignoradas };
+}
+
+/* uma entidade vira uma ou mais polilinhas em coordenadas do arquivo */
+function montaEnt(tipo, d) {
+  if (!d) return null;
+  const f = d.g[8] || "0";
+  const nPt = Math.min(d.x.length, d.y.length);
+  const pts = [];
+  for (let i = 0; i < nPt; i++)
+    if (isFinite(d.x[i]) && isFinite(d.y[i])) pts.push({ x: d.x[i], y: d.y[i] });
+
+  if (tipo === "LINE") {
+    if (!pts.length || !isFinite(d.x2) || !isFinite(d.y2)) return null;
+    return [{ f, c: false, p: [pts[0], { x: d.x2, y: d.y2 }] }];
+  }
+
+  if (tipo === "LWPOLYLINE" || tipo === "POLYLINE") {
+    if (pts.length < 2) return null;
+    const fechada = (parseInt(d.g[70], 10) & 1) === 1;
+    /* bulge: o arco entre dois vértices, codificado como tangente de
+       um quarto do ângulo. Sem converter, um lote com canto curvo
+       entraria como corte reto. */
+    const saida = [];
+    for (let i = 0; i < pts.length - (fechada ? 0 : 1); i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length], bl = d.b[i];
+      if (bl && Math.abs(bl) > 1e-9) arcoBulge(a, b, bl).forEach(q => saida.push(q));
+      else saida.push(a);
+    }
+    if (!fechada) saida.push(pts[pts.length - 1]);
+    return [{ f, c: fechada, p: saida }];
+  }
+
+  if (tipo === "CIRCLE") {
+    const r = parseFloat(d.g[40]);
+    if (!pts.length || !isFinite(r)) return null;
+    const c = pts[0], p = [];
+    for (let i = 0; i < DXF_ARCO; i++) {
+      const t = i / DXF_ARCO * 2 * Math.PI;
+      p.push({ x: c.x + r * Math.cos(t), y: c.y + r * Math.sin(t) });
+    }
+    return [{ f, c: true, p }];
+  }
+
+  if (tipo === "ARC") {
+    const r = parseFloat(d.g[40]), a0 = parseFloat(d.g[50]), a1 = parseFloat(d.g[51]);
+    if (!pts.length || !isFinite(r) || !isFinite(a0) || !isFinite(a1)) return null;
+    const c = pts[0];
+    let d0 = a0 * Math.PI / 180, d1 = a1 * Math.PI / 180;
+    while (d1 <= d0) d1 += 2 * Math.PI;
+    const n = Math.max(2, Math.ceil((d1 - d0) / (2 * Math.PI) * DXF_ARCO));
+    const p = [];
+    for (let i = 0; i <= n; i++) {
+      const t = d0 + (d1 - d0) * i / n;
+      p.push({ x: c.x + r * Math.cos(t), y: c.y + r * Math.sin(t) });
+    }
+    return [{ f, c: false, p }];
+  }
+  return null;   /* INSERT, TEXT, DIMENSION, HATCH e afins: declarados, não lidos */
+}
+
+/* arco definido por bulge entre dois vértices de polilinha */
+function arcoBulge(a, b, bulge) {
+  const dx = b.x - a.x, dy = b.y - a.y, corda = Math.hypot(dx, dy);
+  if (corda < 1e-12) return [a];
+  const ang = 4 * Math.atan(bulge);              /* ângulo central */
+  const r = corda / (2 * Math.sin(Math.abs(ang) / 2));
+  const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const h = Math.sqrt(Math.max(0, r * r - corda * corda / 4)) * (bulge > 0 ? 1 : -1);
+  const cx = m.x - h * dy / corda, cy = m.y + h * dx / corda;
+  const t0 = Math.atan2(a.y - cy, a.x - cx);
+  const n = Math.max(2, Math.ceil(Math.abs(ang) / (2 * Math.PI) * DXF_ARCO));
+  const out = [];
+  for (let i = 0; i < n; i++) out.push({
+    x: cx + r * Math.cos(t0 + ang * i / n),
+    y: cy + r * Math.sin(t0 + ang * i / n)
+  });
+  return out;
+}
+
+/* ============================================================
+   A referência no desenho
+
+   O DXF chega nas coordenadas do CAD; o lote vive num sistema local em
+   metros, com origem onde o usuário o desenhou. Para servir de fundo,
+   a referência precisa de três coisas: unidade, posição e giro. A
+   unidade vem do arquivo ou do usuário; posição e giro são ajustados
+   com o desenho à vista, que é como se faz num CAD.
+
+   Ao importar, a referência é centrada sobre o lote: na maioria dos
+   casos é o suficiente, e o que sobra é um arraste.
+
+   REF mora no módulo de estado, e não aqui: a interface é montada
+   antes deste arquivo ser avaliado e já precisa consultá-la.
+   ============================================================ */
+
+/* DWG e PDF chegam com frequência no lugar do DXF. Em vez de falhar
+   com "não trouxe contorno algum", diz-se o que é e o que fazer. */
+function recusaFormato(arq, cab) {
+  const n = (arq.name || "").toLowerCase();
+  const dwg = /\.dwg$/.test(n) || /^AC10|^AC1\.|^MC0\.0/.test(cab);
+  const pdf = /\.pdf$/.test(n) || cab.indexOf("%PDF") === 0;
+  if (dwg) return "<b>Isto é um DWG, não um DXF.</b> DWG é formato binário proprietário e não há leitor " +
+    "confiável em JavaScript — o único em WebAssembly tem licença AGPL, que obrigaria a abrir o código desta " +
+    "ferramenta. No ArchiCAD ou no AutoCAD, <i>Salvar como → DXF</i> resolve em um passo.";
+  if (pdf) return "<b>Isto é um PDF.</b> Ler PDF exigiria embutir o pdf.js, que mais que dobraria o tamanho " +
+    "da ferramenta. Exporte a implantação em DXF pelo CAD — vem vetorial, exata, e a polilinha do lote pode " +
+    "virar o polígono direto.";
+  if (cab && !/^\s*\d/.test(cab) && cab.indexOf("SECTION") < 0)
+    return "<b>Este arquivo não parece um DXF.</b> O DXF é texto, com pares de código e valor. " +
+      "Confira a exportação do CAD.";
+  return null;
+}
+
+function importaDXF(arq) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    const recusa = recusaFormato(arq, String(fr.result).slice(0, 400));
+    if (recusa) { avisoArquivo(recusa, "err"); return; }
+    let D;
+    try { D = leDXF(String(fr.result)); }
+    catch (e) { avisoArquivo("Não foi possível ler o DXF: " + (e.message || e), "err"); return; }
+    if (!D.ent.length) {
+      avisoArquivo("O arquivo <b>" + arq.name + "</b> não trouxe contorno algum. " +
+        "O leitor usa LWPOLYLINE, POLYLINE, LINE, ARC e CIRCLE — blocos (INSERT), textos e cotas não entram. " +
+        "No CAD, explodir os blocos da implantação resolve.", "err");
+      return;
+    }
+    const un = DXF_UN[D.un];
+    REF = {
+      nome: arq.name,
+      un: un ? un[0] : "?", esc: un ? un[1] : 1,
+      dx: 0, dy: 0, rot: 0,
+      ent: D.ent, camadas: D.camadas.map(c => c.n),
+      ativas: D.camadas.map(c => c.n),
+      ignoradas: D.ignoradas, semUnidade: !un
+    };
+    centraRef();
+    montarRef();
+    /* a referência entra no quadro: enquadrar tudo é o que faz dela
+       uma referência, e não um desenho fora da tela */
+    enquadra("tudo");
+    const ig = Object.keys(D.ignoradas || {});
+    avisoArquivo("Importadas <b>" + pl(D.ent.length, "entidade") + "</b> em " +
+      pl(D.camadas.length, "camada") + "." +
+      (un ? " Unidade do arquivo: " + un[0] + "." : " <b>O arquivo não declara a unidade</b> — confira abaixo.") +
+      (ig.length ? " Não lidas: " + ig.map(k => k + " (" + D.ignoradas[k] + ")").join(", ") + "." : ""),
+      un ? "ok" : "err");
+  };
+  fr.onerror = () => avisoArquivo("Não foi possível ler o arquivo.", "err");
+  fr.readAsText(arq, "utf-8");
+}
+
+/* centro da referência sobre o centro do lote */
+function centraRef() {
+  if (!REF) return;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  REF.ent.forEach(e => e.p.forEach(p => {
+    if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x;
+    if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y;
+  }));
+  if (!isFinite(x0)) return;
+  const c = centroid(LOT.pts);
+  REF.dx = c.x - (x0 + x1) / 2 * REF.esc;
+  REF.dy = c.y - (y0 + y1) / 2 * REF.esc;
+  REF.rot = 0;
+}
+
+/* um ponto da referência no sistema do lote */
+function refPonto(p) {
+  const k = REF.esc, a = REF.rot * Math.PI / 180;
+  const x = p.x * k, y = p.y * k;
+  return { x: x * Math.cos(a) - y * Math.sin(a) + REF.dx,
+           y: x * Math.sin(a) + y * Math.cos(a) + REF.dy };
+}
+/* as polilinhas visíveis, já no sistema do lote */
+function refVisiveis() {
+  if (!REF) return [];
+  return REF.ent.filter(e => REF.ativas.indexOf(e.f) >= 0)
+                .map(e => ({ c: e.c, f: e.f, p: e.p.map(refPonto) }));
+}
+/* as fechadas com três pontos ou mais, que podem virar polígono */
+function refFechadas() {
+  return refVisiveis().filter(e => e.c && e.p.length >= 3 && areaAbs(e.p) > 0.5);
+}
+
+/* adota uma polilinha fechada da referência como lote ou edificação */
+function adotaRef(i, alvo) {
+  const F = refFechadas()[i];
+  if (!F) return;
+  /* o DXF repete o primeiro ponto no fim com frequência; e vértices
+     coincidentes viram lados de comprimento zero no cálculo */
+  const p = [];
+  F.p.forEach(q => {
+    const u = p[p.length - 1];
+    if (!u || Math.hypot(q.x - u.x, q.y - u.y) > 0.01) p.push({ x: +q.x.toFixed(3), y: +q.y.toFixed(3) });
+  });
+  if (p.length >= 3 && Math.hypot(p[0].x - p[p.length - 1].x, p[0].y - p[p.length - 1].y) < 0.01) p.pop();
+  if (p.length < 3) { avisoArquivo("Essa polilinha não fecha um polígono utilizável.", "err"); return; }
+  if (autoIntersecta(p)) { avisoArquivo("Essa polilinha cruza a si mesma e não serve de contorno.", "err"); return; }
+
+  if (alvo === "lote") {
+    LOT.pts = p; LOT.fronts = [0]; LOT.modo = "draw";
+    setModo("draw"); sincroniza(); enquadra("tudo");
+    avisoArquivo("Lote adotado da referência: <b>" + fmt(areaAbs(p), 2) + " m²</b>. " +
+      "Marque a testada em seguida — o afastamento frontal depende dela.", "ok");
+  } else {
+    if (!dentroDe(p, LOT.pts, 0.02)) {
+      avisoArquivo("Essa polilinha não cabe dentro do lote. Adote-a como lote, ou ajuste a posição da referência.", "err");
+      return;
+    }
+    EDIF.pts = p; EDIFS[EDIF_SEL].pts = p;
+    setModo("edif"); sincroniza(); enquadra("tudo");
+    avisoArquivo("Edificação " + EDIF.nome + " adotada da referência: <b>" + fmt(areaAbs(p), 2) + " m²</b>.", "ok");
+  }
+}
+
+function limpaRef() { REF = null; montarRef(); enquadra("tudo"); }
+
+/* ---------- painel da referência ---------- */
+function montarRef() {
+  const box = $("refBox"); if (!box) return;
+  if (!REF) {
+    box.innerHTML = '<p class="hint">Nenhuma implantação carregada. O arquivo tem de ser <b>DXF</b> — ' +
+      "DWG é formato binário proprietário e não há leitor confiável no navegador; no ArchiCAD, " +
+      "<i>Salvar como → DXF</i> resolve. Lê-se LWPOLYLINE, POLYLINE, LINE, ARC e CIRCLE; blocos, textos e " +
+      "cotas não entram, então explodir a implantação antes de exportar ajuda.</p>";
+    return;
+  }
+  const fech = refFechadas();
+  box.innerHTML =
+    '<div class="refhd"><b>' + REF.nome + "</b><span>" + pl(REF.ent.length, "entidade") + " · " +
+      pl(REF.camadas.length, "camada") + "</span></div>" +
+    (REF.semUnidade ? '<div class="nota"><b>O arquivo não declara a unidade.</b> ' +
+      "Escolha abaixo: errar a unidade por mil é o engano mais caro que uma importação de CAD comete.</div>" : "") +
+    '<div class="row"><div><label>Unidade do arquivo</label><select id="refUn">' +
+      Object.keys(DXF_UN).map(k => '<option value="' + k + '"' +
+        (DXF_UN[k][0] === REF.un ? " selected" : "") + ">" + DXF_UN[k][0] + "</option>").join("") +
+      '</select></div><div><label>Giro (graus)</label>' +
+      '<input type="number" id="refRot" step="0.5" value="' + (+REF.rot).toFixed(1) + '"></div></div>' +
+    '<div class="row"><div><label>Deslocar em x (m)</label>' +
+      '<input type="number" id="refDx" step="0.1" value="' + (+REF.dx).toFixed(2) + '"></div>' +
+      '<div><label>Deslocar em y (m)</label>' +
+      '<input type="number" id="refDy" step="0.1" value="' + (+REF.dy).toFixed(2) + '"></div></div>' +
+    '<div class="tools"><button class="b" id="refCentra">Centrar no lote</button>' +
+      '<button class="b" id="refLimpa">Remover referência</button></div>' +
+    "<label>Camadas</label><div id=\"refCam\">" + REF.camadas.map((c, i) =>
+      '<label class="chk2"><input type="checkbox" data-cam="' + i + '"' +
+      (REF.ativas.indexOf(c) >= 0 ? " checked" : "") + "><span>" + c + "</span></label>").join("") + "</div>" +
+    (fech.length
+      ? "<label>Polilinhas fechadas — adotar como contorno</label><div id=\"refFech\">" +
+        fech.map((e, i) => '<div class="rf"><span class="d">' + fmt(areaAbs(e.p), 2) + " m² · " +
+          pl(e.p.length, "vértice") + " · " + e.f + "</span>" +
+          '<button class="b" data-ado="' + i + '" data-alvo="lote">lote</button>' +
+          '<button class="b" data-ado="' + i + '" data-alvo="edif">edificação</button></div>').join("") + "</div>" +
+        '<p class="hint">Adotar usa as coordenadas do arquivo, sem redesenhar por cima. Confira a unidade e a ' +
+        "posição antes: o contorno entra exatamente como está na tela.</p>"
+      : '<p class="hint">Nenhuma polilinha fechada nas camadas ativas. Só contorno fechado pode virar lote ou ' +
+        "edificação; o resto serve de fundo para desenhar por cima.</p>");
+
+  const liga = (id, f) => { const e = $(id); if (e) e.addEventListener("change", f); };
+  liga("refUn", e => { REF.esc = DXF_UN[e.target.value][1]; REF.un = DXF_UN[e.target.value][0];
+                       REF.semUnidade = false; centraRef(); montarRef(); enquadra("tudo"); });
+  liga("refRot", e => { REF.rot = num(e.target.value); montarRef(); desenhaLote(); });
+  liga("refDx", e => { REF.dx = num(e.target.value); montarRef(); desenhaLote(); });
+  liga("refDy", e => { REF.dy = num(e.target.value); montarRef(); desenhaLote(); });
+  const bc = $("refCentra"); if (bc) bc.addEventListener("click", () => { centraRef(); montarRef(); enquadra("tudo"); });
+  const bl = $("refLimpa"); if (bl) bl.addEventListener("click", limpaRef);
+  box.querySelectorAll("[data-cam]").forEach(c => c.addEventListener("change", ev => {
+    const nome = REF.camadas[+ev.target.dataset.cam];
+    const k = REF.ativas.indexOf(nome);
+    if (ev.target.checked) { if (k < 0) REF.ativas.push(nome); } else if (k >= 0) REF.ativas.splice(k, 1);
+    montarRef(); desenhaLote();
+  }));
+  box.querySelectorAll("[data-ado]").forEach(b => b.addEventListener("click", ev =>
+    adotaRef(+ev.target.dataset.ado, ev.target.dataset.alvo)));
+}
+
+/* o fundo, desenhado antes de tudo no canvas do lote */
+function desenhaRef(g, s) {
+  if (!REF) return;
+  g.save();
+  g.strokeStyle = "#6a7488"; g.lineWidth = 1; g.globalAlpha = .85;
+  refVisiveis().forEach(e => {
+    if (e.p.length < 2) return;
+    g.beginPath();
+    e.p.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
+    if (e.c) g.closePath();
+    g.stroke();
+  });
+  g.restore();
 }
 
 </script>
