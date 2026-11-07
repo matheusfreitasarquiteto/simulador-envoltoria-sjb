@@ -953,6 +953,15 @@ h3:first-child{margin-top:0}
 table.doc{width:100%;border-collapse:collapse;font-size:11.5px;margin:6px 0 14px}
 table.doc th,table.doc td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
 table.doc th{background:var(--panel2);color:var(--tx2);font-weight:600}
+/* quadro de rastreabilidade: a situação de cada regra pela borda
+   esquerda, para varrer a coluna com o olho em vez de ler linha a linha */
+#rastTab tr.rg td{background:var(--panel2);font-weight:600;font-size:12px;letter-spacing:.01em}
+#rastTab tr.r-ok td:first-child{border-left:3px solid #3ecf8e}
+#rastTab tr.r-div td:first-child{border-left:3px solid #f2b544}
+#rastTab tr.r-sem td:first-child{border-left:3px solid #ef5f5f}
+#rastTab tr.r-nm td:first-child{border-left:3px solid #7e8797}
+#rastTab td.disp4{font-size:10.5px;color:var(--tx2);line-height:1.4}
+#rastFil button.rfil.on{border-color:var(--acc);color:var(--tx)}
 .leaflet-container{background:#0b0d11}
 .lg{background:rgba(15,17,21,.9);padding:8px 10px;border-radius:7px;font-size:11.5px;line-height:1.7;border:1px solid var(--line);color:var(--tx)}
 .lg i{display:inline-block;width:12px;height:12px;margin-right:6px;border-radius:2px;vertical-align:-1px}
@@ -1486,8 +1495,10 @@ const VIAS_GEO={"n":["Avenida Rotary","Rodovia Alberto Duaire","Rua Joaquim De B
    1. Base legal
    ============================================================ */
 const VERSAO = {
-  app: "1.3",
+  app: "1.4",
   data: "novembro de 2026",
+  nota: "Versão da auditoria de conformidade: cada regra do simulador foi confrontada com o dispositivo que a " +
+        "sustenta, e o quadro de rastreabilidade da aba Base legal registra o resultado regra a regra.",
   leis: "Plano Diretor de Desenvolvimento Sustentável; Lei de Uso, Ocupação e Parcelamento do Solo; " +
         "Código de Obras e Edificações; Código de Posturas; Plano de Mobilidade Urbana — São João da Barra/RJ",
   geo: "Anexo II (macrozoneamento) e Anexo III (zoneamento urbano) — arquivos KMZ fornecidos pelo Município"
@@ -1506,6 +1517,23 @@ const CELULAR = typeof window !== "undefined" && window.matchMedia
   ? window.matchMedia("(max-width: 860px)").matches
   : false;
 
+/* Modelos de parcelamento do Anexo IV.
+
+   A primeira célula do quadro é uma só, mesclada, e nomeia as três zonas
+   juntas: "Zona Comercial (ZC)  Zona Mista 1 (ZM1)  Zona Mista 2 (ZM2)".
+   As cinco linhas abaixo dela — MP-1, MP-2, MP-3, MP-4 e Desdobro — valem
+   para as três, e não uma linha para cada zona. A nota 1 do mesmo anexo
+   confirma a leitura: os lotes dessas três zonas "não podem ter áreas e
+   testadas inferiores às mínimas estabelecidas nos modelos MP-1, MP-2,
+   MP-3, MP-4", tratando os quatro como disponíveis nas três. */
+const MP_ZCM = [
+  { id: "MP-1", area: 160, t: 8, te: 12, varArea: null, varPct: null, qc: 165, ql: 40 },
+  { id: "MP-2", area: 200, t: 8, te: 12, varArea: 160, varPct: null, qc: 185, ql: 40 },
+  { id: "MP-3", area: 300, t: 10, te: 15, varArea: 250, varPct: 30, qc: 250, ql: 50 },
+  { id: "MP-4", area: 360, t: 12, te: 15, varArea: 300, varPct: 25, qc: 300, ql: 52 },
+  { id: "Desdobro", area: 160, t: 8, te: 12, varArea: null, varPct: null, desdobro: true }
+];
+
 /* Parâmetros do Anexo II da Lei de Uso, Ocupação e Parcelamento do Solo.
    tiers = alternativas de adensamento. Em São João da Barra o adensamento
    se dá pelo Coeficiente de Aproveitamento (básico -> máximo, via Outorga
@@ -1523,10 +1551,7 @@ const ZONAS = {
       { rot: "Coeficiente básico", ca: 2, to: 60, tp: 10, pav: 4, h: 15, out: false },
       { rot: "Coeficiente máximo — outorga onerosa", ca: 3, to: 60, tp: 10, pav: 6, h: 22.5, out: true }
     ],
-    mp: [
-      { id: "MP-1", area: 160, t: 8, te: 12, varArea: null, varPct: null },
-      { id: "MP-2", area: 200, t: 8, te: 12, varArea: 160, varPct: null }
-    ],
+    mp: MP_ZCM,
     desdobro: true,
     art: "Anexo II e Anexo IV da Lei de Uso, Ocupação e Parcelamento do Solo; Plano Diretor, art. 95 e 96"
   },
@@ -1550,7 +1575,7 @@ const ZONAS = {
       { rot: "Coeficiente básico — hotel (nota 5)", ca: 2, to: 60, tp: 20, pav: 6, h: 22.5, out: false },
       { rot: "Coeficiente máximo — hotel, por outorga (nota 5)", ca: 4, to: 60, tp: 20, pav: 6, h: 22.5, out: true }
     ],
-    mp: [{ id: "MP-3", area: 300, t: 10, te: 15, varArea: 250, varPct: 30 }],
+    mp: MP_ZCM,
     desdobro: true,
     art: "Anexo II e Anexo IV da Lei de Uso, Ocupação e Parcelamento do Solo; Plano Diretor, art. 97 e 98"
   },
@@ -1562,8 +1587,7 @@ const ZONAS = {
     outorgaMotivo: "A Outorga Onerosa do Direito de Construir não se aplica à ZM2 (art. 133, § 1º), e o Anexo II não fixa Coeficiente de Aproveitamento Máximo para a zona. Sem CA máximo, a nota (1) — que amplia o gabarito — também não incide.",
     emb: true,                                   // Anexo II, notas (2) e (3)
     tiers: [{ rot: "Coeficiente básico — único", ca: 1, to: 60, tp: 20, pav: 2, h: 9, out: false }],
-    mp: [{ id: "MP-4", area: 360, t: 12, te: 15, varArea: 300, varPct: 25 },
-         { id: "Desdobro", area: 160, t: 8, te: 12, varArea: null, varPct: null, desdobro: true }],
+    mp: MP_ZCM,
     desdobro: true,
     art: "Anexo II e Anexo IV da Lei de Uso, Ocupação e Parcelamento do Solo; Plano Diretor, art. 97, II e art. 99, VIII"
   },
@@ -1775,9 +1799,9 @@ const LEGENDA_AII = [
 /* Anexo IV, nota 3: "As quadras com testadas para as vias arteriais e
    coletoras, localizadas na Zona Comercial (ZC), Zona Mista 1 (ZM1) e
    Zona Mista 2 (ZM2), não poderão ter parcelamentos com parâmetros
-   inferiores ao MP-4." O MP-4 vira piso nessas três zonas — daí precisar
-   dele solto, já que a ZC só lista MP-1 e MP-2 e a ZM1 só o MP-3. */
-const MP4 = { id: "MP-4", area: 360, t: 12, te: 15, varArea: 300, varPct: 25 };
+   inferiores ao MP-4." Nessas três zonas o MP-4 deixa de ser uma opção
+   entre cinco e passa a ser o piso: os modelos menores saem de cena. */
+const MP4 = MP_ZCM[3];
 /* A nota 3 do Anexo IV restringe o piso do MP-4 à ZC, à ZM1 e à ZM2; a
    nota (6) da legenda do Anexo II diz o mesmo sem nomear zona. Adotado o
    alcance maior, que é o da nota (6): o piso vale onde houver modelo de
@@ -1882,6 +1906,12 @@ const DIVERG = [
   { z: ["ZEIS"], f: "ZEIS sem parâmetros próprios",
     l: "O art. 128 permite ajustar Coeficiente de Aproveitamento, taxas, gabarito, afastamentos, lote e modelo de parcelamento conforme a tipologia habitacional, mediante parecer do Conselho Municipal da Cidade (art. 129). O art. 127 remete à Zona Mista mais próxima quando a edificação não é de interesse social.",
     t: "Em habitação de interesse social o cálculo é suspenso. Nos demais casos, o usuário escolhe a ZM de referência e o simulador aplica os parâmetros dela, deixando registrado que a identificação da ZM mais próxima é do responsável técnico." },
+  { z: ["ZC","ZM1","ZM2","ZEU","ZIE"], f: "Mais de uma unidade habitacional no lote e a tipologia declarada",
+    l: "O art. 10, I, “a” define o residencial unifamiliar como “apenas uma unidade habitacional por lote”. Duas ou mais casas no mesmo terreno são, por força do art. 10, I, “b”, multifamiliar horizontal — vila ou geminada —, e aí incide o art. 90: lote de no mínimo 160 m² e parâmetros urbanísticos aplicados “sobre o conjunto construtivo e não individualmente”.",
+    t: "O simulador aceita o desenho, reclassifica o conjunto e diz o que decorre disso: verifica o mínimo de 160 m² e mantém a taxa de ocupação, a permeabilidade e o Coeficiente somados no lote. Não impede o estudo, porque a configuração é lícita — o que não se sustenta é o rótulo de unifamiliar. A área computável não muda: o caput do art. 26 trata as duas tipologias do mesmo modo. Resta ao Município dizer se exige a instituição formal do condomínio do art. 90 em todo caso de segunda unidade, ou apenas quando houver áreas comuns a instituir." },
+  { z: ["ZC","ZM1","ZM2","ZEU"], f: "Coeficiente de Aproveitamento mínimo e a edificação compulsória",
+    l: "O art. 25, I, “a” define o Coeficiente mínimo como “a área mínima edificada que o Município pode exigir do proprietário, para fins da aplicação da Edificação Compulsória”. O instrumento é do Plano Diretor, arts. 155 e 156, e tem procedimento próprio: notificação, prazos e progressividade do IPTU.",
+    t: "Tratado como condicionante, nunca como reprovação — um estudo abaixo do mínimo é um imóvel possivelmente subutilizado, não um projeto irregular. O dispositivo não distingue uso, e o simulador aplica o mesmo critério a todos. A diferença que se observa entre tipologias não vem do mínimo: vem do caput do art. 26, que devolve ao cômputo, na unifamiliar e na geminada, a garagem, o pilotis e as áreas técnicas — e com isso o Coeficiente projetado dessas tipologias sobe para a mesma geometria." },
   { z: ["ZIA"], f: "ZIA sem parâmetros urbanísticos",
     l: "Nem o Anexo II nem o Plano Diretor fixam parâmetros para a Zona de Interesse Ambiental, e o art. 139, parágrafo único, do Plano Diretor exclui as Áreas de Interesse Ambiental e as APPs das demais zonas.",
     t: "Cálculo suspenso. A ferramenta não analisou planos de manejo das unidades de conservação — a viabilidade sob esse aspecto não pode ser aferida aqui." }
@@ -1893,7 +1923,7 @@ const PREMISSAS = [
   "Havendo mais de uma testada marcada, o afastamento frontal é aplicado a todas — hipótese conservadora. O art. 29 determina que, em lote de esquina, a testada principal é a voltada para a via de maior hierarquia, e apenas a ela se aplica o afastamento frontal previsto.",
   "A altura da edificação é a soma dos pés-direitos dos pavimentos acima do solo, excluídos o subsolo (art. 25, § 2º) e a casa de máquinas e a caixa-d'água (art. 25, V). O simulador não modela desnível do terreno nem a cota média do alinhamento.",
   "A área computável para o Coeficiente de Aproveitamento segue o art. 26 e suas exclusões. A exceção do caput é aplicada literalmente: em residência unifamiliar e em multifamiliar horizontal (geminada) nada é excluído do cômputo.",
-  "Na cobertura não habitada adota-se metade da projeção, prática usual de anteprojeto que a lei não disciplina.",
+  "A lei do Município não fixa a projeção da cobertura: nenhum dispositivo a limita, habitada ou não. A lacuna está declarada e nada foi estimado em seu lugar — a cobertura conserva a projeção do pavimento abaixo dela, encolhendo apenas pelo afastamento que incide naquele nível. Reduzi-la além disso é decisão de projeto. Casa de máquinas e caixa-d'água são a exceção, tratadas como volume técnico de até 25 m².",
   "A volumetria é desenhada em perspectiva cônica, com a câmera orbitando o lote. É peça de leitura, não de medição: cotas e áreas devem ser lidas na planta, no corte e no quadro de parâmetros.",
   "As três peças são croquis de estudo — traço livre, sem escala gráfica e sem espessuras normalizadas. Servem para conferir a envoltória e o empilhamento; não substituem o desenho técnico do projeto legal.",
   "A área útil usada no cálculo de vagas não residenciais é a área construída dos pavimentos de uso econômico, institucional ou industrial. A nota 2 do Anexo III permite descontar banheiros, escadas, rampas, depósitos de até 5 m² e áreas técnicas — descontos que dependem do projeto e não são estimados aqui.",
@@ -1979,6 +2009,232 @@ const AF_FRONTAL = {
   ],
   nota: "O simulador aplica automaticamente apenas o inciso IV, ao permitir que o subsolo totalmente enterrado ocupe o afastamento frontal. Os demais incisos são liberdades de projeto: não alteram a envoltória calculada, mas alteram o que pode ser implantado dentro dela."
 };
+
+/* ============================================================
+   RASTREABILIDADE — uma linha por regra
+
+   Cada linha amarra um número do simulador a um dispositivo da lei. É
+   o documento que permite a terceiro conferir a ferramenta sem abrir o
+   código: parâmetro, valor adotado, valor na lei, dispositivo e
+   situação.
+
+   st:  "ok"   confere — o valor do simulador é o da lei
+        "div"  divergia e foi corrigido nesta versão; a linha registra
+               o que havia e o que passou a valer
+        "sem"  sem base legal — nenhum dispositivo foi identificado
+               para a regra, e o simulador a declara como lacuna ou
+               decisão de projeto, sem estimar número
+        "nm"   previsto na lei e não modelado — fora do que a
+               ferramenta se propõe a verificar
+
+   Fontes: Lei de Uso, Ocupação e Parcelamento do Solo (LUOPS) —
+   Anexos I a VI e artigos citados; Código de Obras e Edificações;
+   Plano Diretor de Desenvolvimento Sustentável; Código de Posturas;
+   Plano de Mobilidade Urbana. Todos na forma de Projeto de Lei
+   Complementar — minutas, não leis promulgadas.
+   ============================================================ */
+
+const RAST_SIT = {
+  ok:  { n: "Confere", d: "O valor do simulador é o da lei." },
+  div: { n: "Divergia — corrigido", d: "Diferença encontrada na auditoria e corrigida nesta versão." },
+  sem: { n: "Sem base legal", d: "Nenhum dispositivo identificado. Declarado como lacuna ou decisão de projeto." },
+  nm:  { n: "Não modelado", d: "Está na lei e a ferramenta não verifica." }
+};
+
+const RASTREIO = [
+
+/* ---------- 1. Coeficiente de Aproveitamento ---------- */
+{ g: "Coeficiente de Aproveitamento",
+  r: [
+  { p: "CA mínimo — ZC, ZM1, ZM2, ZEU", s: "0,20", l: "0,20", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA mínimo — ZIE", s: "0", l: "0", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA básico / máximo — ZC", s: "2 / 3", l: "2 / 3 (1)", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA básico / máximo — ZM1", s: "1 / 2", l: "1 / 2 (1)", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA básico / máximo — ZM1, uso hotel", s: "2 / 4", l: "2 / 4", d: "LUOPS, Anexo II, nota (5)", st: "ok" },
+  { p: "CA básico / máximo — ZM2", s: "1 / sem máximo", l: "1 / —", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA básico / máximo — ZEU", s: "3 / 4", l: "3 / 4 (1)", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA básico / máximo — ZIE", s: "3 / sem máximo", l: "3 / —", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "CA — SEDISJB, SEPA e AEIP (ZDE)", s: "3,5, sem gabarito nem altura", l: "3,5, sem restrição de gabarito ou altura", d: "LUOPS, art. 107, parágrafo único", st: "ok" },
+  { p: "Efeito do CA mínimo", s: "condicionante; aponta edificação compulsória e nunca reprova o estudo", l: "área mínima que o Município pode exigir, para fins de Edificação Compulsória", d: "LUOPS, art. 25, I, “a”; Plano Diretor, art. 155 e 156", st: "ok" },
+  { p: "CA mínimo por uso", s: "mesmo tratamento em todos os usos", l: "o dispositivo não distingue uso", d: "LUOPS, art. 25, I, “a”", st: "ok" },
+  { p: "Área acima do CA básico", s: "condicionada à outorga onerosa ou à transferência do direito de construir", l: "vedada, salvo outorga onerosa ou transferência", d: "LUOPS, art. 25, § 1º", st: "ok" },
+  { p: "Área acima do CA máximo", s: "reprova", l: "proibida a edificação de área superior ao limite", d: "LUOPS, art. 25, I, “c”", st: "ok" },
+  { p: "Área computável — unifamiliar e geminada", s: "tudo computa, inclusive garagem, pilotis e casa de máquinas", l: "exceção expressa do caput: as exclusões não alcançam essas tipologias", d: "LUOPS, art. 26, caput", st: "ok" },
+  { p: "Área computável — garagem e circulação de veículos", s: "não computa, salvo nas tipologias da exceção", l: "não computa", d: "LUOPS, art. 26, II", st: "ok" },
+  { p: "Área computável — lazer, recepção e circulação de condomínio", s: "não computa em multifamiliar e misto", l: "não computa nessas edificações", d: "LUOPS, art. 26, III e parágrafo único", st: "ok" },
+  { p: "Área computável — subsolo de uso comum", s: "não computa, salvo nas tipologias da exceção", l: "não computa", d: "LUOPS, art. 26, I", st: "ok" },
+  { p: "Área computável — reservatório e casa de máquinas", s: "não computa, salvo nas tipologias da exceção", l: "não computa", d: "LUOPS, art. 26, VI", st: "ok" },
+  { p: "Área computável — varandas até 40% e 20%", s: "não aplicado: depende do projeto de arquitetura, que o simulador não tem", l: "não computa dentro desses limites", d: "LUOPS, art. 26, IV", st: "nm" },
+  { p: "Área computável — varandas comerciais até 7,5%", s: "não aplicado, pela mesma razão", l: "não computa dentro do limite", d: "LUOPS, art. 26, V", st: "nm" },
+  { p: "Área computável — ZDE", s: "só o estacionamento em subsolo sai; as exclusões do art. 26 não incidem", l: "ATE = CA × área do terreno, excluído o estacionamento em subsolo de uso exclusivo", d: "LUOPS, art. 108 e parágrafo único", st: "ok" }
+]},
+
+/* ---------- 2. Taxa de ocupação e permeabilidade ---------- */
+{ g: "Taxa de ocupação e taxa de permeabilidade",
+  r: [
+  { p: "Taxa de ocupação — ZC, ZM1, ZM2, ZEU, ZIE", s: "60%", l: "60%", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Definição da taxa de ocupação", s: "projeção da edificação sobre a área total do lote", l: "idem", d: "LUOPS, art. 25, II", st: "ok" },
+  { p: "Taxa de permeabilidade — ZC", s: "10%", l: "10%", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Taxa de permeabilidade — ZM1, ZM2, ZEU", s: "20%", l: "20%", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Taxa de permeabilidade — ZIE", s: "30%", l: "30%", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Permeabilidade — beirais, varandas e sacadas até 1 m", s: "informado, não descontado: a largura é do projeto", l: "não considerados no cálculo", d: "LUOPS, art. 27, I", st: "nm" },
+  { p: "Permeabilidade — piso permeável e pavimentação com até 20% de impermeável", s: "informado, não descontado", l: "não considerados no cálculo", d: "LUOPS, art. 27, II e III", st: "nm" },
+  { p: "Taxa de ocupação do lote com mais de uma edificação", s: "soma das projeções sobre a área do lote", l: "parâmetros aplicados sobre o conjunto construtivo, e não individualmente", d: "LUOPS, art. 90, IV", st: "ok" },
+  { p: "O que não computa na taxa de ocupação da ZDE", s: "aplicada a relação do Capítulo XI apenas no SEDISJB, SEPA e AEIP", l: "relação própria do Capítulo XI", d: "LUOPS, art. 111", st: "ok" },
+  { p: "Relação equivalente ao art. 111 nas demais zonas", s: "lacuna declarada; nada presumido por analogia", l: "nenhum dispositivo", d: "—", st: "sem" }
+]},
+
+/* ---------- 3. Afastamentos ---------- */
+{ g: "Afastamentos",
+  r: [
+  { p: "Afastamento frontal / lateral / fundos — ZC", s: "3,00 / 1,50 / 1,50 m", l: "3 / 1,5 / 1,5", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Afastamentos — ZM1 e ZM2", s: "5,00 / 1,50 / 1,50 m", l: "5 / 1,5 / 1,5", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Afastamentos — ZEU", s: "5,00 / 2,00 / 2,00 m", l: "5 / 2 / 2", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Afastamentos — ZIE", s: "5,00 / 3,00 / 3,00 m", l: "5 / 3 / 3", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Afastamentos — ZDE, por faixa de área do terreno", s: "cinco faixas: 5/3, 10/4, 10/5, 15/8 e 20/20 m", l: "idem, por área do terreno", d: "LUOPS, art. 113, I a V", st: "ok" },
+  { p: "Afastamentos — AEIP e SEPA", s: "dispensados", l: "não é obrigatória a observância de qualquer afastamento", d: "LUOPS, art. 113, § 1º", st: "ok" },
+  { p: "Nota (2) — dois primeiros pavimentos de uso comum exclusivo, uso não residencial, misto e hotel", s: "ocupam todo o remanescente após o afastamento frontal: dispensam laterais e fundos", l: "idem", d: "LUOPS, Anexo II, nota (2)", st: "ok" },
+  { p: "Nota (2) — aplicação piso a piso", s: "cada pavimento tem o regime do seu próprio uso; térreo de pilotis pode encostar e a habitação acima, não", l: "a nota qualifica os pavimentos, não a edificação", d: "LUOPS, Anexo II, nota (2)", st: "ok" },
+  { p: "Nota (3) — unifamiliar e multifamiliar horizontal", s: "dois primeiros pavimentos dispensados dos dois afastamentos laterais; fundos mantido", l: "idem", d: "LUOPS, Anexo II, nota (3)", st: "ok" },
+  { p: "Nota (3) — multifamiliar vertical", s: "isenção de um afastamento lateral", l: "idem", d: "LUOPS, Anexo II, nota (3)", st: "ok" },
+  { p: "Notas (2) e (3) — do terceiro pavimento em diante", s: "afastamento cheio", l: "as notas alcançam o primeiro e o segundo pavimentos", d: "LUOPS, Anexo II, notas (2) e (3)", st: "ok" },
+  { p: "Notas (2) e (3) — condição de permeabilidade, iluminação e ventilação", s: "a permeabilidade é verificada; iluminação e ventilação ficam declaradas como exigência do projeto", l: "em todos os casos devem ser atendidos", d: "LUOPS, Anexo II, notas (2) e (3); Código de Obras", st: "ok" },
+  { p: "Parede sobre a testada", s: "nunca admitida", l: "o afastamento frontal admite apenas os elementos que o artigo lista", d: "LUOPS, art. 28", st: "ok" },
+  { p: "Marquises no afastamento frontal — até 50%", s: "informado, não desenhado", l: "admitida a projeção em balanço até 50% do afastamento", d: "LUOPS, art. 28, I, “a”", st: "nm" },
+  { p: "Balcões, varandas e sacadas no afastamento frontal — até 1 m, do segundo pavimento", s: "informado, não desenhado", l: "admitidos nesse limite", d: "LUOPS, art. 28, I, “b”", st: "nm" },
+  { p: "Elementos descobertos no afastamento frontal", s: "informado, não desenhado", l: "admitidos decks, jardineiras, pérgolas, muros de arrimo e divisórios", d: "LUOPS, art. 28, II", st: "nm" },
+  { p: "Testada principal no lote de esquina", s: "a de maior hierarquia viária recebe o afastamento frontal; empate fica a critério do responsável técnico", l: "idem", d: "LUOPS, art. 29 e parágrafo único", st: "ok" },
+  { p: "Remanejamento de afastamento por árvore de porte ou relevo", s: "declarado como possibilidade; depende da Comissão Permanente", l: "admitido mediante solicitação e autorização", d: "LUOPS, art. 30 e parágrafo único", st: "ok" },
+  { p: "Dispensa de afastamento em edificação com Habite-se anterior", s: "declarado; não altera o cálculo", l: "pode ser diminuído ou dispensado, mediante aprovação da Comissão Permanente", d: "LUOPS, art. 31, parágrafo único", st: "ok" },
+  { p: "Erosão real da envoltória em lote reentrante", s: "recuo paralelo, com aviso de que a forma reentrante pode exigir verificação manual", l: "a lei fixa a distância mínima, não o método de construção da envoltória", d: "LUOPS, art. 25, IV", st: "sem" },
+  { p: "Distância entre edificações no mesmo lote", s: "lacuna declarada; verificado apenas que as projeções não se sobrepõem", l: "nenhum dispositivo. Agem de forma indireta os prismas de iluminação e ventilação do Código de Obras e o art. 1.301 do Código Civil, por remissão", d: "Código de Obras, art. 132 a 135 e Anexo VI; art. 138, § 2º", st: "sem" }
+]},
+
+/* ---------- 4. Gabarito e altura ---------- */
+{ g: "Gabarito e altura",
+  r: [
+  { p: "Gabarito básico — ZC e ZM1", s: "4 pavimentos / 15,00 m", l: "4/15 (4)", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Gabarito básico — ZM2", s: "2 pavimentos / 9,00 m", l: "2/9 (4)", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Gabarito básico — ZEU", s: "6 pavimentos / 22,50 m", l: "6/22,5 (4)", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Gabarito — ZIE", s: "não fixado", l: "—", d: "LUOPS, Anexo II", st: "ok" },
+  { p: "Gabarito com outorga — ZC e ZM1", s: "até 6 pavimentos / 22,50 m", l: "acréscimo de até dois pavimentos, limitado a 6 pavimentos e 22,5 m", d: "LUOPS, Anexo II, nota (1)", st: "ok" },
+  { p: "Gabarito com outorga — ZEU", s: "até 8 pavimentos / 30,00 m", l: "8 pavimentos e 30 m", d: "LUOPS, Anexo II, nota (1)", st: "ok" },
+  { p: "Gabarito com outorga — ZM2 e ZIE", s: "não incide: sem CA máximo, não há outorga a adotar", l: "a nota (1) pressupõe a adoção do CA máximo", d: "LUOPS, Anexo II, nota (1); art. 133, § 1º", st: "ok" },
+  { p: "Gabarito — ZM1, uso hotel", s: "6 pavimentos / 22,50 m", l: "idem", d: "LUOPS, Anexo II, nota (5)", st: "ok" },
+  { p: "Medição da altura", s: "até a laje de cobertura, sem casa de máquinas e caixa-d’água", l: "idem", d: "LUOPS, Anexo II, nota (4); art. 25, V", st: "ok" },
+  { p: "Cota de referência da altura", s: "média aritmética das cotas máxima e mínima do alinhamento", l: "idem", d: "LUOPS, art. 25, V", st: "ok" },
+  { p: "Subsolo na contagem da altura", s: "não entra", l: "não será considerado no cálculo da altura máxima", d: "LUOPS, art. 25, § 2º", st: "ok" },
+  { p: "Subsolo com laje de teto acima da cota mínima da testada", s: "pode ocupar o remanescente após o afastamento frontal e a permeabilidade, com o térreo até 1,40 m acima da cota média", l: "idem", d: "LUOPS, art. 25, § 3º", st: "ok" },
+  { p: "ZM2 — limite de dois andares", s: "2 pavimentos, do Anexo II", l: "proibida edificação com mais de dois andares", d: "Plano Diretor, art. 99, VIII", st: "ok" },
+  { p: "Projeção da cobertura", s: "conserva a projeção do pavimento abaixo, reduzida só pelo afastamento daquele nível", l: "nenhum dispositivo limita a projeção da cobertura, habitada ou não", d: "—", st: "sem" },
+  { p: "Área da casa de máquinas e da caixa-d’água", s: "volume técnico de até 25 m²", l: "nenhum dispositivo fixa área ou projeção; a lei apenas as exclui da altura e do cômputo", d: "LUOPS, Anexo II, nota (4); art. 26, VI", st: "sem" },
+  { p: "Pé-direito mínimo — dormitórios, salas, lojas", s: "2,60 m", l: "2,60 m", d: "Código de Obras, Anexo IV", st: "ok" },
+  { p: "Pé-direito mínimo — loja com sobreloja", s: "4,50 m", l: "4,50 m", d: "Código de Obras, Anexo IV", st: "ok" },
+  { p: "Pé-direito mínimo — garagem", s: "2,40 m", l: "2,40 m", d: "Código de Obras, Anexo V", st: "ok" },
+  { p: "Pé-direito mínimo — circulações", s: "2,50 m", l: "2,50 m", d: "Código de Obras, Anexo V", st: "ok" },
+  { p: "Pé-direito mínimo — casa de máquinas e subsolo", s: "2,20 m", l: "2,20 m", d: "Código de Obras, Anexo V", st: "ok" }
+]},
+
+/* ---------- 5. Usos ---------- */
+{ g: "Classificação e admissibilidade de usos",
+  r: [
+  { p: "Residencial unifamiliar", s: "uma unidade habitacional por lote; duas edificações unifamiliares no mesmo lote passam a ser tratadas como multifamiliar horizontal", l: "apenas uma unidade habitacional por lote", d: "LUOPS, art. 10, I, “a”", st: "div" },
+  { p: "Residencial multifamiliar", s: "mais de uma unidade, horizontal (vila, geminada) ou vertical", l: "idem", d: "LUOPS, art. 10, I, “b”", st: "ok" },
+  { p: "Condomínio Multifamiliar em Série Horizontal — área mínima do lote", s: "160,00 m²", l: "não admitido em terreno inferior a 160 m²", d: "LUOPS, art. 90, I e II", st: "div" },
+  { p: "Série horizontal — parâmetros sobre o conjunto", s: "taxa de ocupação, permeabilidade e CA somados no lote", l: "aplicação dos parâmetros sobre o conjunto construtivo e não individualmente", d: "LUOPS, art. 90, IV", st: "ok" },
+  { p: "Econômico de atendimento local", s: "até 250 m² de área construída", l: "até 250 m²", d: "LUOPS, art. 10, II, “a”", st: "ok" },
+  { p: "Econômico de atendimento geral", s: "acima de 250 m², ou com impacto urbano", l: "idem", d: "LUOPS, art. 10, II, “b”", st: "ok" },
+  { p: "Industrial não impactante", s: "até 500 m² de área construída", l: "até 500 m²", d: "LUOPS, art. 10, V, “a”", st: "ok" },
+  { p: "Industrial impactante", s: "acima de 500 m², ou com poluição ou transtorno", l: "idem", d: "LUOPS, art. 10, V, “b”", st: "ok" },
+  { p: "Matriz de admissibilidade por zona", s: "quadro A / AC / NA reproduzido por zona e uso", l: "Anexo I", d: "LUOPS, Anexo I", st: "ok" },
+  { p: "Hotel e apart-hotel como categoria própria", s: "tratado como uso à parte, acompanhando o econômico de atendimento geral na matriz", l: "não é categoria do Anexo I: aparece na nota (5) do Anexo II, para a ZM1, e no art. 114, para a ZDE", d: "LUOPS, Anexo II, nota (5); art. 114", st: "sem" },
+  { p: "Usos residencial, misto e institucional na ZDE", s: "declarado que a lei não os admite expressamente nem os proíbe de forma literal", l: "o rol do art. 99 não os contempla", d: "LUOPS, art. 99; Anexo I", st: "sem" },
+  { p: "ZEIS — coexistência de usos", s: "declarada", l: "permitida a coexistência de residencial uni e multifamiliar e de pequenos comércios e serviços", d: "LUOPS, art. 131", st: "ok" },
+  { p: "ZEIS — parâmetros próprios", s: "remete ao Plano de Desenvolvimento Local; não arbitra números", l: "parâmetros podem ser ajustados no PDL", d: "LUOPS, art. 128, II, e art. 132", st: "ok" }
+]},
+
+/* ---------- 6. Parcelamento ---------- */
+{ g: "Parcelamento do solo",
+  r: [
+  { p: "Modelos de parcelamento — ZC, ZM1 e ZM2", s: "MP-1, MP-2, MP-3, MP-4 e Desdobro, nas três zonas", l: "a primeira célula do quadro é mesclada e nomeia as três zonas juntas; as cinco linhas valem para todas elas", d: "LUOPS, Anexo IV e nota 1", st: "div" },
+  { p: "MP-1 — área e testada mínimas", s: "160,00 m² · 8,00 m (12,00 m em esquina)", l: "160,00 · 8,00/12,00", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "MP-2", s: "200,00 m² · 8,00/12,00 m · variação até 160,00 m²", l: "idem", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "MP-3", s: "300,00 m² · 10,00/15,00 m · variação até 250,00 m² em 30% dos lotes", l: "idem", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "MP-4", s: "360,00 m² · 12,00/15,00 m · variação até 300,00 m² em 25% dos lotes", l: "idem", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "Desdobro — área e testada mínimas", s: "160,00 m² · 8,00/12,00 m", l: "idem", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "Modelos — ZEU", s: "MP-4, MP-5 (450 m² · 15,00/18,00 m · 20%) e MP-6 (600 m² · 20,00/30,00 m)", l: "idem", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "Modelo — ZIE", s: "MP-7, 2.000,00 m² · 30,00/40,00 m", l: "idem", d: "LUOPS, Anexo IV", st: "ok" },
+  { p: "Desdobro na ZEU e na ZIE", s: "vedado", l: "fica vedado o desdobro na ZEU e na ZIE", d: "LUOPS, art. 36; Anexo IV, nota 4", st: "ok" },
+  { p: "Piso do MP-4 em quadra com testada para via arterial ou coletora", s: "aplicado onde houver modelo de parcelamento", l: "a nota 3 do Anexo IV restringe à ZC, ZM1 e ZM2; a nota (6) do Anexo II diz o mesmo sem nomear zona", d: "LUOPS, Anexo IV, nota 3; Anexo II, nota (6)", st: "sem" },
+  { p: "Remissão da nota (6) ao “Anexo V”", s: "lida como Anexo IV; a divergência fica declarada", l: "o Anexo V trata de parâmetros geométricos de vias, não de modelos de parcelamento", d: "LUOPS, Anexo II, nota (6); Anexo V", st: "sem" },
+  { p: "Variação de lote dentro da mesma quadra", s: "percentual informado; a verificação depende do projeto de parcelamento", l: "a variação só vale na mesma quadra e o percentual incide sobre o total de lotes", d: "LUOPS, Anexo IV, nota 2", st: "nm" },
+  { p: "Comprimento máximo e largura mínima de quadra", s: "não verificado: é parâmetro de quadra, não de lote", l: "165 a 360 m de comprimento e 40 a 60 m de largura, por modelo", d: "LUOPS, Anexo IV", st: "nm" },
+  { p: "Lote sem saída para via pública", s: "não verificado", l: "nenhum parcelamento pode resultar lote sem saída para via pública", d: "LUOPS, art. 34, § 2º", st: "nm" },
+  { p: "Vedações de parcelamento — terreno alagadiço, aterrado com resíduo, declividade", s: "declaradas como condicionantes a verificar", l: "não admitido o parcelamento nessas áreas", d: "LUOPS, art. 38", st: "ok" },
+  { p: "Dimensionamento máximo do lote na ZIE", s: "não verificado", l: "deve ser compatível com os usos do Capítulo XII", d: "LUOPS, Anexo IV, nota 5", st: "nm" }
+]},
+
+/* ---------- 7. Vagas ---------- */
+{ g: "Vagas de estacionamento",
+  r: [
+  { p: "Residencial em via arterial", s: "1 vaga por unidade habitacional", l: "1 vaga por unidade", d: "LUOPS, Anexo III", st: "ok" },
+  { p: "Residencial em via coletora ou local — unidade de até 35 m²", s: "1 vaga a cada 3 unidades", l: "idem", d: "LUOPS, Anexo III", st: "ok" },
+  { p: "Residencial em coletora ou local — unidade de 35 a 60 m²", s: "2 vagas a cada 3 unidades", l: "idem", d: "LUOPS, Anexo III", st: "ok" },
+  { p: "Residencial em coletora ou local — unidade acima de 60 m²", s: "1 vaga por unidade", l: "idem", d: "LUOPS, Anexo III", st: "ok" },
+  { p: "Não residencial em via arterial", s: "1 vaga a cada 50 m² de área útil", l: "1 vaga a cada 50 m²", d: "LUOPS, Anexo III", st: "div" },
+  { p: "Não residencial em via coletora ou local", s: "1 vaga a cada 100 m² de área útil", l: "1 vaga a cada 100 m²", d: "LUOPS, Anexo III", st: "div" },
+  { p: "Uso misto", s: "regra residencial para a parte residencial e não residencial para a demais", l: "idem", d: "LUOPS, Anexo III, nota 1", st: "ok" },
+  { p: "Áreas desconsideradas no cálculo da demanda", s: "declaradas; o desconto depende do projeto", l: "banheiros, vestiários, escadas, rampas, depósitos de até 5 m² e áreas técnicas", d: "LUOPS, Anexo III, nota 2", st: "nm" },
+  { p: "Vagas como condição de aprovação", s: "item do checklist", l: "nenhum projeto será aprovado se não atender ao número mínimo", d: "LUOPS, art. 33, § 1º", st: "ok" },
+  { p: "Vagas no interior do lote", s: "declarado", l: "estacionamento, carga e descarga e manobra integralmente no interior do lote", d: "LUOPS, art. 33, § 4º", st: "ok" },
+  { p: "Vagas no lote com mais de uma edificação", s: "regra por edificação, total somado no lote", l: "parâmetros sobre o conjunto construtivo; número mínimo conforme o Anexo III", d: "LUOPS, art. 90, IV e V", st: "ok" }
+]},
+
+/* ---------- 8. Instrumentos ---------- */
+{ g: "Instrumentos urbanísticos",
+  r: [
+  { p: "Outorga Onerosa do Direito de Construir — alcance", s: "oferecida onde há CA máximo; não incide na ZM2, ZIE e ZDE", l: "em todo o território municipal, excetuadas a ZM2, a ZIE e a ZDE", d: "LUOPS, art. 133, § 1º", st: "ok" },
+  { p: "Outorga Onerosa de Alteração de Uso — alcance", s: "declarada; não incide na ZDE", l: "em todo o território, excetuada a ZDE", d: "LUOPS, art. 133, § 2º", st: "ok" },
+  { p: "Outorga — usos admitidos na alteração de uso", s: "declarados: saúde, educação, cultura, esporte e lazer", l: "idem", d: "LUOPS, art. 133, § 5º", st: "ok" },
+  { p: "Outorga — fórmula da contrapartida do direito de construir", s: "VC′ = (CAP ÷ CAB − 1) × VT", l: "VC’ = (CAP/CAB − 1) × VT, com o CAP limitado ao máximo da zona no Anexo II", d: "LUOPS, art. 134; Anexo VI, I", st: "ok" },
+  { p: "Outorga — fórmula da contrapartida de alteração de uso", s: "VC″ = FIS × Vmt × AC × Fpc", l: "VC’’ = FIS × Vmt × AC × Fpc, com FIS entre 0 e 1 e Fpc entre 1 e 2", d: "LUOPS, art. 134; Anexo VI, II", st: "ok" },
+  { p: "Outorga — valor do terreno (VT)", s: "não calculado: depende de avaliação do órgão municipal", l: "valor da terra nua avaliado pelo órgão competente no período do pedido", d: "LUOPS, Anexo VI", st: "nm" },
+  { p: "Outorga — condição de infraestrutura", s: "declarada como condicionante", l: "observadas as condições do sistema viário e das redes de água e esgoto", d: "LUOPS, art. 133, § 3º", st: "ok" },
+  { p: "Outorga — EIV, RIV e licenciamento simultâneos", s: "declarados no checklist de exigências", l: "apresentação simultânea ao pedido", d: "LUOPS, art. 133, § 4º", st: "ok" },
+  { p: "Transferência do Direito de Construir", s: "declarada como alternativa à outorga para adoção do CA máximo", l: "admitida nas hipóteses do artigo", d: "LUOPS, art. 142; art. 25, § 1º", st: "ok" },
+  { p: "Edificação compulsória por subutilização", s: "aviso quando a área computável fica abaixo do CA mínimo", l: "imóvel subutilizado sujeito a parcelamento, edificação ou utilização compulsórios", d: "Plano Diretor, art. 155 e 156; LUOPS, art. 25, I, “a”", st: "ok" },
+  { p: "EIV e RIV — exigibilidade", s: "exigido no uso econômico de atendimento geral e industrial, e nos usos AC da matriz", l: "condicionado à apresentação do EIV e do RIV", d: "LUOPS, art. 13; Anexo I; Plano Diretor, art. 154, II", st: "ok" },
+  { p: "Equipe e conteúdo do EIV", s: "declarado", l: "equipe multidisciplinar coordenada por profissional habilitado", d: "LUOPS, art. 145", st: "ok" }
+]},
+
+/* ---------- 9. Zoneamento e base cartográfica ---------- */
+{ g: "Zoneamento e base cartográfica",
+  r: [
+  { p: "Perímetro das zonas", s: "arquivo de zoneamento do Município, com as divergências de feição declaradas uma a uma", l: "os anexos do Plano Diretor são três mapas", d: "Plano Diretor, art. 198", st: "ok" },
+  { p: "Hierarquia viária", s: "arterial primária e secundária, coletora e local", l: "idem", d: "LUOPS, art. 91; Plano de Mobilidade, art. 40 e Anexo III", st: "ok" },
+  { p: "Classificação da via de uma testada concreta", s: "escolhida pelo usuário, com sugestão a partir da base de vias", l: "a lei não classifica via a via", d: "—", st: "sem" },
+  { p: "Cota mínima de edificação na ZIE", s: "declarada: igual ou superior à da rodovia mais próxima, até o Plano de Macrodrenagem", l: "idem", d: "LUOPS, art. 119, parágrafo único", st: "ok" },
+  { p: "Zona Rural como zona urbana", s: "feição do arquivo declarada como divergência; sem parâmetros atribuídos", l: "o Plano Diretor tem Macrozona Rural, não zona urbana de mesmo nome", d: "Plano Diretor; LUOPS, Anexo II", st: "sem" }
+]},
+
+/* ---------- 10. Fora do alcance da ferramenta ---------- */
+{ g: "Matérias de outras leis, fora do alcance da ferramenta",
+  r: [
+  { p: "Iluminação e ventilação dos compartimentos", s: "declarado como exigência do projeto; não verificado", l: "área mínima do prisma proporcional ao número de pavimentos", d: "Código de Obras, art. 134 e Anexo VI", st: "nm" },
+  { p: "Acessibilidade, escadas, saídas e segurança contra incêndio", s: "não verificado", l: "normas próprias", d: "Código de Obras; normas do Corpo de Bombeiros", st: "nm" },
+  { p: "Calçada, marquise sobre passeio, mobiliário e publicidade", s: "não verificado", l: "matéria de postura, sobre o espaço público", d: "Código de Posturas", st: "nm" },
+  { p: "Parâmetros de envoltória no Código de Posturas", s: "nenhum adotado", l: "o Código de Posturas não fixa taxa, coeficiente, afastamento, gabarito ou altura: regula o uso do espaço público", d: "Código de Posturas, art. 1º e 5º", st: "ok" },
+  { p: "Licenciamento ambiental", s: "declarado como exigência quando o uso é econômico ou industrial", l: "o EIV não substitui o licenciamento ambiental", d: "LUOPS, art. 147", st: "ok" },
+  { p: "Natureza dos textos-fonte", s: "declarado em todo relatório: são Projetos de Lei Complementar", l: "minutas em tramitação, não leis promulgadas", d: "—", st: "ok" }
+]}
+];
+
+/* contagem por situação, para o cabeçalho do quadro */
+function rastContagem() {
+  const c = { ok: 0, div: 0, sem: 0, nm: 0, t: 0 };
+  RASTREIO.forEach(g => g.r.forEach(l => { c[l.st] = (c[l.st] || 0) + 1; c.t++; }));
+  return c;
+}
 
 /* ============================================================
    2. Geometria e motor de cálculo
@@ -2393,6 +2649,7 @@ function motor(est) {
   const MULTI = !!est.multi;
   R.multi = MULTI;
   R.nome = est.nome || "";
+  R.est = est;          /* o consolidador do lote precisa ler o uso declarado */
   const ck = (req, exig, proj, st, art) => R.check.push({ req, exig, proj, st, art });
   const P = paramZona(est.zona, est.setor, est.zeisRef);
   R.P = P;
@@ -3032,8 +3289,15 @@ function motor(est) {
          divisa — e não mais "é um dos dois primeiros" */
       p.emb = !!(N && N.rec && N.rec.some((v, i) => v <= 1e-6 && fronts.indexOf(i) < 0)) ||
               !!(desOk && iAcima <= 2 && R.emb);
-      const base = N ? N.area : (iAcima <= 2 ? proj : projTorre);
-      a = (p.Q.n === "Cobertura" && !p.O.hab) ? base / 2 : base;
+      /* A cobertura conserva a projeção do pavimento de baixo. Antes
+         adotava-se metade dela quando não habitada, "prática usual de
+         anteprojeto" — mas isso era estimar onde a lei nada diz, e
+         estimar é justamente o que esta ferramenta não faz. Nenhum
+         dispositivo do Município limita a projeção da cobertura: ela
+         encolhe apenas pelo que a lei impõe, que é o afastamento
+         incidente naquele nível. Reduzi-la além disso é decisão de
+         projeto, e cabe a quem projeta. */
+      a = N ? N.area : (iAcima <= 2 ? proj : projTorre);
     }
     p.area = a;
     areaTotal += a;
@@ -3058,7 +3322,7 @@ function motor(est) {
     pavs.forEach(p => {
       const a = p.Q.sub ? R.projSub
         : p.Q.topo ? Math.min(projSemEnc, 25)
-        : (p.Q.n === "Cobertura" && !p.O.hab) ? projSemEnc / 2 : projSemEnc;
+        : projSemEnc;
       if (p.computa) semEnc += a;
     });
     R.compSemEnc = semEnc;
@@ -3244,6 +3508,11 @@ function motor(est) {
        aqui como encostada — o alerta ao lado já diz que ela caiu */
     const alcancadas = R.naDivisa.length ? R.naDivisa : R.emb.lados;
     const quais = alcancadas.map(i => "divisa " + (i + 1) + " (" + R.lados[i].tipo + ")").join(", ");
+    /* Edificação desenhada que não toca divisa alguma: a permissão
+       existe e o projeto não a usa. Dizer que "encosta" seria afirmar
+       o que o desenho desmente — e a frase seguinte sairia anunciando
+       um ganho de área de X para o mesmo X. */
+    const soPermissao = desOk && !R.naDivisa.length;
     /* Quando os pisos não têm a mesma permissão, dizer piso a piso:
        "dois primeiros pavimentos" vira frase falsa num prédio em que
        só o térreo encosta. */
@@ -3261,13 +3530,19 @@ function motor(est) {
     ck("Encostar na divisa — dois primeiros pavimentos acima do solo",
        EP.art + " — " + (EP.lat >= 99 || EP.fundos ? "qualquer divisa que não seja testada"
          : pl(EP.lat, "divisa lateral", "divisas laterais") + ", mantido o afastamento de fundos"),
-       quais + " — projeção de " + fmt(proj, 2) + " m² contra " + fmt(projTorre, 2) +
-       " m² da torre", "cond",
+       soPermissao ? "permissão não utilizada — o perímetro desenhado não alcança divisa alguma"
+         : quais + " — projeção de " + fmt(proj, 2) + " m² contra " + fmt(projTorre, 2) + " m² da torre",
+       "cond",
        EP.art + " — condicionado à taxa de permeabilidade e às normas de iluminação e ventilação dos compartimentos");
-    R.infos.push((variam ? "O pavimento térreo encosta" : "Os dois primeiros pavimentos acima do solo encostam") +
-      " em " + quais + " — " + R.emb.rot +
-      ". A área por pavimento vai de " + fmt(projTorre, 2) + " m² para " + fmt(proj, 2) +
-      " m². Do terceiro pavimento em diante valem todos os afastamentos.");
+    R.infos.push(soPermissao
+      ? "A " + R.emb.rot + " permitiria encostar em " + quais + " nos dois primeiros pavimentos, e o " +
+        "perímetro desenhado não usa essa permissão: nenhuma parede alcança a divisa. A edificação mantém " +
+        "a mesma projeção em todos os níveis, e a diferença entre o que a lei admite e o que o projeto " +
+        "ocupa é folga de projeto, não restrição."
+      : (variam ? "O pavimento térreo encosta" : "Os dois primeiros pavimentos acima do solo encostam") +
+        " em " + quais + " — " + R.emb.rot +
+        ". A área por pavimento vai de " + fmt(projTorre, 2) + " m² para " + fmt(proj, 2) +
+        " m². Do terceiro pavimento em diante valem todos os afastamentos.");
   } else if (EP.art && !desOk) {
     /* Quando os pisos não têm a mesma permissão, dizer piso a piso:
        "dois primeiros pavimentos" vira frase falsa num prédio em que
@@ -3597,6 +3872,41 @@ function motorLote(ests) {
   ck("Edificações sem sobreposição", "cada construção com projeção própria",
      chocam.length ? chocam.map(c => c.a + " e " + c.b).join("; ") : pl(lista.length, "edificação", "edificações") + " sem sobreposição",
      chocam.length ? "no" : "ok", "Art. 25, II — a taxa de ocupação é a projeção horizontal sobre o lote");
+
+  /* ---- unifamiliar é uma unidade por lote ----
+     O art. 10, I, "a" define o residencial unifamiliar como "apenas uma
+     unidade habitacional por lote". Duas casas no mesmo terreno não são,
+     portanto, duas unifamiliares: são multifamiliar horizontal — vila ou
+     geminada, art. 10, I, "b" —, e aí entra o art. 90, que exige lote de
+     no mínimo 160 m² e manda aplicar os parâmetros urbanísticos "sobre o
+     conjunto construtivo e não individualmente". A segunda parte é o que
+     este consolidador já faz; a primeira é o que falta verificar.
+     Reclassificar não mexe na área computável: o caput do art. 26 põe
+     unifamiliar e geminada na mesma exceção. */
+  const uniHab = lista.filter(E => E.est && E.est.uso === "res_uni");
+  if (uniHab.length > 1) {
+    R.serieHoriz = { n: uniHab.length, min: 160, ok: S >= 160 - 1e-6 };
+    ck("Classificação do uso residencial", "unifamiliar admite uma unidade habitacional por lote",
+       pl(uniHab.length, "edificação unifamiliar declarada", "edificações unifamiliares declaradas") +
+       " no mesmo lote — o conjunto é multifamiliar horizontal",
+       "cond", "Art. 10, I, “a” e “b” — a tipologia do conjunto é vila ou geminada, não unifamiliar");
+    R.avisos.push("Há " + pl(uniHab.length, "edificação declarada como residencial unifamiliar",
+      "edificações declaradas como residencial unifamiliar") + " no mesmo lote. O art. 10, I, “a” reserva a " +
+      "unifamiliar para uma única unidade habitacional por lote: o conjunto se classifica como multifamiliar " +
+      "horizontal — vila ou casas geminadas, art. 10, I, “b” — e passa a reger-se pelo art. 90. Declare o uso " +
+      "como multifamiliar com a marca de geminada para que o regime de afastamentos seja o da tipologia certa. " +
+      "A área computável não muda: o caput do art. 26 trata unifamiliar e geminada do mesmo modo.");
+    ck("Área mínima do lote para série horizontal", "ao menos 160,00 m²", fmt(S, 2) + " m²",
+       R.serieHoriz.ok ? "ok" : "no",
+       "Art. 90, I e II — Condomínio Multifamiliar em Série Horizontal não é admitido em terreno inferior a 160 m²");
+    if (!R.serieHoriz.ok)
+      R.erros.push("O lote tem " + fmt(S, 2) + " m² e o art. 90, I, não admite Condomínio Multifamiliar em Série " +
+        "Horizontal em terreno inferior a 160 m². Duas ou mais unidades habitacionais no mesmo lote configuram " +
+        "essa tipologia.");
+    R.infos.push("O art. 90, IV, manda aplicar os parâmetros urbanísticos “sobre o conjunto construtivo e não " +
+      "individualmente”: é o dispositivo que sustenta a taxa de ocupação, a permeabilidade e o Coeficiente de " +
+      "Aproveitamento verificados por somatório do lote, e não edificação por edificação.");
+  }
 
   /* ---- taxa de ocupação do conjunto ---- */
   const okTO = proj <= R0.toMax + 1e-6;
@@ -4312,11 +4622,19 @@ function desenhaLote() {
     g.beginPath(); g.arc(q.X, q.Y, i === arrast ? 6 : 4.5, 0, 7);
     g.fillStyle = i === arrast ? "#5b9dff" : "#e8eaed"; g.fill();
   });
-  /* envoltória dos afastamentos, como guia do desenho */
+  /* envoltória dos afastamentos, como guia do desenho — e, quando o
+     projeto usa o direito de encostar, a do embasamento por cima dela,
+     que é o limite que de fato vale no térreo. O ímã prende nas duas. */
   if (LOT.modo === "edif" && RS && RS.env && RS.env.ok) {
     g.setLineDash([5, 4]); g.strokeStyle = "#f2b544"; g.lineWidth = 1.2;
     g.beginPath();
     RS.env.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
+    g.closePath(); g.stroke(); g.setLineDash([]);
+  }
+  if (LOT.modo === "edif" && RS && RS.emb && RS.emb.pts) {
+    g.setLineDash([7, 3]); g.strokeStyle = "#3ecf8e"; g.lineWidth = 1.4;
+    g.beginPath();
+    RS.emb.pts.forEach((p, i) => { const q = T(p, s); i ? g.lineTo(q.X, q.Y) : g.moveTo(q.X, q.Y); });
     g.closePath(); g.stroke(); g.setLineDash([]);
   }
   /* perímetro das edificações: a em foco em verde cheio, as demais
@@ -4356,9 +4674,16 @@ function desenhaLote() {
   if ((LOT.modo === "edif" || LOT.modo === "draw") && IMA_ALVO) {
     const q = T(IMA_ALVO, s);
     const daRef = IMA_ALVO.tipo === "refvert" || IMA_ALVO.tipo === "reflado";
-    g.strokeStyle = daRef ? "#7fd4ff" : "#f2b544"; g.lineWidth = 1.8;
+    const daEnv = IMA_ALVO.tipo === "envvert" || IMA_ALVO.tipo === "envlado";
+    g.strokeStyle = daRef ? "#7fd4ff" : daEnv ? "#3ecf8e" : "#f2b544"; g.lineWidth = 1.8;
     g.beginPath();
-    if (IMA_ALVO.tipo === "refvert") {
+    if (IMA_ALVO.tipo === "envvert") {
+      g.rect(q.X - 6, q.Y - 6, 12, 12);
+      g.moveTo(q.X - 6, q.Y); g.lineTo(q.X + 6, q.Y);
+    } else if (IMA_ALVO.tipo === "envlado") {
+      g.moveTo(q.X - 6, q.Y); g.lineTo(q.X + 6, q.Y);
+      g.moveTo(q.X, q.Y - 6); g.lineTo(q.X, q.Y + 6);
+    } else if (IMA_ALVO.tipo === "refvert") {
       g.moveTo(q.X - 7, q.Y - 7); g.lineTo(q.X + 7, q.Y + 7);
       g.moveTo(q.X + 7, q.Y - 7); g.lineTo(q.X - 7, q.Y + 7);
     } else if (IMA_ALVO.tipo === "reflado") g.arc(q.X, q.Y, 6, 0, 7);
@@ -4524,6 +4849,43 @@ function bordaMaisPerto(p, poly) {
    Sobra um caso em que ela ainda vale: lote reentrante, em que dois
    cantos dentro do lote podem ser ligados por uma aresta que passa por
    fora. Aí não é pontaria, é a forma, e o aviso continua certo. */
+/* ímã da envoltória: a linha tracejada do afastamento é justamente onde
+   a edificação máxima encosta, e era a única guia da tela em que o clique
+   não prendia. Prende nos cantos e nos lados dela, tanto na envoltória
+   dos afastamentos quanto na do embasamento, que é a que vale quando o
+   projeto usa o direito de encostar na divisa. */
+function poliIman(poli, p, s, tipo) {
+  if (!poli || poli.length < 3) return null;
+  const tol = IMA_PX / (s.k || 1);
+  let melhor = null;
+  poli.forEach(v => {
+    const d = Math.hypot(p.x - v.x, p.y - v.y);
+    if (d <= tol && (!melhor || d < melhor.d))
+      melhor = { d: d, p: { x: v.x, y: v.y }, tipo: tipo + "vert", rank: 0 };
+  });
+  if (melhor) return melhor;
+  for (let i = 0; i < poli.length; i++) {
+    const a = poli[i], b = poli[(i + 1) % poli.length];
+    const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+    if (L2 < 1e-12) continue;
+    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const q = { x: a.x + t * dx, y: a.y + t * dy };
+    const d = Math.hypot(p.x - q.x, p.y - q.y);
+    if (d <= tol && (!melhor || d < melhor.d))
+      melhor = { d: d, p: q, tipo: tipo + "lado", rank: 1 };
+  }
+  return melhor;
+}
+function imanEnv(p, s) {
+  const R = Rsel();
+  if (!R || R.suspenso) return [];
+  const saida = [];
+  if (R.emb && R.emb.pts) { const q = poliIman(R.emb.pts, p, s, "env"); if (q) saida.push(q); }
+  if (R.env && R.env.ok && R.env.pts) { const q = poliIman(R.env.pts, p, s, "env"); if (q) saida.push(q); }
+  return saida;
+}
+
 function pontoEdif(p, s) {
   if (SEM_IMA) {
     if (LOT.pts.length >= 3 && !inside(p, LOT.pts))
@@ -4545,6 +4907,7 @@ function pontoEdif(p, s) {
     return false;
   };
   if (ref && (LOT.pts.length < 3 || inside(ref.p, LOT.pts) || naBorda(ref.p))) cand.push(ref);
+  imanEnv(p, s).forEach(q => cand.push(q));
   cand.sort((a, b) => a.rank - b.rank || a.d - b.d);
   if (cand.length) return { p: cand[0].p, tipo: cand[0].tipo };
   if (LOT.pts.length >= 3 && !inside(p, LOT.pts))
@@ -4583,7 +4946,7 @@ function setModo(m) {
           "Duplo clique remove um vértice. Com implantação carregada, o vértice <b>prende nos cantos e nas linhas do " +
           "DXF</b> — a cruz azul mostra onde vai cair. Segure <b>Alt</b> para soltar o ímã.",
     front: "Clique sobre um lado para marcá-lo ou desmarcá-lo como testada. Mais de uma testada é permitido — lote de esquina.",
-      edif: "Clique para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. O ponto <b>nunca sai do lote</b>: perto da divisa adere à linha ou ao vértice, e clique fora cai sobre a divisa mais próxima. O marcador mostra onde vai cair — <b>âmbar no lote</b> (quadrado no vértice, círculo na divisa, losango quando o ponto veio de fora) e <b>azul na implantação importada</b> (cruz no canto, círculo na linha). Vértice tem prioridade sobre linha; segure <b>Alt</b> para soltar o ímã. O tracejado é o limite dos afastamentos: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
+      edif: "Clique para marcar os cantos da edificação; a partir do terceiro ponto a forma fecha sozinha. Arraste um canto para movê-lo, duplo clique remove. O ponto <b>nunca sai do lote</b>: perto da divisa adere à linha ou ao vértice, e clique fora cai sobre a divisa mais próxima. O marcador mostra onde vai cair — <b>âmbar no lote</b> (quadrado no vértice, círculo na divisa, losango quando o ponto veio de fora), <b>verde na envoltória</b> (quadrado cortado no canto, cruz na linha) e <b>azul na implantação importada</b> (cruz no canto, círculo na linha). Vértice tem prioridade sobre linha; segure <b>Alt</b> para soltar o ímã. O tracejado âmbar é o limite dos afastamentos e o verde, quando aparece, é o do embasamento com as divisas encostadas: o desenho vale para o 1º e o 2º pavimentos, e acima deles a forma é recortada por esse limite.",
   }[m];
   /* No polígono desenhado, testada e profundidade deixam de governar o
      lote — passam a ser leitura do que foi desenhado. Ficam tachados e
@@ -4622,7 +4985,15 @@ function montarEncostas() {
      que é encostar em tudo o que a lei permitir. O padrão é derivado da
      permissão, e não copiado da rodada anterior — se o regime passa a
      admitir mais divisas, as novas têm de entrar. */
-  const assin = [zonaAtual, $("uso").value, LOT.pts.length, LOT.fronts.join(","), EP.art].join("|");
+  /* A assinatura carrega a sequência de tipos dos lados, e não só a
+     contagem: redesenhar o lote mantendo o número de vértices pode trocar
+     qual lado é testada, e aí o índice guardado passa a apontar para outra
+     divisa. Sem isso, a marca de uma lateral sobrevivia à mudança e
+     reaparecia na testada — um check que se marcava sozinho. Comprimento
+     de lado fica fora de propósito: arrastar um vértice não pode apagar a
+     escolha de quem está projetando. */
+  const assin = [zonaAtual, $("uso").value, LOT.pts.length, LOT.fronts.join(","),
+                 R.lados.map(L => L.tipo.charAt(0)).join(""), EP.art].join("|");
   if (assin !== ENC.assin) {
     ENC.assin = assin;
     const lat = R.lados.filter(L => L.tipo === "lateral").sort((a, b) => b.len - a.len);
@@ -4642,21 +5013,34 @@ function montarEncostas() {
       "pavimento de uso comum exclusivo em multifamiliar, e as tipologias residenciais.";
     return;
   }
-  const marc = ENC.lados;
-  const nLatMarc = marc.filter(i => R.lados[i] && R.lados[i].tipo === "lateral").length;
+  /* O check mostra o que o motor aceitou, não o que a lista pedia. Uma
+     divisa recusada aparece desmarcada, com o motivo da recusa — antes
+     ela continuava marcada e o desenho a ignorava, de modo que a tela
+     afirmava uma coisa e o cálculo fazia outra. */
+  const aceitas = (R.encosta && R.encosta.escolhidas) || [];
+  const recus = {};
+  ((R.encosta && R.encosta.recusadas) || []).forEach(r => { recus[r.i] = r.m; });
+  const nLatMarc = aceitas.filter(i => R.lados[i] && R.lados[i].tipo === "lateral").length;
   el.innerHTML = R.lados.map(L => {
-    const on = marc.indexOf(L.i) >= 0;
+    const on = aceitas.indexOf(L.i) >= 0;
     let pode = true, pq = "";
     if (L.tipo === "testada") { pode = false; pq = "afastamento frontal obrigatório"; }
     else if (L.tipo === "fundos" && !EP.fundos) { pode = false; pq = "a nota (3) dispensa só o lateral"; }
     else if (L.tipo === "lateral" && !on && nLatMarc >= EP.lat) {
       pode = false; pq = "o regime admite " + pl(EP.lat, "lateral", "laterais");
     }
+    if (!on && recus[L.i]) pq = recus[L.i];
     return '<label class="' + (on ? "on" : pode ? "" : "off") + '">' +
       '<input type="checkbox" data-lado="' + L.i + '"' + (on ? " checked" : "") + (pode ? "" : " disabled") + ">" +
       "<span>Lado " + (L.i + 1) + " · " + L.tipo + '<span class="d">' + fmt(L.len, 2) + " m" +
       (pq ? " · " + pq : "") + "</span></span></label>";
   }).join("");
+  /* a lista acompanha o que foi aceito: índice recusado sai, para não
+     voltar a aparecer marcado no próximo desenho */
+  if (ENC.pronto) {
+    const limpa = ENC.lados.filter(i => aceitas.indexOf(i) >= 0);
+    if (limpa.length !== ENC.lados.length) ENC.lados = limpa;
+  }
   el.querySelectorAll("input").forEach(x => x.addEventListener("change", () => {
     const i = +x.dataset.lado, k = ENC.lados.indexOf(i);
     x.checked ? (k < 0 && ENC.lados.push(i)) : (k >= 0 && ENC.lados.splice(k, 1));
@@ -4665,7 +5049,9 @@ function montarEncostas() {
   const podem = EP.lat >= 99 || EP.fundos
     ? "qualquer divisa que não seja testada, inclusive a de fundos"
     : pl(EP.lat, "divisa lateral", "divisas laterais") + ", mantido o afastamento de fundos";
-  inf.innerHTML = "<b>" + EP.art + "</b> permite encostar em " + podem + ".";
+  inf.innerHTML = "<b>" + EP.art + "</b> permite encostar em " + podem + "." +
+    " O simulador começa marcando o máximo que a lei admite, porque é isso que define a envoltória máxima; desmarque para afastar por decisão de projeto." +
+    " Trocar a zona, o uso ou o lado que faz testada refaz essa marcação no padrão.";
 }
 
 /* leitura da forma desenhada, logo abaixo do editor */
@@ -5773,7 +6159,23 @@ function desenhaCorte(R, dir, alvo) {
   const RB = 54;
   const x0 = LB + 14, x1 = W - RB;
   const larguraDes = Math.max(40, x1 - x0);
-  const hTot = pavs.reduce((a, p) => a + num(p.pd), 0);
+  /* Toda edificação começa no nível do terreno. Com várias no mesmo
+     lote, a lista de pavimentos do corte é a de todas juntas — e
+     empilhar uma sobre a outra, como se a segunda continuasse de onde
+     a primeira parou, punha a segunda flutuando no ar. Cada uma tem a
+     sua pilha, e cada pilha arranca do chão.
+
+     Daí as alturas serem as da edificação MAIS ALTA, e não a soma:
+     é ela que define o quadro. */
+  const PILHAS = {};
+  pavs.forEach(p => {
+    const nm = p.edif || "";
+    if (!PILHAS[nm]) PILHAS[nm] = { acima: 0, sub: 0, lista: [] };
+    PILHAS[nm].lista.push(p);
+    if (POS[p.pos].sub) PILHAS[nm].sub += num(p.pd); else PILHAS[nm].acima += num(p.pd);
+  });
+  const chaves = Object.keys(PILHAS);
+  const hTot = Math.max.apply(null, chaves.map(n => PILHAS[n].acima + PILHAS[n].sub));
   /* margem superior maior: acima do desenho ficam a linha de eixo das
      divisas e o rótulo que a nomeia */
   const m = 22, mTopo = 34;
@@ -5788,7 +6190,7 @@ function desenhaCorte(R, dir, alvo) {
   const largLote = Math.max(fLote.b - fLote.a, .001);
   /* a maior extensão desenhada é a do lote: tudo cabe nela */
   const k = Math.min(larguraDes / (largLote * 1.06), (H - m - mTopo) / Math.max(hTot, 1));
-  const hSub = pavs.filter(p => POS[p.pos].sub).reduce((a, p) => a + num(p.pd), 0);
+  const hSub = Math.max.apply(null, chaves.map(n => PILHAS[n].sub));
   const usado = hTot * k;
   const yBase = mTopo + Math.max(0, (H - m - mTopo - usado) / 2) + usado;
   const yTerreno = yBase - hSub * k;
@@ -5830,20 +6232,57 @@ function desenhaCorte(R, dir, alvo) {
   g.fillStyle = PAL.tx;
   [[xDivA, iA], [xDivB, iB]].forEach(t => rotulo(g, nomeLado(t[1]), t[0], yTopoDes - 4));
 
-  let y = yTerreno + hSub * k;
   /* o rótulo vem do próprio pavimento: com mais de uma edificação a
      lista do corte é a de todas, e a pilha da tela é a de uma só */
   const MUITAS = !!(R.edifs && R.edifs.length > 1);
-  const nv = pavs.map(p => (MUITAS && p.edif ? p.edif + " · " : "") + (p.rot || "?"));
+  const nv = pavs.map(p => (MUITAS && p.edif ? p.edif + "·" : "") + (p.rot || "?"));
   const TOL = 0.02;
+
+  /* cada pilha arranca do próprio terreno: o subsolo desce a partir
+     dele e os pavimentos acima sobem a partir dele */
+  const YS = new Array(pavs.length);
+  chaves.forEach(nm => {
+    let yc = yTerreno + PILHAS[nm].sub * k;
+    PILHAS[nm].lista.forEach(p => {
+      const h = num(p.pd) * k;
+      YS[pavs.indexOf(p)] = { y: yc, h };
+      yc -= h;
+    });
+  });
+
+  /* Com duas pilhas no mesmo corte, pavimentos de mesma cota caem na
+     mesma faixa e os rótulos se escreveriam um por cima do outro.
+     Em vez de empurrá-los, juntam-se: uma linha de rótulo por faixa,
+     nomeando as duas lajes — que é como se cota um nível partilhado
+     num corte desenhado à mão. O que sobra de colisão é afastado. */
+  const ALT_LIN = 22;
+  const GRUPOS = [];
   pavs.forEach((p, i) => {
-    const h = num(p.pd) * k;
+    const a0 = Math.min(YS[i].y, YS[i].y - YS[i].h), a1 = Math.max(YS[i].y, YS[i].y - YS[i].h);
+    const g0 = MUITAS && GRUPOS.find(G => {
+      const cob = Math.min(a1, G.y1) - Math.max(a0, G.y0);
+      return cob > 0.6 * Math.min(a1 - a0, G.y1 - G.y0);
+    });
+    if (g0) { g0.is.push(i); g0.y0 = Math.min(g0.y0, a0); g0.y1 = Math.max(g0.y1, a1); }
+    else GRUPOS.push({ is: [i], y0: a0, y1: a1 });
+  });
+  GRUPOS.forEach(G => { G.yr = (G.y0 + G.y1) / 2; });
+  GRUPOS.sort((a, b) => a.yr - b.yr);
+  for (let q = 1; q < GRUPOS.length; q++)
+    if (GRUPOS[q].yr - GRUPOS[q - 1].yr < ALT_LIN) GRUPOS[q].yr = GRUPOS[q - 1].yr + ALT_LIN;
+  const sobra = GRUPOS.length ? GRUPOS[GRUPOS.length - 1].yr - (H - 12) : 0;
+  if (sobra > 0) GRUPOS.forEach(G => { G.yr -= sobra; });
+
+  const XX = new Array(pavs.length);
+  pavs.forEach((p, i) => {
+    const y = YS[i].y, h = YS[i].h;
     /* largura real do pavimento no eixo do corte */
     const anel = anelPavimento(R, p);
     const fp = faixa(anel);
     let xx, lp;
     if (fp) { xx = X(fp.a); lp = Math.max(2, X(fp.b) - X(fp.a)); }
     else { lp = Math.min(larguraDes, Math.sqrt(Math.max(p.area, 1)) * k); xx = xc - lp / 2; }
+    XX[i] = xx;
     const enterrado = POS[p.pos].sub;
     const cai = [{ X: xx, Y: y - h }, { X: xx + lp, Y: y - h }, { X: xx + lp, Y: y }, { X: xx, Y: y }];
     hachuraMao(g, cai, p.O.hab ? PAL.proj : PAL.env, p.O.hab ? PAL.faceh : PAL.face,
@@ -5862,41 +6301,64 @@ function desenhaCorte(R, dir, alvo) {
       });
     }
 
-    /* linha de chamada até o rótulo */
-    g.beginPath();
-    riscoMao(g, LB + 2, y - h / 2, xx - 4, y - h / 2, 140 + i, 0.5, 1);
-    g.strokeStyle = PAL.tx; g.globalAlpha = .45; g.lineWidth = .7; g.stroke(); g.globalAlpha = 1;
+  });
 
-    const duasLinhas = h >= 16;
-    const fs = Math.max(6.2, Math.min(9.6, duasLinhas ? Math.min(9.6, h * 0.46) : h * 0.46));
-    g.font = ftx(fs); g.textAlign = "right"; g.textBaseline = "middle";
-    const maxW = LB - 8;
-    const corta = t => {
-      if (g.measureText(t).width <= maxW) return t;
-      let n = t.length;
-      while (n > 6 && g.measureText(t.slice(0, n) + "…").width > maxW) n--;
-      return t.slice(0, n) + "…";
-    };
+  /* a geometria empilhada fica à vista para o autoteste poder conferir
+     que toda edificação arranca do terreno, como a planta já expõe a
+     sua transformação */
+  window.__CORTE = { yTerreno, k, YS: YS.map((v, i) => ({ edif: pavs[i].edif || "", rot: pavs[i].rot,
+    base: v.y, topo: v.y - v.h, sub: POS[pavs[i].pos].sub })) };
+
+  /* ---- rótulos, uma linha por faixa de nível ---- */
+  g.textAlign = "right"; g.textBaseline = "middle";
+  const maxW = LB - 8;
+  const corta = t => {
+    if (g.measureText(t).width <= maxW) return t;
+    let n = t.length;
+    while (n > 6 && g.measureText(t.slice(0, n) + "…").width > maxW) n--;
+    return t.slice(0, n) + "…";
+  };
+  const unico = (arr, f) => {
+    const v = arr.map(f);
+    return v.every(x => x === v[0]) ? v[0] : null;
+  };
+  GRUPOS.forEach((G, ig) => {
+    const ps = G.is.map(i => pavs[i]);
+    const hMin = Math.min.apply(null, G.is.map(i => YS[i].h));
+
+    /* linha de chamada do texto até cada laje da faixa */
+    G.is.forEach((i, j) => {
+      const xx = XX[i], y = YS[i].y, h = YS[i].h;
+      g.beginPath();
+      riscoMao(g, LB + 2, G.yr, xx - 4, y - h / 2, 140 + i, 0.5, 1);
+      g.strokeStyle = PAL.tx; g.globalAlpha = .45; g.lineWidth = .7; g.stroke(); g.globalAlpha = 1;
+    });
+
+    const duasLinhas = hMin >= 16 || ps.length > 1;
+    const fs = Math.max(6.4, Math.min(9.6, duasLinhas ? 9.2 : hMin * 0.46));
+    g.font = ftx(fs);
+    const rot = G.is.map(i => nv[i]).join(" / ");
+    const oc = unico(ps, p => p.O.n);
+    const pd = unico(ps, p => fmt(p.pd, 2));
+    const areas = ps.map(p => fmt(p.area, 1)).join(" + ");
     if (duasLinhas) {
-      /* encolhe a fonte antes de abreviar: perder o nome do pavimento
-         é pior do que uma linha meio ponto menor */
-      const nome = nv[i] + " · " + p.O.n;
+      const nome = rot + (oc ? " · " + oc : "");
       let fn = fs;
-      while (fn > 7 && (g.font = ftx(fn), g.measureText(nome).width > maxW)) fn -= .3;
+      while (fn > 6.6 && (g.font = ftx(fn), g.measureText(nome).width > maxW)) fn -= .3;
       g.font = ftx(fn); g.fillStyle = PAL.lote;
-      rotulo(g, corta(nome), LB - 2, y - h / 2 - fs * 0.56);
+      rotulo(g, corta(nome), LB - 2, G.yr - fs * 0.56);
       g.font = ftx(fs); g.fillStyle = PAL.tx;
-      rotulo(g, corta(fmt(p.pd, 2) + " m · " + fmt(p.area, 1) + " m²"), LB - 2, y - h / 2 + fs * 0.66);
+      const seg = (pd ? pd + " m · " : ps.map(p => fmt(p.pd, 2)).join(" / ") + " m · ") + areas + " m²";
+      rotulo(g, corta(seg), LB - 2, G.yr + fs * 0.66);
     } else {
       g.fillStyle = PAL.tx;
-      const cheio = nv[i] + " · " + p.O.n + " · " + fmt(p.pd, 2) + " m · " + fmt(p.area, 0) + " m²";
-      const curto = nv[i] + " · " + p.O.n + " · " + fmt(p.pd, 2) + " m";
+      const cheio = rot + " · " + ps[0].O.n + " · " + fmt(ps[0].pd, 2) + " m · " + fmt(ps[0].area, 0) + " m²";
+      const curto = rot + " · " + ps[0].O.n + " · " + fmt(ps[0].pd, 2) + " m";
       const usa = g.measureText(cheio).width <= maxW ? cheio
                 : g.measureText(curto).width <= maxW ? curto
-                : corta(nv[i] + " · " + p.O.n);
-      rotulo(g, usa, LB - 2, y - h / 2);
+                : corta(rot + " · " + ps[0].O.n);
+      rotulo(g, usa, LB - 2, G.yr);
     }
-    y -= h;
   });
 
   /* Recuo da torre sobre o embasamento: a cota horizontal que mostra,
@@ -6210,6 +6672,12 @@ function desenha3d(R) {
     g.textAlign = "left"; g.textBaseline = "alphabetic";
   }
   });
+
+  /* a pilha de cada massa fica à vista para o autoteste conferir que
+     toda edificação nasce no nível do terreno, como no corte */
+  window.__ISO = { massas: MASSAS.map(M => ({
+    edif: M.E.nome, base: 0, hTot: M.hTot, hSub: M.hSub,
+    niveis: M.pavs.map(q => q.rot) })) };
 
   /* rótulo da parede na divisa, sobre a face voltada para a câmera */
   if (rotDiv) {
@@ -6811,8 +7279,18 @@ const CASOS = [
     pav: [["terreo", "pilotis", 2.60], ["pav", "habitacao", 2.60], ["pav", "habitacao", 2.60],
           ["pav", "habitacao", 2.60], ["pav", "habitacao", 2.60], ["pav", "habitacao", 2.60]],
     e: { gab: 6, alt: 15.60, recF: 3, recL: 1.5, env: 229.50, proj: 216.00, ca: 3.00, selo: "cond" } },
-  { n: "ZM1 · lote de 200 m², abaixo do mínimo do MP-3",
+  /* Lote de 200 m² na ZM1: atende ao MP-2 na área e na testada. Até a
+     versão 1.3 o simulador dava à ZM1 apenas o MP-3, de 300 m², e
+     reprovava este caso; a célula do Anexo IV é mesclada e os cinco
+     modelos valem para ZC, ZM1 e ZM2 juntas. Agora passa, com a
+     condicionante do Coeficiente mínimo. */
+  { n: "ZM1 · lote de 200 m² — atende ao MP-2 do Anexo IV",
     z: "ZM1", f: 10, p: 20, fronts: [0], uso: "res_uni", via: "local", unid: 1,
+    pav: [["terreo", "habitacao", 2.60]],
+    e: { gab: 1, alt: 2.60, selo: "cond" } },
+  /* e um lote de 120 m², abaixo até do MP-1 e do desdobro, segue reprovando */
+  { n: "ZM1 · lote de 120 m², abaixo do menor modelo do Anexo IV",
+    z: "ZM1", f: 8, p: 15, fronts: [0], uso: "res_uni", via: "local", unid: 1,
     pav: [["terreo", "habitacao", 2.60]],
     e: { gab: 1, alt: 2.60, selo: "no" } },
   { n: "ZC · gabarito exatamente no teto: 4 pavimentos",
@@ -6871,6 +7349,57 @@ function rodaAutoteste() {
 }
 
 /* ---------- aba base legal ---------- */
+/* ---------- quadro de rastreabilidade ----------
+   Uma linha por regra, com o dispositivo ao lado. É o que permite a
+   terceiro conferir a ferramenta sem abrir o código — e é o documento
+   que se leva à Prefeitura quando a divergência é da lei, não do
+   simulador. */
+function tabelaRastreio() {
+  const C = rastContagem();
+  const sel = s => RASTREIO.map(g => {
+    const linhas = g.r.filter(l => !s || l.st === s);
+    if (!linhas.length) return "";
+    return '<tr class="rg"><td colspan="4">' + g.g + "</td></tr>" +
+      linhas.map(l => '<tr class="r-' + l.st + '"><td>' + l.p + "</td><td>" + l.s + "</td><td>" + l.l +
+        '</td><td class="disp4">' + l.d + "</td></tr>").join("");
+  }).join("");
+  const chip = (k, n) => '<button class="b rfil" data-st="' + k + '">' + n + "</button>";
+  return "<h3>Rastreabilidade — uma linha por regra</h3>" +
+    '<p class="hint">Cada linha amarra um número do simulador a um dispositivo da lei: parâmetro, valor adotado, ' +
+    "valor na lei e dispositivo. <b>" + C.t + " regras</b> — " + C.ok + " conferem, " + C.div +
+    " divergiam e foram corrigidas, " + C.sem + " sem base legal identificada e " + C.nm +
+    " previstas na lei e não modeladas.</p>" +
+    '<div class="bar" id="rastFil">' + chip("", "Todas") + chip("div", "Corrigidas") +
+    chip("sem", "Sem base legal") + chip("nm", "Não modeladas") + chip("ok", "Conferem") + "</div>" +
+    '<table class="doc" id="rastTab"><tr><th>Parâmetro</th><th>No simulador</th><th>Na lei</th><th>Dispositivo</th></tr>' +
+    sel("") + "</table>" +
+    '<p class="hint"><b>Sem base legal</b> não quer dizer proibido: quer dizer que a lei do Município não dispõe ' +
+    "sobre aquilo e que o simulador declarou a lacuna em vez de estimar um número no lugar dela. " +
+    "<b>Não modelado</b> é o que está na lei e depende do projeto de arquitetura, que esta ferramenta não tem.</p>";
+}
+function ligaRastreio() {
+  const bar = $("rastFil");
+  if (!bar) return;
+  bar.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const st = b.dataset.st;
+    bar.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    $("rastTab").querySelectorAll("tr").forEach(tr => {
+      if (tr.querySelector("th")) return;
+      if (tr.classList.contains("rg")) { tr.style.display = ""; return; }
+      tr.style.display = (!st || tr.classList.contains("r-" + st)) ? "" : "none";
+    });
+    /* cabeçalho de grupo sem linha visível abaixo dele sai também */
+    const trs = Array.from($("rastTab").querySelectorAll("tr"));
+    trs.forEach((tr, i) => {
+      if (!tr.classList.contains("rg")) return;
+      let vis = false;
+      for (let j = i + 1; j < trs.length && !trs[j].classList.contains("rg"); j++)
+        if (trs[j].style.display !== "none") { vis = true; break; }
+      tr.style.display = vis ? "" : "none";
+    });
+  }));
+}
+
 function montarBaseLegal() {
   $("autoteste").innerHTML = "<h3>Autoteste</h3>" +
     '<div class="bar"><button class="b" id="btnTeste">Rodar os ' + CASOS.length + " casos de referência</button>" +
@@ -6948,9 +7477,12 @@ function montarBaseLegal() {
 
     "<h3>Premissas de cálculo</h3><ul class=\"hint\">" + PREMISSAS.map(p => "<li>" + p + "</li>").join("") + "</ul>" +
 
+    tabelaRastreio() +
+
     '<div class="nota">Este simulador é uma consulta prévia de viabilidade construtiva. Não substitui o projeto ' +
     "arquitetônico, o licenciamento ambiental nem a análise do órgão municipal competente. Os planos de manejo das " +
     "unidades de conservação que compõem a Zona de Interesse Ambiental não foram analisados.</div>";
+  ligaRastreio();
 }
 
 /* ---------- eventos e inicialização ---------- */
@@ -7417,7 +7949,7 @@ function motorCert(P, lote, viaK) {
   }
   if (admitidos.some(u => u.I.eco || u.I.ind || u.id === "inst")) {
     vagas.push({ q: "Não residencial em via " + (cls === "arterial" ? "arterial" : "coletora ou local"),
-      t: "1 vaga para cada " + (cls === "arterial" ? 25 : 50) + " m² de área útil" });
+      t: "1 vaga para cada " + (cls === "arterial" ? 50 : 100) + " m² de área útil" });
   }
 
   /* ---------- instrumentos ---------- */
